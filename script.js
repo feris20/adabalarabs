@@ -91,45 +91,45 @@ function createAnalysisPanel(data, extraClass = "") {
 function renderVerses() {
   const container = document.getElementById('verses-container');
   if (!container) return;
-  container.innerHTML = '';
-  verses.forEach((verse, idx) => {
-    const isSadr = idx % 2 === 0;
-    const wrapper = document.createElement('div');
-    wrapper.className = `flex flex-col mb-6 verse-input-wrapper ${activeIndex === idx ? 'active' : ''}`;
-    wrapper.innerHTML = `
-      <div class="flex items-start gap-4">
-        <div class="w-10 pt-4 text-center text-text-muted/40 font-mono text-sm">${isSadr ? Math.floor(idx/2)+1 : '←'}</div>
-        <div class="flex-grow relative">
-          <input type="text" value="${verse}" data-idx="${idx}" placeholder="${isSadr ? 'صدر البيت...' : 'عجز البيت...'}" 
-                 class="verse-input w-full p-4 md:p-6 text-2xl md:text-3xl font-serif bg-transparent border-b-2 border-border focus:border-primary focus:outline-none transition-all">
-        </div>
-      </div>
-      <div id="mobile-panel-${idx}" class="lg:hidden mt-4"></div>`;
-    container.appendChild(wrapper);
-  });
 
-  document.querySelectorAll('.verse-input').forEach(input => {
-    input.addEventListener('focus', (e) => {
-      activeIndex = parseInt(e.target.dataset.idx);
-      renderVerses();
-      const currentInput = document.querySelector(`input[data-idx="${activeIndex}"]`);
-      currentInput.focus();
-      updateAnalysisUI(activeIndex, e.target.value);
+  // نقوم بالرسم فقط إذا كان الحاوي فارغاً (عند تحميل الصفحة أول مرة)
+  if (container.innerHTML === '') {
+    verses.forEach((verse, idx) => {
+      const isSadr = idx % 2 === 0;
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex flex-col mb-6 verse-input-wrapper`;
+      wrapper.id = `wrapper-${idx}`;
+      wrapper.innerHTML = `
+        <div class="flex items-start gap-4">
+          <div class="w-10 pt-4 text-center text-text-muted/40 font-mono text-sm">${isSadr ? Math.floor(idx/2)+1 : '←'}</div>
+          <div class="flex-grow relative">
+            <input type="text" value="${verse}" data-idx="${idx}" placeholder="${isSadr ? 'صدر البيت...' : 'عجز البيت...'}" 
+                   class="verse-input w-full p-4 md:p-6 text-2xl md:text-3xl font-serif bg-transparent border-b-2 border-border focus:border-primary focus:outline-none transition-all">
+          </div>
+        </div>
+        <div id="mobile-panel-${idx}" class="lg:hidden mt-4"></div>`;
+      container.appendChild(wrapper);
     });
-    input.addEventListener('input', (e) => {
-      const idx = parseInt(e.target.dataset.idx);
-      verses[idx] = e.target.value;
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(() => updateAnalysisUI(idx, e.target.value), 300);
-      
-      if (idx === verses.length - 1 && e.target.value.trim() !== '' && idx % 2 === 1) {
-        verses.push('', ''); renderVerses();
-        const nextInput = document.querySelector(`input[data-idx="${idx}"]`);
-        nextInput.focus();
-        nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length);
-      }
+
+    // ربط الأحداث مرة واحدة فقط
+    document.querySelectorAll('.verse-input').forEach(input => {
+      input.addEventListener('focus', (e) => {
+        const idx = parseInt(e.target.dataset.idx);
+        activeIndex = idx;
+        // بدلاً من إعادة الرسم، نغير الكلاسات فقط
+        document.querySelectorAll('.verse-input-wrapper').forEach(w => w.classList.remove('active'));
+        document.getElementById(`wrapper-${idx}`).classList.add('active');
+        updateAnalysisUI(idx, e.target.value);
+      });
+
+      input.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.dataset.idx);
+        verses[idx] = e.target.value;
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => updateAnalysisUI(idx, e.target.value), 300);
+      });
     });
-  });
+  }
 }
 
 // --- التحديات ---
