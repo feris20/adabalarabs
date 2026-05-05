@@ -31,7 +31,7 @@ async function analyzeVerses(text) {
 
   try {
     // الاتصال بسيرفر Pterodactyl الخاص بك
-    const response = await fetch('http://fi13.bot-hosting.cloud:21346/analyze', {
+    const response = await fetch('https://fi13.bot-hosting.cloud:21346/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text })
