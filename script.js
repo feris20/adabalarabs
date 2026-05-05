@@ -1,4 +1,4 @@
-// --- Data & Logic ---
+// --- البيانات والمنطق ---
 const QUIZZES = {
   complete: [
     { question: "الخيلُ والليلُ والبيداءُ تعرفُني... والرمحُ والقرطاسُ و____", options: ["السيفُ", "القلمُ", "الكتابُ", "الحبرُ"], correct: 1 },
@@ -25,16 +25,13 @@ const SAMPLE_VERSES = [
   "فلا بدَّ أنْ يستجيبَ القدرْ"
 ];
 
-
 function analyzeVerses(text) {
   if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
 
   if (typeof window.python_analyze_verses === "function") {
     try {
-      // استلام النتيجة كنص JSON
+      // استلام النتيجة كنص JSON وفكه
       const pyResultString = window.python_analyze_verses(text);
-      
-      // تحويل النص إلى كائن جافاسكريبت طبيعي
       const pyResult = JSON.parse(pyResultString);
       
       return {
@@ -43,8 +40,8 @@ function analyzeVerses(text) {
         meter: pyResult.meter || "..."
       };
     } catch (error) {
-      console.error("حدث خطأ أثناء الاتصال بالبايثون:", error);
-      return { phonetic: "حدث خطأ في التحليل.", symbols: "---", meter: "..." };
+      console.error("خطأ في الاتصال بمحرك بايثون:", error);
+      return { phonetic: "حدث خطأ.", symbols: "---", meter: "..." };
     }
   }
 
@@ -55,19 +52,18 @@ function analyzeVerses(text) {
   };
 }
 
-
-// --- App State ---
+// --- حالة التطبيق ---
 let darkMode = false;
 let verses = ['', '', '', ''];
 let activeIndex = 0;
 let activeQuizType = null;
 let quizIndex = 0;
 let score = 0;
+let typingTimer; // مؤقت لتحسين أداء الكتابة
 
-// --- Initialize Icons ---
+// --- الأيقونات والمظهر ---
 lucide.createIcons();
 
-// --- Theme Toggle ---
 document.getElementById('theme-toggle').addEventListener('click', () => {
   darkMode = !darkMode;
   if (darkMode) {
@@ -80,14 +76,13 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
   lucide.createIcons();
 });
 
-// --- Navigation ---
 function navigate(pageId) {
   document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-page'));
   document.getElementById(`page-${pageId}`).classList.add('active-page');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --- Tests Generation ---
+// --- توليد التحديات ---
 const testsData = [
   { id: 'complete', title: 'أكمل الفراغ', desc: 'اختبر حصيلتك من أبيات الشعر الخالدة', icon: 'quote', color: 'from-orange-500/20 to-red-500/20', img: 'https://images.unsplash.com/photo-1544648151-55737bb41329?auto=format&fit=crop&q=80&w=600' },
   { id: 'meter', title: 'فراسة البحور', desc: 'هل تستطيع تمييز البحر من نظرة؟', icon: 'target', color: 'from-emerald-500/20 to-teal-500/20', img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600' },
@@ -118,7 +113,7 @@ testsData.forEach((item, idx) => {
   testsGrid.appendChild(btn);
 });
 
-// --- Quiz Logic ---
+// --- منطق التحديات ---
 function startQuiz(type) {
   activeQuizType = type;
   quizIndex = 0;
@@ -133,23 +128,14 @@ function renderQuiz() {
   const qData = QUIZZES[activeQuizType][quizIndex];
   document.getElementById('quiz-number').innerText = `السؤال ${quizIndex + 1}`;
   document.getElementById('quiz-question').innerText = qData.question;
-  
-  // Progress Bar
   const progContainer = document.getElementById('quiz-progress');
   progContainer.innerHTML = [0,1].map(i => `<div class="h-1.5 w-10 rounded-full ${i <= quizIndex ? 'bg-primary' : 'bg-border'}"></div>`).join('');
-  
-  // Options
   const optsContainer = document.getElementById('quiz-options');
   optsContainer.innerHTML = '';
   qData.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = "p-5 glass-panel !bg-transparent border border-border rounded-2xl text-right text-lg md:text-xl font-medium hover:!border-primary hover:text-primary transition-all shadow-sm flex justify-between items-center group";
-    btn.innerHTML = `
-      <span>${opt}</span>
-      <div class="w-6 h-6 rounded-full border-2 border-border group-hover:border-primary flex items-center justify-center transition-colors">
-        <div class="w-2 h-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      </div>
-    `;
+    btn.innerHTML = `<span>${opt}</span><div class="w-6 h-6 rounded-full border-2 border-border group-hover:border-primary flex items-center justify-center"><div class="w-2 h-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></div></div>`;
     btn.onclick = () => handleAnswer(i, qData.correct);
     optsContainer.appendChild(btn);
   });
@@ -170,40 +156,55 @@ function showResult() {
   document.getElementById('quiz-result').classList.remove('hidden');
   document.getElementById('score-text').innerText = score;
   document.getElementById('score-message').innerText = score === 2 ? 'مذهل! لقد أثبتّ جدارتك.' : 'لا بأس، المعرفة تراكمية.';
-  // Circle Animation
   setTimeout(() => {
     document.getElementById('score-circle').style.strokeDasharray = `${(score/2)*283} 283`;
   }, 100);
 }
 
-// --- Analysis Logic ---
+// --- منطق التحليل العروضي ---
+
+// دالة لتحديث لوحة النتائج فقط دون التأثير على حقل الإدخال
+function updateAnalysisUI(idx, text) {
+  const analysis = analyzeVerses(text);
+  
+  // تحديث لوحة الكمبيوتر
+  if (idx === activeIndex) {
+    const desktopPanel = document.getElementById('desktop-analysis-panel');
+    if (desktopPanel) {
+      desktopPanel.innerHTML = createAnalysisPanel(analysis, "min-h-[400px]");
+      lucide.createIcons();
+    }
+  }
+
+  // تحديث لوحة الجوال
+  const mobilePanel = document.getElementById(`mobile-panel-${idx}`);
+  if (mobilePanel) {
+    mobilePanel.innerHTML = createAnalysisPanel(analysis);
+    lucide.createIcons();
+  }
+}
+
 function createAnalysisPanel(analysisData, extraClass = "") {
   return `
-    <div class="glass-panel rounded-3xl overflow-hidden flex flex-col ${extraClass}">
-      <div class="bg-gradient-to-l from-primary/10 to-transparent p-6 lg:p-8 border-b border-border relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
+    <div class="glass-panel rounded-3xl overflow-hidden flex flex-col ${extraClass} animate-fade-in">
+      <div class="bg-gradient-to-l from-primary/10 to-transparent p-6 lg:p-8 border-b border-border relative">
         <span class="text-xs uppercase tracking-widest font-bold text-secondary block mb-2">البحر الشعري</span>
-        <h3 class="text-4xl lg:text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-text-main to-text-muted">${analysisData.meter}</h3>
+        <h3 class="text-3xl lg:text-4xl font-serif font-bold text-text-main">${analysisData.meter || '...'}</h3>
       </div>
-      <div class="p-6 lg:p-8 space-y-8 flex-grow">
+      <div class="p-6 lg:p-8 space-y-6 flex-grow">
         <div>
           <span class="text-sm font-bold text-text-muted block mb-3">الترميز العروضي</span>
-          <div class="text-2xl lg:text-3xl font-mono tracking-[0.5em] text-center bg-bg/50 py-4 rounded-2xl text-primary border border-border shadow-inner" dir="ltr">
+          <!-- إصلاح الحجم والالتفاف -->
+          <div class="text-xl lg:text-2xl font-mono tracking-[0.2em] text-center bg-bg/50 py-4 rounded-2xl text-primary border border-border shadow-inner break-all px-2" dir="ltr">
             ${analysisData.symbols || "----"}
           </div>
         </div>
         <div>
-          <span class="text-sm font-bold text-text-muted block mb-3">الكتابة العروضية</span>
-          <div class="text-xl lg:text-2xl font-serif text-right text-text-main/90 leading-relaxed bg-bg/30 p-5 rounded-2xl italic min-h-[90px] border border-border/50">
-            ${analysisData.phonetic || "بانتظار الإلهام يتدفق من قلمك..."}
+          <span class="text-sm font-bold text-text-muted block mb-3">الكتابة والتفعيلات</span>
+          <div class="text-lg lg:text-xl font-serif text-right text-text-main/90 leading-relaxed bg-bg/30 p-5 rounded-2xl italic min-h-[90px] border border-border/50">
+            ${analysisData.phonetic || "بانتظار قلمك..."}
           </div>
         </div>
-      </div>
-      <div class="p-4 text-center border-t border-border bg-black/5 dark:bg-white/5">
-        <span class="text-[11px] font-medium text-text-muted flex items-center justify-center gap-2">
-          <i data-lucide="feather" class="w-3 h-3 text-secondary"></i>
-          مبني على قواعد العروض للفراهيدي
-        </span>
       </div>
     </div>
   `;
@@ -214,53 +215,52 @@ function renderVerses() {
   container.innerHTML = '';
   verses.forEach((verse, idx) => {
     const isSadr = idx % 2 === 0;
-    const isActive = activeIndex === idx;
-    
     const wrapper = document.createElement('div');
-    wrapper.className = "flex flex-col mb-6 verse-input-wrapper transition-all duration-300 " + (isActive ? "active" : "");
+    wrapper.className = `flex flex-col mb-6 verse-input-wrapper ${activeIndex === idx ? 'active' : ''}`;
     
-    const inputHtml = `
+    wrapper.innerHTML = `
       <div class="flex items-start gap-4">
-        <div class="w-10 pt-4 flex justify-center text-text-muted/40 font-mono text-sm select-none">
-          ${isSadr ? String(Math.floor(idx/2)+1).padStart(2,'0') : '<i data-lucide="chevron-left" class="rotate-180 w-4 h-4"></i>'}
+        <div class="w-10 pt-4 flex justify-center text-text-muted/40 font-mono text-sm">
+          ${isSadr ? String(Math.floor(idx/2)+1).padStart(2,'0') : '←'}
         </div>
         <div class="flex-grow relative">
-          <input type="text" value="${verse}" placeholder="${isSadr ? 'الشطر الأول (الصدر)' : 'الشطر الثاني (العجز)'}" 
-                 class="verse-input w-full p-4 md:p-6 text-2xl md:text-3xl font-serif bg-transparent border-b-2 transition-all focus:outline-none placeholder:text-text-muted/30 ${isActive ? 'border-primary text-text-main drop-shadow-md' : 'border-border text-text-main/80'}"
+          <input type="text" value="${verse}" placeholder="${isSadr ? 'صدر البيت...' : 'عجز البيت...'}" 
+                 class="verse-input w-full p-4 md:p-6 text-2xl md:text-3xl font-serif bg-transparent border-b-2 border-border focus:border-primary focus:outline-none transition-all"
                  data-idx="${idx}">
-          ${isActive ? '<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(155,34,38,0.6)] dark:shadow-[0_0_8px_rgba(230,57,70,0.6)]"></div>' : ''}
         </div>
       </div>
-      <!-- Mobile Analysis Panel -->
-      ${isActive ? `<div class="lg:hidden pl-14 overflow-hidden mt-6 animate-slide-up">${createAnalysisPanel(analyzeVerses(verse))}</div>` : ''}
+      <div id="mobile-panel-${idx}" class="lg:hidden mt-4"></div>
     `;
-    wrapper.innerHTML = inputHtml;
     container.appendChild(wrapper);
   });
 
-  // Attach Events
+  // ربط الأحداث بذكاء لتجنب فقدان التركيز (Focus)
   document.querySelectorAll('.verse-input').forEach(input => {
     input.addEventListener('focus', (e) => {
       activeIndex = parseInt(e.target.getAttribute('data-idx'));
-      renderVerses();
-      updateDesktopPanel();
-      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Restore cursor position
-      setTimeout(() => e.target.selectionStart = e.target.selectionEnd = e.target.value.length, 0);
+      document.querySelectorAll('.verse-input-wrapper').forEach((w, i) => {
+          w.classList.toggle('active', i === activeIndex);
+      });
+      updateAnalysisUI(activeIndex, e.target.value);
     });
     
     input.addEventListener('input', (e) => {
       const idx = parseInt(e.target.getAttribute('data-idx'));
       verses[idx] = e.target.value;
+      
+      // تأخير بسيط لتحسين الأداء (Debounce)
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        updateAnalysisUI(idx, e.target.value);
+      }, 300);
+
       if (idx === verses.length - 1 && e.target.value.trim() !== '' && idx % 2 === 1) {
-        verses.push('', ''); // Auto expand
-      }
-      updateDesktopPanel();
-      // Only re-render mobile panel (avoiding full re-render on type for better performance)
-      if (window.innerWidth < 1024) {
-          renderVerses();
-          const focusInput = document.querySelector(`input[data-idx="${idx}"]`);
-          if(focusInput) focusInput.focus();
+        verses.push('', ''); 
+        renderVerses(); 
+        // إعادة التركيز لآخر حقل
+        const nextInput = document.querySelector(`input[data-idx="${idx}"]`);
+        nextInput.focus();
+        nextInput.setSelectionRange(nextInput.value.length, nextInput.value.length);
       }
     });
   });
@@ -269,9 +269,7 @@ function renderVerses() {
 
 function updateDesktopPanel() {
   const currentText = verses[activeIndex] || '';
-  const analysisData = analyzeVerses(currentText);
-  document.getElementById('desktop-analysis-panel').innerHTML = createAnalysisPanel(analysisData, "min-h-[400px]");
-  lucide.createIcons();
+  updateAnalysisUI(activeIndex, currentText);
 }
 
 function fillSample() {
@@ -288,6 +286,6 @@ function clearVerses() {
   updateDesktopPanel();
 }
 
-// Initial render
+// البدء الأولي
 renderVerses();
 updateDesktopPanel();
