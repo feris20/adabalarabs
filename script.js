@@ -25,33 +25,42 @@ const SAMPLE_VERSES = [
   "فلا بدَّ أنْ يستجيبَ القدرْ"
 ];
 
-function analyzeVerses(text) {
+async function analyzeVerses(text) {
   if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
 
-  if (typeof window.python_analyze_verses === "function") {
-    try {
-      // استلام النتيجة كنص JSON وفكه
-      const pyResultString = window.python_analyze_verses(text);
-      const pyResult = JSON.parse(pyResultString);
-      
-      return {
-        phonetic: pyResult.phonetic || "",
-        symbols: pyResult.symbols || "",
-        meter: pyResult.meter || "..."
-      };
-    } catch (error) {
-      console.error("خطأ في الاتصال بمحرك بايثون:", error);
-      return { phonetic: "حدث خطأ.", symbols: "---", meter: "..." };
+  try {
+    // نستخدم العنوان الظاهر في صورتك مع إضافة مسار التحليل
+    // جرب https أولاً، إذا لم يعمل جرب http
+    const response = await fetch('http://fi13.bot-hosting.cloud:21346/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text: text })
+    });
+
+    if (!response.ok) {
+      throw new Error('فشل الاتصال بالسيرفر');
     }
+
+    const pyResult = await response.json();
+    
+    return {
+      phonetic: pyResult.phonetic || "",
+      symbols: pyResult.symbols || "",
+      meter: pyResult.meter || "..."
+    };
+
+  } catch (error) {
+    console.error("خطأ في الاتصال بالخادم:", error);
+    // في حال فشل السيرفر، نعيد رسالة واضحة للمستخدم
+    return { 
+      phonetic: "السيرفر لا يستجيب حالياً..", 
+      symbols: "---", 
+      meter: "خطأ اتصال" 
+    };
   }
-
-  return { 
-    phonetic: "جاري تحميل محرك العروض (PyScript)...", 
-    symbols: "...", 
-    meter: "..." 
-  };
 }
-
 // --- حالة التطبيق ---
 let darkMode = false;
 let verses = ['', '', '', ''];
