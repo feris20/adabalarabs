@@ -4,6 +4,55 @@
   <!-- PyScript (تم ربطها محلياً بناءً على طلبك) -->
   <link rel="stylesheet" href="PyScript/core.css" />
   <script type="module" src="PyScript/core.js"></script>
+  <!-- إعدادات البايثون داخل سكريبت خاص لضمان عدم ظهورها كنص -->
+<script type="py-config">
+    [[fetch]]
+    from = "aruudy/"
+    to_folder = "aruudy"
+    files = ["__init__.py", "prosody.py"]
+    [[fetch]]
+    from = "aruudy/poetry/"
+    to_folder = "aruudy/poetry"
+    files = ["__init__.py", "foot.py", "meter.py"]
+    [[fetch]]
+    from = "aruudy/lists/"
+    to_folder = "aruudy/lists"
+    files = ["__init__.py", "change.py", "const.py"]
+</script>
+
+<script type="py">
+import json
+from js import window
+from aruudy import prosody 
+
+def analyze_arabic_verse(text):
+    if not text or not text.strip():
+        return json.dumps({"phonetic": "", "symbols": "", "meter": "..."})
+    try:
+        processed = prosody.process_shatr(text)
+        bahr_name = processed.bahr.name.get('arabic', 'غير محدد') if processed.bahr else "غير محدد"
+        
+        tafeela = ""
+        if hasattr(processed, 'parts') and processed.parts:
+            tafeela_list = [p.mnemonic if hasattr(p, 'mnemonic') else (p.part if hasattr(p, 'part') else "") for p in processed.parts]
+            tafeela = " | ".join(tafeela_list)
+
+        ameter_raw = processed.ameter if processed.ameter else ""
+        custom_symbols = ameter_raw.replace('w', 'o').replace('s', '/').replace('v', 'o').replace('-', '/')
+
+        return json.dumps({
+            "phonetic": f"{processed.prosody} [{tafeela}]" if tafeela else processed.prosody,
+            "symbols": custom_symbols,
+            "meter": bahr_name
+        })
+    except Exception as e:
+        return json.dumps({"phonetic": "خطأ في المعالجة", "symbols": "---", "meter": "..."})
+
+# ربط الدالة بالنافذة فور التحميل
+window.python_analyze_verses = analyze_arabic_verse
+# إرسال إشارة للجافاسكريبت بأن المحرك جاهز
+window.dispatchEvent(window.Event.new("py-ready"))
+</script>
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
