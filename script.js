@@ -189,7 +189,7 @@ function createAnalysisPanel(analysisData, extraClass = "") {
     <div class="glass-panel rounded-3xl overflow-hidden flex flex-col ${extraClass} animate-fade-in">
       <div class="bg-gradient-to-l from-primary/10 to-transparent p-6 lg:p-8 border-b border-border relative">
         <span class="text-xs uppercase tracking-widest font-bold text-secondary block mb-2">البحر الشعري</span>
-        <h3 class="text-3xl lg:text-4xl font-serif font-bold text-text-main">${analysisData.meter || '...'}</h3>
+        <h3 class="text-3xl lg:text-4xl font-serif font-bold text-blue-600">${analysisData.meter || '...'}</h3>
       </div>
       <div class="p-6 lg:p-8 space-y-6 flex-grow">
         <div>
