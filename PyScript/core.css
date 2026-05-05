@@ -1,0 +1,12 @@
+.pyscript-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f0f0;
+}
+
+.pyscript-loader p {
+  font-size: 1.2em;
+  color: #333;
+}
