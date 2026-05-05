@@ -25,15 +25,17 @@ const SAMPLE_VERSES = [
   "فلا بدَّ أنْ يستجيبَ القدرْ"
 ];
 
+
 function analyzeVerses(text) {
   if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
 
-  // PyScript تستغرق ثوانٍ معدودة للتحميل عند فتح الموقع
-  // نتحقق مما إذا كانت دالة بايثون أصبحت جاهزة
   if (typeof window.python_analyze_verses === "function") {
     try {
-      // استدعاء دالة بايثون وتمرير البيت الشعري لها
-      const pyResult = window.python_analyze_verses(text);
+      // استلام النتيجة كنص JSON
+      const pyResultString = window.python_analyze_verses(text);
+      
+      // تحويل النص إلى كائن جافاسكريبت طبيعي
+      const pyResult = JSON.parse(pyResultString);
       
       return {
         phonetic: pyResult.phonetic || "",
@@ -42,17 +44,17 @@ function analyzeVerses(text) {
       };
     } catch (error) {
       console.error("حدث خطأ أثناء الاتصال بالبايثون:", error);
-      return { phonetic: "حدث خطأ.", symbols: "---", meter: "..." };
+      return { phonetic: "حدث خطأ في التحليل.", symbols: "---", meter: "..." };
     }
   }
 
-  // رسالة مؤقتة تظهر للمستخدم إذا بدأ بالكتابة قبل أن يكتمل تحميل بيئة بايثون
   return { 
     phonetic: "جاري تحميل محرك العروض (PyScript)...", 
     symbols: "...", 
     meter: "..." 
   };
 }
+
 
 // --- App State ---
 let darkMode = false;
