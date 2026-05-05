@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@theme {
+  --font-sans: "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Amiri", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-text-main: var(--color-text-main);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+}
+
+:root {
+  --color-primary: #9b2226; /* Deep Arabian Red */
+  --color-secondary: #b89855; /* Sophisticated Gold */
+  --color-bg: #f9f7f3; /* Warm Pearl */
+  --color-surface: rgba(255, 255, 255, 0.65);
+  --color-text-main: #18181b;
+  --color-text-muted: #52525b;
+  --color-border: rgba(0, 0, 0, 0.06);
+  --glow-opacity: 0.35;
+}
+
+html.dark {
+  --color-primary: #f26a6a; /* Soft elegant red */
+  --color-secondary: #e6cfb3; /* Champagne Gold */
+  --color-bg: #13100f; /* Deep Warm Espresso */
+  --color-surface: rgba(30, 26, 25, 0.75);
+  --color-text-main: #fdfbf7;
+  --color-text-muted: #a89f9a;
+  --color-border: rgba(230, 207, 179, 0.12);
+  --glow-opacity: 0.15;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  transition: background-color 0.5s ease, color 0.5s ease;
+  font-family: var(--font-sans);
+}
+
+/* Ambient Glow Effects */
+body::before, body::after {
+  content: "";
+  position: fixed;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(140px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--glow-opacity);
+  transition: opacity 0.5s ease;
+}
+body::before {
+  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 60%);
+  top: -10vw;
+  right: -10vw;
+}
+body::after {
+  background: radial-gradient(circle, var(--color-primary) 0%, transparent 60%);
+  bottom: -10vw;
+  left: -10vw;
+}
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+}
+html.dark .noise-overlay { opacity: 0.06; }
+
+/* Premium Glassmorphism */
+.glass-panel {
+  background: var(--color-surface);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+html.dark .glass-panel { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+.glass-panel:hover { border-color: rgba(184, 152, 85, 0.25); }
+html.dark .glass-panel:hover { border-color: rgba(212, 175, 55, 0.25); }
+
+/* Inputs & Scrollbar */
+input::placeholder { color: var(--color-text-muted); opacity: 0.5; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* View Switching Logic */
+.page-section { display: none; opacity: 0; transition: opacity 0.4s ease; }
+.page-section.active-page { display: flex; opacity: 1; animation: fadeIn 0.5s ease-out; }
+#page-tests.active-page, #page-analysis.active-page { display: block; }
+
+/* Custom Animations */
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+.animate-slide-up { opacity: 0; animation: slideUp 0.6s ease-out forwards; }
+
+.verse-input-wrapper.active { transform: scale(1.02); z-index: 10; opacity: 1; }
+.verse-input-wrapper:not(.active) { opacity: 0.6; }
+.verse-input-wrapper:not(.active):hover { opacity: 1; }
