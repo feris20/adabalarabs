@@ -179,13 +179,14 @@
 </py-config>
 <!-- ثانياً: كود التشغيل والربط -->
 <script type="py">
-    from pyodide.ffi import to_js
+    import json
     from js import window
     from aruudy import prosody 
 
     def analyze_arabic_verse(text):
         if not text or not text.strip():
-            return to_js({"phonetic": "", "symbols": "", "meter": "..."})
+            # إرجاع نص JSON
+            return json.dumps({"phonetic": "", "symbols": "", "meter": "..."})
 
         try:
             processed = prosody.process_shatr(text)
@@ -206,15 +207,16 @@
             ameter_raw = processed.ameter if processed.ameter else ""
             custom_symbols = ameter_raw.replace('w', 'o').replace('s', '/').replace('v', 'o').replace('-', '/')
 
-            return to_js({
+            # تحويل القاموس إلى JSON وإرجاعه
+            return json.dumps({
                 "phonetic": f"{prosody_text} [{tafeela}]" if tafeela else prosody_text,
                 "symbols": custom_symbols,
                 "meter": bahr_name
             })
         except Exception as e:
-            return to_js({"phonetic": f"خطأ: {str(e)}", "symbols": "---", "meter": "..."})
+            return json.dumps({"phonetic": f"خطأ: {str(e)}", "symbols": "---", "meter": "..."})
 
-    # هذا السطر هو الأهم لربط البايثون بالجافاسكريبت
+    # ربط دالة بايثون بالجافاسكريبت
     window.python_analyze_verses = analyze_arabic_verse
 </script>
   
