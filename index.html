@@ -157,11 +157,44 @@
       </div>
     </div>
   </section>
+
+  <!-- إعداد بيئة بايثون لجلب مكتبة aruudy -->
+  <py-config>
+    packages = ["aruudy"]
+  </py-config>
+
+  <!-- كود بايثون الذي سيكون الجسر بين الجافاسكريبت والمكتبة -->
+  <script type="py">
+    from pyodide.ffi import to_js
+    from js import window
+    from aruudy.poetry import shatar  # استدعاء وحدة تحليل الشطر من المكتبة
+
+    def analyze_arabic_verse(text):
+        if not text or not text.strip():
+            # إرجاع قيم فارغة إذا كان النص فارغاً
+            return to_js({"phonetic": "", "symbols": "", "meter": "..."})
+
+        try:
+            # معالجة الشطر باستخدام مكتبة aruudy
+            s = shatar.Shatar(text)
+            
+            # استخراج البيانات المطلوبة
+            result = {
+                "phonetic": s.ameter,       # الكتابة العروضية
+                "symbols": s.emeter,        # التفعيلات / الرموز
+                "meter": s.bahr.name if s.bahr else "لم يتم التعرف عليه" # اسم البحر
+            }
+            # تحويل قاموس بايثون إلى كائن جافاسكريبت (JS Object)
+            return to_js(result)
+        
+        except Exception as e:
+            # في حال وجود خطأ في التحليل
+            return to_js({"phonetic": "خطأ في التحليل", "symbols": "---", "meter": "..."})
+
+    # ربط دالة بايثون ببيئة الجافاسكريبت العامة (window)
+    window.python_analyze_verses = analyze_arabic_verse
+  </script>
   
-<!-- PyScript -->
-  <link rel="stylesheet" href="https://pyscript.net/releases/2023.11.1/core.css" />
-  <script type="module" src="https://pyscript.net/releases/2023.11.1/core.js"></script>
-  <!-- ملف المنطق البرمجي -->
   <script src="script.js"></script>
 </body>
 </html>
