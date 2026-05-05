@@ -1,58 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <!-- PyScript (تم ربطها محلياً بناءً على طلبك) -->
-  <link rel="stylesheet" href="PyScript/core.css" />
-  <script type="module" src="PyScript/core.js"></script>
-  <!-- إعدادات البايثون داخل سكريبت خاص لضمان عدم ظهورها كنص -->
-<script type="py-config">
-    [[fetch]]
-    from = "aruudy/"
-    to_folder = "aruudy"
-    files = ["__init__.py", "prosody.py"]
-    [[fetch]]
-    from = "aruudy/poetry/"
-    to_folder = "aruudy/poetry"
-    files = ["__init__.py", "foot.py", "meter.py"]
-    [[fetch]]
-    from = "aruudy/lists/"
-    to_folder = "aruudy/lists"
-    files = ["__init__.py", "change.py", "const.py"]
-</script>
-
-<script type="py">
-import json
-from js import window
-from aruudy import prosody 
-
-def analyze_arabic_verse(text):
-    if not text or not text.strip():
-        return json.dumps({"phonetic": "", "symbols": "", "meter": "..."})
-    try:
-        processed = prosody.process_shatr(text)
-        bahr_name = processed.bahr.name.get('arabic', 'غير محدد') if processed.bahr else "غير محدد"
-        
-        tafeela = ""
-        if hasattr(processed, 'parts') and processed.parts:
-            tafeela_list = [p.mnemonic if hasattr(p, 'mnemonic') else (p.part if hasattr(p, 'part') else "") for p in processed.parts]
-            tafeela = " | ".join(tafeela_list)
-
-        ameter_raw = processed.ameter if processed.ameter else ""
-        custom_symbols = ameter_raw.replace('w', 'o').replace('s', '/').replace('v', 'o').replace('-', '/')
-
-        return json.dumps({
-            "phonetic": f"{processed.prosody} [{tafeela}]" if tafeela else processed.prosody,
-            "symbols": custom_symbols,
-            "meter": bahr_name
-        })
-    except Exception as e:
-        return json.dumps({"phonetic": "خطأ في المعالجة", "symbols": "---", "meter": "..."})
-
-# ربط الدالة بالنافذة فور التحميل
-window.python_analyze_verses = analyze_arabic_verse
-# إرسال إشارة للجافاسكريبت بأن المحرك جاهز
-window.dispatchEvent(window.Event.new("py-ready"))
-</script>
+  <!-- PyScript -->
+  <link rel="stylesheet" href="https://pyscript.net/releases/2023.11.1/core.css" />
+  <script type="module" src="https://pyscript.net/releases/2023.11.1/core.js"></script>
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -61,14 +12,18 @@ window.dispatchEvent(window.Event.new("py-ready"))
   <!-- الخطوط -->
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <!-- المكتبات المحلية -->
+  <!-- Tailwind CSS v4 CDN -->
   <script src="tailwind.js"></script>
+  
+  <!-- الأيقونات -->
   <script src="lucide.js"></script>
+  
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="min-h-screen font-sans selection:bg-secondary/30 selection:text-primary relative transition-colors duration-500">
   <div class="noise-overlay"></div>
   
+  <!-- شريط التنقل (الوضع الليلي) -->
   <nav class="fixed top-0 left-0 right-0 p-4 lg:p-6 z-50 flex justify-end pointer-events-none">
     <div class="pointer-events-auto">
       <button id="theme-toggle" class="p-3 glass-panel rounded-full text-text-muted hover:text-primary transition-all active:scale-95 group" title="تغيير المظهر">
@@ -82,14 +37,15 @@ window.dispatchEvent(window.Event.new("py-ready"))
     <div class="mb-8 relative animate-fade-in">
       <div class="absolute inset-0 bg-secondary/20 blur-3xl rounded-full"></div>
       <h1 class="text-7xl md:text-[7rem] font-serif font-bold text-transparent bg-clip-text bg-gradient-to-bl from-[#bf953f] via-[#fcf6ba] to-[#b38728] drop-shadow-sm mb-4 relative z-10 leading-tight py-2">
-        أدب العرب
-      </h1>
+  أدب العرب
+</h1>
+
     </div>
     <p class="text-lg md:text-2xl text-text-muted leading-relaxed mb-16 max-w-2xl font-light animate-slide-up" style="animation-delay: 0.2s;">
       ملاذك الرقمي لتذوق بلاغة الضاد، واكتشاف أوزان الشعر، وخوض تحديات المعرفة الأدبية بأسلوب عصري وأنيق.
     </p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full animate-slide-up" style="animation-delay: 0.4s;">
-      <button id="nav-to-analysis" class="group glass-panel p-8 rounded-3xl text-right flex flex-col justify-end min-h-[220px] relative overflow-hidden">
+      <button id="btn-nav-analysis" class="group glass-panel p-8 rounded-3xl text-right flex flex-col justify-end min-h-[220px] relative overflow-hidden">
         <div class="absolute top-6 left-6 text-primary/20 group-hover:text-primary/40 transition-colors duration-500">
           <i data-lucide="pen-tool" class="w-20 h-20" stroke-width="1"></i>
         </div>
@@ -97,14 +53,20 @@ window.dispatchEvent(window.Event.new("py-ready"))
           <span class="text-3xl font-bold font-serif mb-2 block text-text-main group-hover:text-primary transition-colors">التحليل العروضي</span>
           <span class="text-sm text-text-muted font-light block">مقطّع شعري ذكي يبرز أوزان وتفعيلات أبياتك.</span>
         </div>
+        <div class="absolute bottom-8 left-8 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+          <i data-lucide="arrow-left" class="text-primary"></i>
+        </div>
       </button>
-      <button id="nav-to-tests" class="group glass-panel p-8 rounded-3xl text-right flex flex-col justify-end min-h-[220px] relative overflow-hidden">
+      <button id="btn-nav-tests" class="group glass-panel p-8 rounded-3xl text-right flex flex-col justify-end min-h-[220px] relative overflow-hidden">
         <div class="absolute top-6 left-6 text-secondary/20 group-hover:text-secondary/40 transition-colors duration-500">
           <i data-lucide="check-circle-2" class="w-20 h-20" stroke-width="1"></i>
         </div>
         <div class="relative z-10">
           <span class="text-3xl font-bold font-serif mb-2 block text-text-main group-hover:text-secondary transition-colors">ميدان المعرفة</span>
           <span class="text-sm text-text-muted font-light block">تحديات يومية في البلاغة والشعر وحفظ الأبيات.</span>
+        </div>
+        <div class="absolute bottom-8 left-8 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+          <i data-lucide="arrow-left" class="text-secondary"></i>
         </div>
       </button>
     </div>
@@ -113,27 +75,37 @@ window.dispatchEvent(window.Event.new("py-ready"))
   <!-- صفحة التحديات -->
   <section id="page-tests" class="page-section p-6 md:p-12 max-w-6xl mx-auto py-20 hidden">
     <div class="flex flex-col items-start mb-12">
-      <button id="back-home-from-tests" class="flex items-center gap-2 text-text-muted hover:text-primary mb-6 transition-colors font-medium">
+      <button id="btn-back-home-tests" class="flex items-center gap-2 text-text-muted hover:text-primary mb-6 transition-colors font-medium">
         <i data-lucide="arrow-right" class="w-4 h-4"></i> العودة للطليعة
       </button>
       <h2 class="text-5xl font-serif font-bold text-text-main">ميدان المعرفة</h2>
       <p class="text-text-muted mt-3 text-lg">اختر التحدي الذي يناسب ذائقتك الأدبية.</p>
     </div>
-    <div id="tests-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"></div>
+    <div id="tests-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+      <!-- يتم توليد التحديات هنا عبر الجافاسكريبت -->
+    </div>
   </section>
 
   <!-- صفحة الاختبار النشط -->
   <section id="page-quiz" class="page-section min-h-screen flex items-center justify-center p-4 md:p-8 hidden">
+    <!-- حاوية السؤال -->
     <div id="quiz-container" class="w-full max-w-2xl glass-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
       <div class="flex justify-between items-center mb-8">
-        <div class="flex gap-1" dir="ltr" id="quiz-progress"></div>
+        <div class="flex gap-1" dir="ltr" id="quiz-progress">
+          <!-- أشرطة التقدم -->
+        </div>
         <span class="text-secondary font-mono tracking-widest uppercase text-xs font-bold" id="quiz-number">السؤال 1</span>
       </div>
-      <h3 id="quiz-question" class="text-2xl md:text-4xl font-serif font-bold mb-12 leading-relaxed text-right text-text-main"></h3>
-      <div id="quiz-options" class="flex flex-col gap-4"></div>
+      <h3 id="quiz-question" class="text-2xl md:text-4xl font-serif font-bold mb-12 leading-relaxed text-right text-text-main">
+      </h3>
+      <div id="quiz-options" class="flex flex-col gap-4">
+        <!-- الخيارات -->
+      </div>
     </div>
 
+    <!-- حاوية النتيجة -->
     <div id="quiz-result" class="text-center glass-panel p-12 max-w-lg w-full rounded-[3rem] relative overflow-hidden hidden">
+      <div class="absolute inset-0 bg-gradient-to-b from-secondary/10 to-transparent pointer-events-none"></div>
       <h3 class="text-3xl md:text-4xl font-serif font-bold mb-8 text-text-main relative z-10">أنهيت التحدي</h3>
       <div class="relative inline-block mb-10 w-40 h-40">
         <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -146,7 +118,7 @@ window.dispatchEvent(window.Event.new("py-ready"))
         </div>
       </div>
       <p id="score-message" class="mb-10 text-text-muted text-lg font-light relative z-10"></p>
-      <button id="btn-back-to-tests" class="bg-text-main text-bg px-10 py-4 rounded-full text-lg font-bold shadow-xl hover:bg-primary hover:text-white transition-all relative z-10 block w-full">
+      <button id="btn-back-tests" class="bg-text-main text-bg px-10 py-4 rounded-full text-lg font-bold shadow-xl hover:bg-primary hover:text-white transition-all relative z-10 block w-full">
         العودة للميدان
       </button>
     </div>
@@ -156,42 +128,55 @@ window.dispatchEvent(window.Event.new("py-ready"))
   <section id="page-analysis" class="page-section p-4 md:p-8 max-w-7xl mx-auto py-12 lg:py-20 hidden">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8 border-b border-border pb-8">
       <div>
-        <button id="back-home-from-analysis" class="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-sm font-medium mb-4">
+        <button id="btn-back-home-analysis" class="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-sm font-medium mb-4">
           <i data-lucide="arrow-right" class="w-4 h-4"></i> تراجع
         </button>
         <h2 class="text-4xl font-serif font-bold text-text-main">مُحلل العَروض</h2>
         <p class="text-text-muted mt-2">اكتب أبياتك وشاهد السحر العروضي مباشرة.</p>
       </div>
       <div class="flex gap-3 w-full md:w-auto">
-        <button id="btn-fill-sample" class="flex-1 md:flex-none px-6 py-3 glass-panel hover:bg-bg !border-secondary/30 text-sm font-bold text-secondary rounded-full shadow-sm transition-all">تجربة بمثال</button>
-        <button id="btn-clear-verses" class="flex-1 md:flex-none px-6 py-3 glass-panel hover:bg-bg !border-primary/30 text-sm font-bold text-primary rounded-full shadow-sm transition-all">مسح الصحيفة</button>
+        <button id="btn-fill-sample" class="flex-1 md:flex-none px-6 py-3 glass-panel hover:bg-bg !border-secondary/30 text-sm font-bold text-secondary hover:text-secondary shadow-sm transition-all rounded-full">
+          تجربة بمثال
+        </button>
+        <button id="btn-clear-verses" class="flex-1 md:flex-none px-6 py-3 glass-panel hover:bg-bg !border-primary/30 text-sm font-bold text-primary hover:text-primary shadow-sm transition-all rounded-full">
+          مسح الصحيفة
+        </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative">
-      <div id="verses-container" class="lg:col-span-7 space-y-6"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start lg:items-stretch relative">
+      <!-- حقول الإدخال -->
+      <div id="verses-container" class="lg:col-span-7 space-y-6">
+        <!-- ستُولد برمجياً -->
+      </div>
+
+      <!-- لوحة التحليل الجانبية -->
       <div class="hidden lg:block lg:col-span-5 relative">
-        <div class="sticky top-28" id="desktop-analysis-panel"></div>
+        <div class="sticky top-28" id="desktop-analysis-panel">
+          <!-- تُضاف عبر الـ JS -->
+        </div>
       </div>
     </div>
   </section>
-
-  <py-config>
+<!-- أولاً: جلب ملفاتك من مجلد aruudy المرفوع -->
+<py-config>
     [[fetch]]
     from = "aruudy/"
     to_folder = "aruudy"
     files = ["__init__.py", "prosody.py"]
+
     [[fetch]]
     from = "aruudy/poetry/"
     to_folder = "aruudy/poetry"
     files = ["__init__.py", "foot.py", "meter.py"]
+
     [[fetch]]
     from = "aruudy/lists/"
     to_folder = "aruudy/lists"
     files = ["__init__.py", "change.py", "const.py"]
-  </py-config>
-
-  <script type="py">
+</py-config>
+<!-- ثانياً: كود التشغيل والربط -->
+<script type="py">
 import json
 from js import window
 from aruudy import prosody 
@@ -199,17 +184,28 @@ from aruudy import prosody
 def analyze_arabic_verse(text):
     if not text or not text.strip():
         return json.dumps({"phonetic": "", "symbols": "", "meter": "..."})
+
     try:
         processed = prosody.process_shatr(text)
+        
+        # استخراج اسم البحر (بنفس منطق البوت)
         bahr_name = "غير محدد"
         if processed.bahr and hasattr(processed.bahr, 'name'):
+            # المكتبة تعيد قاموساً يحتوي على مفتاح 'arabic'
             bahr_name = processed.bahr.name.get('arabic', 'غير محدد')
         
+        # استخراج التفعيلات (بنفس منطق البوت)
         tafeela = ""
         if hasattr(processed, 'parts') and processed.parts:
-            tafeela_list = [p.mnemonic if hasattr(p, 'mnemonic') else (p.part if hasattr(p, 'part') else "") for p in processed.parts]
+            tafeela_list = []
+            for part in processed.parts:
+                if hasattr(part, 'mnemonic') and part.mnemonic:
+                    tafeela_list.append(part.mnemonic)
+                elif hasattr(part, 'part') and part.part:
+                    tafeela_list.append(part.part)
             tafeela = " | ".join(tafeela_list)
 
+        # الترميز العروضي
         ameter_raw = processed.ameter if processed.ameter else ""
         custom_symbols = ameter_raw.replace('w', 'o').replace('s', '/').replace('v', 'o').replace('-', '/')
 
@@ -218,12 +214,22 @@ def analyze_arabic_verse(text):
             "symbols": custom_symbols,
             "meter": bahr_name
         })
-    except:
+    except Exception as e:
         return json.dumps({"phonetic": "جاري التحليل...", "symbols": "---", "meter": "..."})
 
 window.python_analyze_verses = analyze_arabic_verse
-  </script>
+</script>
 
+  <script>
+  // هذا الكود يضمن ظهور الصفحة حتى لو تأخر تحميل البايثون
+  window.addEventListener('load', function() {
+    document.body.style.display = 'block';
+    document.body.style.opacity = '1';
+    document.body.style.visibility = 'visible';
+  });
+</script>
+
+  
   <script src="script.js"></script>
 </body>
 </html>
