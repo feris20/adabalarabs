@@ -159,12 +159,24 @@
   </section>
 <!-- أولاً: جلب ملفاتك من مجلد aruudy المرفوع -->
 <py-config>
+    # جلب الملفات الأساسية في المجلد الرئيسي
     [[fetch]]
     from = "aruudy/"
     to_folder = "aruudy"
-    files = ["__init__.py", "prosody.py", "shatar.py", "bahr.py", "poetry.py"]
-</py-config>
+    files = ["__init__.py", "prosody.py"]
 
+    # جلب ملفات مجلد الشعر (poetry)
+    [[fetch]]
+    from = "aruudy/poetry/"
+    to_folder = "aruudy/poetry"
+    files = ["__init__.py", "foot.py", "meter.py"]
+
+    # جلب ملفات القوائم (lists)
+    [[fetch]]
+    from = "aruudy/lists/"
+    to_folder = "aruudy/lists"
+    files = ["__init__.py", "change.py", "const.py"]
+</py-config>
 <!-- ثانياً: كود التشغيل والربط -->
 <script type="py">
     from pyodide.ffi import to_js
