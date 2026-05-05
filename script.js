@@ -27,15 +27,31 @@ const SAMPLE_VERSES = [
 
 function analyzeVerses(text) {
   if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
-  let phonetic = text.replace(/الت/g, "تت").replace(/اً/g, "ان").replace(/ة/g, "ت");
-  let symbols = "";
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === " ") continue;
-    symbols += i % 3 === 0 ? "o" : "/";
+
+  // PyScript تستغرق ثوانٍ معدودة للتحميل عند فتح الموقع
+  // نتحقق مما إذا كانت دالة بايثون أصبحت جاهزة
+  if (typeof window.python_analyze_verses === "function") {
+    try {
+      // استدعاء دالة بايثون وتمرير البيت الشعري لها
+      const pyResult = window.python_analyze_verses(text);
+      
+      return {
+        phonetic: pyResult.phonetic || "",
+        symbols: pyResult.symbols || "",
+        meter: pyResult.meter || "..."
+      };
+    } catch (error) {
+      console.error("حدث خطأ أثناء الاتصال بالبايثون:", error);
+      return { phonetic: "حدث خطأ.", symbols: "---", meter: "..." };
+    }
   }
-  const meters = ["الطويل", "الكامل", "البسيط", "الوافر"];
-  const meter = text.length > 5 ? meters[Math.floor(Math.random() * meters.length)] : "...";
-  return { phonetic, symbols, meter };
+
+  // رسالة مؤقتة تظهر للمستخدم إذا بدأ بالكتابة قبل أن يكتمل تحميل بيئة بايثون
+  return { 
+    phonetic: "جاري تحميل محرك العروض (PyScript)...", 
+    symbols: "...", 
+    meter: "..." 
+  };
 }
 
 // --- App State ---
