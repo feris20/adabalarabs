@@ -111,3 +111,19 @@ input::placeholder { color: var(--color-text-muted); opacity: 0.5; }
 .verse-input-wrapper.active { transform: scale(1.02); z-index: 10; opacity: 1; }
 .verse-input-wrapper:not(.active) { opacity: 0.6; }
 .verse-input-wrapper:not(.active):hover { opacity: 1; }
+
+/* منع الوميض الأبيض */
+html {
+    background-color: var(--color-bg);
+}
+
+/* تحسين شكل المدخلات عند التركيز */
+.verse-input:focus {
+    transform: translateY(-2px);
+    border-bottom-width: 3px;
+}
+
+.verse-input-wrapper.active {
+    opacity: 1 !important;
+    transform: scale(1.02);
+}
