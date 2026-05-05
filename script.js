@@ -225,3 +225,27 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   lucide.createIcons();
 });
+// أضف هذا المستمع في نهاية ملف script.js
+window.addEventListener("py-ready", () => {
+    console.log("محرك العروض جاهز الآن!");
+    // تحديث التحليل إذا كان هناك نص مكتوب بالفعل
+    if (verses[activeIndex]) {
+        updateAnalysisUI(activeIndex, verses[activeIndex]);
+    }
+});
+
+// تأكد أن دالة analyzeVerses تبدو هكذا:
+function analyzeVerses(text) {
+  if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
+  
+  // التحقق هل الدالة معرفة في window؟
+  if (typeof window.python_analyze_verses === "function") {
+    try {
+      const pyResultString = window.python_analyze_verses(text);
+      return JSON.parse(pyResultString);
+    } catch (e) { 
+      console.error("خطأ في استدعاء البايثون:", e); 
+    }
+  }
+  return { phonetic: "جاري تحميل محرك العروض...", symbols: "...", meter: "..." };
+}
