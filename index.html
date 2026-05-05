@@ -219,6 +219,16 @@ def analyze_arabic_verse(text):
 
 window.python_analyze_verses = analyze_arabic_verse
 </script>
+
+  <script>
+  // هذا الكود يضمن ظهور الصفحة حتى لو تأخر تحميل البايثون
+  window.addEventListener('load', function() {
+    document.body.style.display = 'block';
+    document.body.style.opacity = '1';
+    document.body.style.visibility = 'visible';
+  });
+</script>
+
   
   <script src="script.js"></script>
 </body>
