@@ -159,66 +159,6 @@
     </div>
   </section>
 <!-- أولاً: جلب ملفاتك من مجلد aruudy المرفوع -->
-<py-config>
-    [[fetch]]
-    from = "aruudy/"
-    to_folder = "aruudy"
-    files = ["__init__.py", "prosody.py"]
-
-    [[fetch]]
-    from = "aruudy/poetry/"
-    to_folder = "aruudy/poetry"
-    files = ["__init__.py", "foot.py", "meter.py"]
-
-    [[fetch]]
-    from = "aruudy/lists/"
-    to_folder = "aruudy/lists"
-    files = ["__init__.py", "change.py", "const.py"]
-</py-config>
-<!-- ثانياً: كود التشغيل والربط -->
-<script type="py">
-import json
-from js import window
-from aruudy import prosody 
-
-def analyze_arabic_verse(text):
-    if not text or not text.strip():
-        return json.dumps({"phonetic": "", "symbols": "", "meter": "..."})
-
-    try:
-        processed = prosody.process_shatr(text)
-        
-        # استخراج اسم البحر (بنفس منطق البوت)
-        bahr_name = "غير محدد"
-        if processed.bahr and hasattr(processed.bahr, 'name'):
-            # المكتبة تعيد قاموساً يحتوي على مفتاح 'arabic'
-            bahr_name = processed.bahr.name.get('arabic', 'غير محدد')
-        
-        # استخراج التفعيلات (بنفس منطق البوت)
-        tafeela = ""
-        if hasattr(processed, 'parts') and processed.parts:
-            tafeela_list = []
-            for part in processed.parts:
-                if hasattr(part, 'mnemonic') and part.mnemonic:
-                    tafeela_list.append(part.mnemonic)
-                elif hasattr(part, 'part') and part.part:
-                    tafeela_list.append(part.part)
-            tafeela = " | ".join(tafeela_list)
-
-        # الترميز العروضي
-        ameter_raw = processed.ameter if processed.ameter else ""
-        custom_symbols = ameter_raw.replace('w', 'o').replace('s', '/').replace('v', 'o').replace('-', '/')
-
-        return json.dumps({
-            "phonetic": f"{processed.prosody} [{tafeela}]" if tafeela else processed.prosody,
-            "symbols": custom_symbols,
-            "meter": bahr_name
-        })
-    except Exception as e:
-        return json.dumps({"phonetic": "جاري التحليل...", "symbols": "---", "meter": "..."})
-
-window.python_analyze_verses = analyze_arabic_verse
-</script>
 
   <script>
   // هذا الكود يضمن ظهور الصفحة حتى لو تأخر تحميل البايثون
