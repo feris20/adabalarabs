@@ -166,8 +166,24 @@ function showResult() {
 // --- منطق التحليل العروضي ---
 
 // دالة لتحديث لوحة النتائج فقط دون التأثير على حقل الإدخال
-function updateAnalysisUI(idx, text) {
-  const analysis = analyzeVerses(text);
+async function updateAnalysisUI(idx, text) {
+  // أضفنا await لانتظار النتيجة من الخادم
+  const analysis = await analyzeVerses(text);
+  
+  if (idx === activeIndex) {
+    const desktopPanel = document.getElementById('desktop-analysis-panel');
+    if (desktopPanel) {
+      desktopPanel.innerHTML = createAnalysisPanel(analysis, "min-h-[400px]");
+      lucide.createIcons();
+    }
+  }
+
+  const mobilePanel = document.getElementById(`mobile-panel-${idx}`);
+  if (mobilePanel) {
+    mobilePanel.innerHTML = createAnalysisPanel(analysis);
+    lucide.createIcons();
+  }
+}
   
   // تحديث لوحة الكمبيوتر
   if (idx === activeIndex) {
