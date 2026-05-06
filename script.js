@@ -31,12 +31,17 @@ async function analyzeVerses(text) {
   if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
 
   try {
-    // لاحظ الرابط الجديد، هو مسار داخل موقعك نفسه
-    const response = await fetch('/analyze', {
+    // الرابط المحدث لتجنب تضارب المسارات
+    const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text })
     });
+
+    // إذا لم تكن الاستجابة ناجحة (مثل خطأ 405 أو 404)
+    if (!response.ok) {
+      throw new Error(`خطأ من السيرفر: ${response.status}`);
+    }
 
     const pyResult = await response.json();
     return {
@@ -45,8 +50,8 @@ async function analyzeVerses(text) {
       meter: pyResult.meter || "..."
     };
   } catch (error) {
-    console.error("خطأ:", error);
-    return { phonetic: "حدث خطأ في النظام", symbols: "---", meter: "خطأ" };
+    console.error("خطأ في التحليل:", error);
+    return { phonetic: "السيرفر لا يستجيب..", symbols: "---", meter: "خطأ اتصال" };
   }
 }
 
