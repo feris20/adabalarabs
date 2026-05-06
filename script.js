@@ -31,10 +31,8 @@ async function analyzeVerses(text) {
   if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
 
   try {
-    // استخدم الرابط الظاهر في صورتك
-    const workerUrl = 'https://falling-hill-7e47.feriswaleedkhaled0.workers.dev/'; 
-    
-    const response = await fetch(workerUrl, {
+    // لاحظ الرابط الجديد، هو مسار داخل موقعك نفسه
+    const response = await fetch('/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text })
@@ -48,7 +46,7 @@ async function analyzeVerses(text) {
     };
   } catch (error) {
     console.error("خطأ:", error);
-    return { phonetic: "السيرفر لا يستجيب..", symbols: "---", meter: "خطأ اتصال" };
+    return { phonetic: "حدث خطأ في النظام", symbols: "---", meter: "خطأ" };
   }
 }
 
