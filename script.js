@@ -26,18 +26,19 @@ const SAMPLE_VERSES = [
 ];
 
 // --- محرك التحليل العروضي (API) ---
+// داخل ملف script.js
 async function analyzeVerses(text) {
   if (!text.trim()) return { phonetic: "", symbols: "", meter: "..." };
 
   try {
-    // الاتصال بسيرفر Pterodactyl الخاص بك
-    const response = await fetch('https://fi13.bot-hosting.cloud:21346/analyze', {
+    // استخدم الرابط الظاهر في صورتك
+    const workerUrl = 'https://falling-hill-7e47.feriswaleedkhaled0.workers.dev/'; 
+    
+    const response = await fetch(workerUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text })
     });
-
-    if (!response.ok) throw new Error('سيرفر التحليل غير متاح');
 
     const pyResult = await response.json();
     return {
@@ -46,7 +47,7 @@ async function analyzeVerses(text) {
       meter: pyResult.meter || "..."
     };
   } catch (error) {
-    console.error("خطأ API:", error);
+    console.error("خطأ:", error);
     return { phonetic: "السيرفر لا يستجيب..", symbols: "---", meter: "خطأ اتصال" };
   }
 }
