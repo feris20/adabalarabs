@@ -1,10 +1,13 @@
-import '@fontsource/alexandria/300.css';
-import '@fontsource/alexandria/400.css';
-import '@fontsource/alexandria/700.css';
-import '@fontsource/amiri/400.css';
-import '@fontsource/amiri/700.css';
-import '@fontsource/amiri/400-italic.css';
-import '@fontsource/amiri/700-italic.css';
+import 'Alexandria-Black.ttf';
+import 'Alexandria-Light.ttf';
+import 'Alexandria-Medium.ttf';
+import 'Alexandria-Regular.ttf';
+import 'Alexandria-SemiBold.ttf';
+import 'Alexandria-Thin.ttf';
+import 'Amiri-Bold.ttf';
+import 'Amiri-BoldItalic.ttf';
+import 'Amiri-Italic.ttf';
+import 'Amiri-Regular.ttf';
 import { createIcons } from 'lucide';
 
 /* =============================================
