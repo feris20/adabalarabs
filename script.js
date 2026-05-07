@@ -577,3 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   lucide.createIcons();
 });
+
+document.getElementById('start-analysis-btn').addEventListener('click', () => {
+    showSection('arud');
+});
