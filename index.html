@@ -18,8 +18,8 @@
                 <span>أدبُ العرب</span>
             </div>
             <div class="nav-links">
-                <a href="#" id="start-analysis-btn">الرئيسية</a>
-                <a href="#" id="start-analysis-btn">المحلل العروضي</a>
+                <a href="#" onclick="showSection('home'); return false;">الرئيسية</a>
+                <a href="#" onclick="showSection('arud'); return false;">المحلل العروضي</a>
                 <button id="theme-toggle" class="theme-btn">
                     <i data-lucide="moon" id="moon-icon"></i>
                     <i data-lucide="sun" id="sun-icon" style="display:none"></i>
@@ -35,11 +35,11 @@
                 <h1>ملاذ عشاق <span class="italic">الأدب العربي</span> الأصيل</h1>
                 <p class="hero-sub">اكتشف جمال العروض العربي، خض التحديات الأدبية، واستمتع بجمال لغة الضاد في بيئة تقنية حديثة وبسيطة.</p>
                 <div class="hero-actions">
-                    <button class="btn-primary" id="start-analysis-btn">
+                    <button class="btn-primary" onclick="showSection('arud')">
                         <span>ابدأ التحليل العروضي</span>
                         <i data-lucide="arrow-left"></i>
                     </button>
-                    <button class="btn-secondary" id="start-analysis-btn">
+                    <button class="btn-secondary" onclick="showSection('tests')">
                         <span>ميدان المعرفة</span>
                         <i data-lucide="trophy"></i>
                     </button>
@@ -91,7 +91,7 @@
         <!-- ===== ميدان المعرفة ===== -->
         <section id="tests-section" style="display:none;">
             <div class="container py-8">
-                <button class="back-btn" id="start-analysis-btn">
+                <button class="back-btn" onclick="showSection('home')">
                     <i data-lucide="arrow-right"></i> العودة للرئيسية
                 </button>
                 <div class="section-full-header text-center mb-12">
@@ -132,7 +132,7 @@
                         </div>
                     </div>
                     <p id="score-message" class="score-message"></p>
-                    <button class="btn-primary" id="start-analysis-btn">العودة للميدان</button>
+                    <button class="btn-primary" onclick="showSection('tests')">العودة للميدان</button>
                 </div>
 
             </div>
@@ -143,20 +143,20 @@
             <div class="container py-8">
                 <div class="arud-header">
                     <div class="header-main">
-                        <button class="back-btn" id="start-analysis-btn">
+                        <button class="back-btn" onclick="showSection('home')">
                             <i data-lucide="arrow-right"></i> العودة للرئيسية
                         </button>
                         <h1 class="page-title">المحلل العروضي</h1>
                         <p class="page-sub">اصنع أبياتك بحب، ونحن نزن نبضها لك.</p>
                     </div>
                     <div class="arud-actions">
-                        <button class="btn-secondary" id="start-analysis-btn">
+                        <button class="btn-secondary" onclick="copyAllVerses(this)">
                             <i data-lucide="copy"></i> نسخ الأبيات
                         </button>
-                        <button class="btn-secondary" id="start-analysis-btn">
+                        <button class="btn-secondary" onclick="fillSample()">
                             <i data-lucide="sparkles"></i> مثال
                         </button>
-                        <button class="btn-secondary" id="start-analysis-btn">
+                        <button class="btn-secondary" onclick="clearVerses()">
                             <i data-lucide="refresh-cw"></i> مسح
                         </button>
                     </div>
@@ -169,8 +169,8 @@
                 <!-- Analysis Box (Draggable) -->
                 <div id="analysis-box" class="analysis-card" style="display: none;">
                     <div class="analysis-header">
-                        <button id="start-analysis-btn" class="close-btn"><i data-lucide="x"></i></button>
-                        <button id="start-analysis-btn" class="copy-mini-btn" id="copy-btn-text">نسخ</button>
+                        <button onclick="closeAnalysis()" class="close-btn"><i data-lucide="x"></i></button>
+                        <button onclick="copyAnalysis()" class="copy-mini-btn" id="copy-btn-text">نسخ</button>
                     </div>
                     <div id="analysis-content" class="analysis-body">
                         <!-- Content will be injected here statically matching the analysis panel -->
