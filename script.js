@@ -1,3 +1,12 @@
+import '@fontsource/alexandria/300.css';
+import '@fontsource/alexandria/400.css';
+import '@fontsource/alexandria/700.css';
+import '@fontsource/amiri/400.css';
+import '@fontsource/amiri/700.css';
+import '@fontsource/amiri/400-italic.css';
+import '@fontsource/amiri/700-italic.css';
+import { createIcons } from 'lucide';
+
 /* =============================================
    script.js
    منطق recent code كاملاً + نمط التنقل من goal code
@@ -302,7 +311,7 @@ async function updateAnalysisUI(idx, text, inputElement) {
   // تحديث اللوحة
   if (idx === activeIndex) {
     analysisContent.innerHTML = createAnalysisPanel(data);
-    lucide.createIcons();
+    createIcons();
     // حفظ التحليل الحالي من أجل النسخ
     window.currentAnalysis = {
         bahr: data.meter,
@@ -346,10 +355,10 @@ window.copyAllVerses = (btn) => {
     if (btn) {
         const original = btn.innerHTML;
         btn.innerHTML = '<i data-lucide="check"></i> تم النسخ';
-        lucide.createIcons();
+        createIcons();
         setTimeout(() => {
             btn.innerHTML = original;
-            lucide.createIcons();
+            createIcons();
         }, 2000);
     }
 };
@@ -443,7 +452,7 @@ function renderVerses() {
     });
   });
 
-  lucide.createIcons();
+  createIcons();
 }
 
 // =============================================
@@ -569,11 +578,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ===== ربط الأحداث للتنقل (تجنب onclick المباشر) =====
+  document.querySelectorAll('[data-nav-target]').forEach(el => {
+      el.addEventListener('click', (e) => {
+          e.preventDefault();
+          showSection(el.getAttribute('data-nav-target'));
+      });
+  });
+
+  const copyAnalysisBtn = document.getElementById('copy-analysis-btn');
+  if (copyAnalysisBtn) copyAnalysisBtn.addEventListener('click', window.copyAnalysis);
+
+  const closeAnalysisBtn = document.getElementById('close-analysis-btn');
+  if (closeAnalysisBtn) closeAnalysisBtn.addEventListener('click', window.closeAnalysis);
+
+  const copyAllBtn = document.getElementById('copy-all-btn');
+  if (copyAllBtn) copyAllBtn.addEventListener('click', (e) => window.copyAllVerses(e.currentTarget));
+
+  const fillSampleBtn = document.getElementById('fill-sample-btn');
+  if (fillSampleBtn) fillSampleBtn.addEventListener('click', fillSample);
+
+  const clearVersesBtn = document.getElementById('clear-verses-btn');
+  if (clearVersesBtn) clearVersesBtn.addEventListener('click', clearVerses);
+
   // ===== تعريض الدوال للـ HTML الداخلي =====
   window.showSection  = showSection;
   window.startQuiz    = startQuiz;
   window.fillSample   = fillSample;
   window.clearVerses  = clearVerses;
 
-  lucide.createIcons();
+  createIcons();
 });
