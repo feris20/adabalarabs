@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>أدب العرب - لعشاق الأدب العربي</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -18,8 +14,8 @@
                 <span>أدبُ العرب</span>
             </div>
             <div class="nav-links">
-                <a href="#" onclick="showSection('home'); return false;">الرئيسية</a>
-                <a href="#" onclick="showSection('arud'); return false;">المحلل العروضي</a>
+                <a href="#" data-nav-target="home">الرئيسية</a>
+                <a href="#" data-nav-target="arud">المحلل العروضي</a>
                 <button id="theme-toggle" class="theme-btn">
                     <i data-lucide="moon" id="moon-icon"></i>
                     <i data-lucide="sun" id="sun-icon" style="display:none"></i>
@@ -35,11 +31,11 @@
                 <h1>ملاذ عشاق <span class="italic">الأدب العربي</span> الأصيل</h1>
                 <p class="hero-sub">اكتشف جمال العروض العربي، خض التحديات الأدبية، واستمتع بجمال لغة الضاد في بيئة تقنية حديثة وبسيطة.</p>
                 <div class="hero-actions">
-                    <button class="btn-primary" onclick="showSection('arud')">
+                    <button class="btn-primary" data-nav-target="arud">
                         <span>ابدأ التحليل العروضي</span>
                         <i data-lucide="arrow-left"></i>
                     </button>
-                    <button class="btn-secondary" onclick="showSection('tests')">
+                    <button class="btn-secondary" data-nav-target="tests">
                         <span>ميدان المعرفة</span>
                         <i data-lucide="trophy"></i>
                     </button>
@@ -91,7 +87,7 @@
         <!-- ===== ميدان المعرفة ===== -->
         <section id="tests-section" style="display:none;">
             <div class="container py-8">
-                <button class="back-btn" onclick="showSection('home')">
+                <button class="back-btn" data-nav-target="home">
                     <i data-lucide="arrow-right"></i> العودة للرئيسية
                 </button>
                 <div class="section-full-header text-center mb-12">
@@ -132,7 +128,7 @@
                         </div>
                     </div>
                     <p id="score-message" class="score-message"></p>
-                    <button class="btn-primary" onclick="showSection('tests')">العودة للميدان</button>
+                    <button class="btn-primary" data-nav-target="tests">العودة للميدان</button>
                 </div>
 
             </div>
@@ -143,20 +139,20 @@
             <div class="container py-8">
                 <div class="arud-header">
                     <div class="header-main">
-                        <button class="back-btn" onclick="showSection('home')">
+                        <button class="back-btn" data-nav-target="home">
                             <i data-lucide="arrow-right"></i> العودة للرئيسية
                         </button>
                         <h1 class="page-title">المحلل العروضي</h1>
                         <p class="page-sub">اصنع أبياتك بحب، ونحن نزن نبضها لك.</p>
                     </div>
                     <div class="arud-actions">
-                        <button class="btn-secondary" onclick="copyAllVerses(this)">
+                        <button class="btn-secondary" id="copy-all-btn">
                             <i data-lucide="copy"></i> نسخ الأبيات
                         </button>
-                        <button class="btn-secondary" onclick="fillSample()">
+                        <button class="btn-secondary" id="fill-sample-btn">
                             <i data-lucide="sparkles"></i> مثال
                         </button>
-                        <button class="btn-secondary" onclick="clearVerses()">
+                        <button class="btn-secondary" id="clear-verses-btn">
                             <i data-lucide="refresh-cw"></i> مسح
                         </button>
                     </div>
@@ -169,8 +165,8 @@
                 <!-- Analysis Box (Draggable) -->
                 <div id="analysis-box" class="analysis-card" style="display: none;">
                     <div class="analysis-header">
-                        <button onclick="closeAnalysis()" class="close-btn"><i data-lucide="x"></i></button>
-                        <button onclick="copyAnalysis()" class="copy-mini-btn" id="copy-btn-text">نسخ</button>
+                        <button id="close-analysis-btn" class="close-btn"><i data-lucide="x"></i></button>
+                        <button id="copy-analysis-btn" class="copy-mini-btn">نسخ</button>
                     </div>
                     <div id="analysis-content" class="analysis-body">
                         <!-- Content will be injected here statically matching the analysis panel -->
@@ -180,6 +176,6 @@
         </section>
     </main>
 
-    <script src="script.js"></script>
+    <script type="module" src="/script.js"></script>
 </body>
 </html>
