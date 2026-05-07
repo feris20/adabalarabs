@@ -1,129 +1,839 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
-@theme {
-  --font-sans: "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Amiri", serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
-  --color-primary: var(--color-primary);
-  --color-secondary: var(--color-secondary);
-  --color-bg: var(--color-bg);
-  --color-surface: var(--color-surface);
-  --color-text-main: var(--color-text-main);
-  --color-text-muted: var(--color-text-muted);
-  --color-border: var(--color-border);
-}
-
+/* =============================================
+   المتغيرات والألوان (goal code)
+   ============================================= */
 :root {
-  --color-primary: #9b2226; /* Deep Arabian Red */
-  --color-secondary: #b89855; /* Sophisticated Gold */
-  --color-bg: #f9f7f3; /* Warm Pearl */
-  --color-surface: rgba(255, 255, 255, 0.65);
-  --color-text-main: #18181b;
-  --color-text-muted: #52525b;
-  --color-border: rgba(0, 0, 0, 0.06);
-  --glow-opacity: 0.35;
+  --font-sans: "Alexandria", sans-serif;
+  --font-serif: "Amiri", serif;
+
+  --color-bg:       #FFFFFF;
+  --color-surface:  #F9F8F6;
+  --color-border:   #E7E5E4;
+  --color-text:     #1C1917;
+  --color-muted:    #78716C;
+  --color-accent:   #1C1917;
+  --color-input-bg: #F9F8F6;
 }
 
-html.dark {
-  --color-primary: #f26a6a; /* Soft elegant red */
-  --color-secondary: #e6cfb3; /* Champagne Gold */
-  --color-bg: #13100f; /* Deep Warm Espresso */
-  --color-surface: rgba(30, 26, 25, 0.75);
-  --color-text-main: #fdfbf7;
-  --color-text-muted: #a89f9a;
-  --color-border: rgba(230, 207, 179, 0.12);
-  --glow-opacity: 0.15;
+.dark {
+  --color-bg:       #0C0A09;
+  --color-surface:  #1C1917;
+  --color-border:   #2D2A28;
+  --color-text:     #F5F5F4;
+  --color-muted:    #A8A29E;
+  --color-accent:   #FAFAF9;
+  --color-input-bg: #1C1917;
 }
+
+/* =============================================
+   الأساسيات
+   ============================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { background-color: var(--color-bg); }
 
 body {
   background-color: var(--color-bg);
-  color: var(--color-text-main);
-  transition: background-color 0.5s ease, color 0.5s ease;
+  color: var(--color-text);
   font-family: var(--font-sans);
+  line-height: 1.5;
+  transition: background-color 0.3s, color 0.3s;
+  direction: rtl;
+  min-height: 100vh;
 }
 
-/* Ambient Glow Effects */
-body::before, body::after {
-  content: "";
-  position: fixed;
-  width: 50vw;
-  height: 50vw;
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* =============================================
+   شريط التنقل
+   ============================================= */
+.navbar {
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background-color: var(--color-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100;
+  height: 64px;
+  transition: background-color 0.3s;
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.logo i { width: 20px; height: 20px; }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--color-text); }
+
+.theme-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  padding: 8px;
   border-radius: 50%;
-  filter: blur(140px);
-  z-index: -1;
-  pointer-events: none;
-  opacity: var(--glow-opacity);
-  transition: opacity 0.5s ease;
-}
-body::before {
-  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 60%);
-  top: -10vw;
-  right: -10vw;
-}
-body::after {
-  background: radial-gradient(circle, var(--color-primary) 0%, transparent 60%);
-  bottom: -10vw;
-  left: -10vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
 }
 
-.noise-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.04;
-}
-html.dark .noise-overlay { opacity: 0.06; }
+.theme-btn:hover { background-color: var(--color-surface); }
 
-/* Premium Glassmorphism */
-.glass-panel {
-  background: var(--color-surface);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
+/* =============================================
+   قسم الهيرو
+   ============================================= */
+.hero {
+  padding: 80px 0;
+  text-align: center;
+}
+
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 24px;
+}
+
+.hero .italic { font-style: italic; }
+
+.hero-sub {
+  font-size: 1.25rem;
+  color: var(--color-muted);
+  max-width: 700px;
+  margin: 0 auto 40px;
+  font-family: var(--font-serif);
+  font-style: italic;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hero-actions .btn-primary,
+.hero-actions .btn-secondary {
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* =============================================
+   بطاقات الميزات
+   ============================================= */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  margin-top: 64px;
+}
+
+.card {
+  background-color: var(--color-bg);
   border: 1px solid var(--color-border);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-html.dark .glass-panel { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-.glass-panel:hover { border-color: rgba(184, 152, 85, 0.25); }
-html.dark .glass-panel:hover { border-color: rgba(212, 175, 55, 0.25); }
-
-/* Inputs & Scrollbar */
-input::placeholder { color: var(--color-text-muted); opacity: 0.5; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
-
-/* View Switching Logic */
-.page-section { display: none; opacity: 0; transition: opacity 0.4s ease; }
-.page-section.active-page { display: flex; opacity: 1; animation: fadeIn 0.5s ease-out; }
-#page-tests.active-page, #page-analysis.active-page { display: block; }
-
-/* Custom Animations */
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
-.animate-slide-up { opacity: 0; animation: slideUp 0.6s ease-out forwards; }
-
-.verse-input-wrapper.active { transform: scale(1.02); z-index: 10; opacity: 1; }
-.verse-input-wrapper:not(.active) { opacity: 0.6; }
-.verse-input-wrapper:not(.active):hover { opacity: 1; }
-
-/* منع الوميض الأبيض */
-html {
-    background-color: var(--color-bg);
+  border-radius: 12px;
+  padding: 32px;
+  transition: transform 0.2s;
 }
 
-/* تحسين شكل المدخلات عند التركيز */
+.card:hover { transform: translateY(-4px); }
+
+.card-icon {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.card p {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* =============================================
+   الأزرار
+   ============================================= */
+.btn-primary {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+  border: none;
+  padding: 14px 40px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:active { transform: scale(0.95); }
+
+.btn-secondary {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover { background-color: var(--color-surface); }
+
+.btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  margin-bottom: 8px;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.back-btn:hover { color: var(--color-text); }
+.back-btn i { width: 14px; height: 14px; }
+
+/* =============================================
+   مكتبة الشعر
+   ============================================= */
+.library {
+  padding: 80px 0;
+  margin-top: 80px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.header-icon {
+  margin: 0 auto 24px;
+  width: 56px;
+  height: 56px;
+  background-color: var(--color-surface);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-header h2 {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.section-header p {
+  color: var(--color-muted);
+  font-style: italic;
+  font-family: var(--font-serif);
+}
+
+.verses-list {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.verse-item { text-align: center; }
+
+.verse-text {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  color: var(--color-text);
+}
+
+.verse-divider {
+  width: 48px;
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 0 auto 16px;
+}
+
+.verse-author {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================
+   التحديات / ميدان المعرفة
+   ============================================= */
+.challenges-grid-full {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.challenge-item {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 32px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.challenge-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+}
+
+.challenge-visual {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challenge-visual.purple  { background-color: #f5f3ff; color: #7c3aed; }
+.challenge-visual.blue    { background-color: #eff6ff; color: #2563eb; }
+.challenge-visual.gold    { background-color: #fffbeb; color: #d97706; }
+
+.challenge-visual i { width: 32px; height: 32px; }
+
+.challenge-details { flex: 1; }
+
+.badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background-color: #16a34a;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.badge.purple { background-color: #7c3aed; }
+.badge.blue   { background-color: #2563eb; }
+.badge.gold   { background-color: #d97706; }
+
+.challenge-details h3 {
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.challenge-details p {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* =============================================
+   الاختبار (Quiz)
+   ============================================= */
+.quiz-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 60px;
+  padding-bottom: 60px;
+}
+
+.quiz-card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 40px;
+}
+
+.quiz-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.quiz-progress {
+  display: flex;
+  gap: 6px;
+}
+
+.progress-dot {
+  height: 6px;
+  width: 40px;
+  border-radius: 3px;
+  background-color: var(--color-border);
+  transition: background-color 0.3s;
+}
+
+.progress-dot.active { background-color: var(--color-accent); }
+
+.quiz-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.quiz-question {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  line-height: 1.65;
+  margin-bottom: 40px;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-option {
+  padding: 18px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background-color: var(--color-bg);
+  text-align: right;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--color-text);
+  width: 100%;
+  transition: all 0.18s;
+}
+
+.quiz-option:hover {
+  border-color: var(--color-accent);
+  background-color: var(--color-surface);
+}
+
+/* نتيجة الاختبار */
+.quiz-result-card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 48px 40px;
+  text-align: center;
+}
+
+.quiz-result-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  margin-bottom: 32px;
+  color: var(--color-text);
+}
+
+.score-circle-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 160px;
+  height: 160px;
+  margin-bottom: 32px;
+}
+
+.score-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.score-arc { transition: stroke-dasharray 1s ease-out; }
+
+.score-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.score-num  { font-size: 3rem; line-height: 1; }
+
+.score-denom {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  border-top: 1px solid var(--color-border);
+  padding-top: 4px;
+  margin-top: 4px;
+  width: 40%;
+  text-align: center;
+}
+
+.score-message {
+  color: var(--color-muted);
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+  font-style: italic;
+  font-family: var(--font-serif);
+}
+
+/* =============================================
+   المحلل العروضي
+   ============================================= */
+.arud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--color-text);
+}
+
+.page-sub {
+  color: var(--color-muted);
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.arud-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* =============================================
+   محرر الأبيات
+   ============================================= */
+.verses-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.verse-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.verse-line-num {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--color-muted);
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.verse-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  flex: 1;
+}
+
+.verse-input {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-input-bg);
+  outline: none;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  color: var(--color-text);
+  direction: rtl;
+}
+
 .verse-input:focus {
-    transform: translateY(-2px);
-    border-bottom-width: 3px;
+  border-color: var(--color-text);
+  background-color: var(--color-bg);
+  box-shadow: 0 0 0 3px rgba(var(--color-text), 0.05);
 }
 
-.verse-input-wrapper.active {
-    opacity: 1 !important;
-    transform: scale(1.02);
+.verse-input::placeholder {
+  color: var(--color-muted);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+/* =============================================
+   بطاقة التحليل العائمة (Draggable Analysis Box)
+   ============================================= */
+.analysis-card {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 12px;
+  width: 380px;
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-text);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  z-index: 50;
+}
+
+.dark .analysis-card {
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+  background-color: var(--color-surface);
+}
+
+.analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  cursor: grab;
+  user-select: none;
+}
+
+.analysis-header:active {
+  cursor: grabbing;
+}
+
+.close-btn, .copy-mini-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-mini-btn {
+  font-size: 9px;
+  font-weight: bold;
+  border: 1px solid var(--color-border);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.close-btn:hover, .copy-mini-btn:hover {
+  color: var(--color-text);
+}
+
+/* محتوى بطاقة التحليل */
+.analysis-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bahr-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  padding: 16px 20px;
+}
+
+.bahr-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-muted);
+  letter-spacing: 0.08em;
+}
+
+.bahr-name {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.kitaba-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.scansion-section { padding: 16px 20px; }
+
+.label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.kitaba-text {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  padding: 10px 12px;
+  background-color: var(--color-surface);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.scansion-display {
+  background-color: #000;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.dark .scansion-display {
+  background-color: #1a1a1a;
+}
+
+.scansion-text {
+  font-family: var(--font-serif), monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.3em;
+  white-space: nowrap;
+  display: inline-block;
+  padding: 0 4px;
+}
+
+.scansion-display::-webkit-scrollbar { height: 4px; }
+.scansion-display::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}
+
+/* حالة التحميل */
+.loading-box {
+  text-align: center;
+  padding: 40px 24px;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  font-family: var(--font-serif);
+}
+
+/* =============================================
+   مساعدات عامة
+   ============================================= */
+.border-top  { border-top: 1px solid var(--color-border); }
+.text-center { text-align: center; }
+.mb-12       { margin-bottom: 48px; }
+.py-8        { padding-top: 32px; padding-bottom: 32px; }
+.py-12       { padding-top: 48px; padding-bottom: 48px; }
+
+.section-full-header { margin-bottom: 40px; }
+
+/* =============================================
+   الاستجابة للأجهزة المحمولة
+   ============================================= */
+@media (max-width: 768px) {
+  .hero h1     { font-size: 2.5rem; }
+  .verse-text  { font-size: 1.35rem; }
+
+  .challenge-item {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .challenge-details p  { margin-bottom: 16px; }
+
+  .quiz-card { padding: 28px 20px; }
+  .quiz-result-card { padding: 32px 20px; }
+
+  .nav-links a:not(:last-child) { display: none; }
+
+  .arud-header { flex-direction: column; align-items: flex-start; }
+
+  .verse-inputs { grid-template-columns: 1fr; gap: 12px; }
+  .analysis-card { width: calc(100% - 48px); }
 }
