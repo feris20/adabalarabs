@@ -1,5 +1,5 @@
 /* =============================================
-   المتغيرات والألوان (goal code)
+   المتغيرات والألوان
    ============================================= */
 :root {
   --font-sans: "Alexandria", sans-serif;
@@ -426,10 +426,7 @@ body {
   margin-bottom: 32px;
 }
 
-.quiz-progress {
-  display: flex;
-  gap: 6px;
-}
+.quiz-progress { display: flex; gap: 6px; }
 
 .progress-dot {
   height: 6px;
@@ -483,7 +480,6 @@ body {
   background-color: var(--color-surface);
 }
 
-/* نتيجة الاختبار */
 .quiz-result-card {
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -548,15 +544,36 @@ body {
 }
 
 /* =============================================
-   المحلل العروضي
+   المحلل العروضي — تخطيط ثابت بالشاشة
    ============================================= */
+
+/* القسم يأخذ ارتفاع الشاشة كاملاً ناقص الـ navbar */
+#arud-section {
+  height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* الـ container يتمدد ليملأ الارتفاع المتاح */
+#arud-section > .container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: 28px;
+  padding-bottom: 16px;
+  height: 100%;
+}
+
 .arud-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0; /* لا يتقلص أبداً */
 }
 
 .page-title {
@@ -580,21 +597,44 @@ body {
 }
 
 /* =============================================
-   محرر الأبيات
+   محرر الأبيات — منطقة scroll مستقلة
    ============================================= */
 .verses-form {
+  flex: 1;           /* يأخذ كل المساحة المتبقية */
+  overflow-y: auto;  /* scroll مستقل */
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
   max-width: 800px;
+  width: 100%;
   margin: 0 auto;
   position: relative;
+  padding: 4px 4px 80px 4px; /* padding سفلي لعدم تغطية آخر بيت بالبوكس */
+
+  /* تخصيص شكل الـ scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.verses-form::-webkit-scrollbar {
+  width: 4px;
+}
+
+.verses-form::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.verses-form::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 4px;
 }
 
 .verse-row {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .verse-line-num {
@@ -640,7 +680,7 @@ body {
 .verse-input:focus {
   border-color: var(--color-text);
   background-color: var(--color-bg);
-  box-shadow: 0 0 0 3px rgba(var(--color-text), 0.05);
+  box-shadow: 0 0 0 3px rgba(28, 25, 23, 0.06);
 }
 
 .verse-input::placeholder {
@@ -650,21 +690,20 @@ body {
 }
 
 /* =============================================
-   بطاقة التحليل العائمة (Draggable Analysis Box)
+   بطاقة التحليل العائمة
    ============================================= */
 .analysis-card {
-  position: absolute;
-  top: 100%;
+  position: fixed; /* fixed دائماً حتى لا تتأثر بـ scroll الأبيات */
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  margin-top: 12px;
   width: 380px;
   background-color: var(--color-bg);
   border: 2px solid var(--color-text);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-  z-index: 50;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+  z-index: 200;
 }
 
 .dark .analysis-card {
@@ -681,9 +720,7 @@ body {
   user-select: none;
 }
 
-.analysis-header:active {
-  cursor: grabbing;
-}
+.analysis-header:active { cursor: grabbing; }
 
 .close-btn, .copy-mini-btn {
   background: none;
@@ -703,11 +740,8 @@ body {
   border-radius: 4px;
 }
 
-.close-btn:hover, .copy-mini-btn:hover {
-  color: var(--color-text);
-}
+.close-btn:hover, .copy-mini-btn:hover { color: var(--color-text); }
 
-/* محتوى بطاقة التحليل */
 .analysis-body {
   display: flex;
   flex-direction: column;
@@ -773,9 +807,7 @@ body {
   overflow-x: auto;
 }
 
-.dark .scansion-display {
-  background-color: #1a1a1a;
-}
+.dark .scansion-display { background-color: #1a1a1a; }
 
 .scansion-text {
   font-family: var(--font-serif), monospace;
@@ -792,7 +824,6 @@ body {
   border-radius: 2px;
 }
 
-/* حالة التحميل */
 .loading-box {
   text-align: center;
   padding: 40px 24px;
@@ -810,15 +841,14 @@ body {
 .mb-12       { margin-bottom: 48px; }
 .py-8        { padding-top: 32px; padding-bottom: 32px; }
 .py-12       { padding-top: 48px; padding-bottom: 48px; }
-
 .section-full-header { margin-bottom: 40px; }
 
 /* =============================================
    الاستجابة للأجهزة المحمولة
    ============================================= */
 @media (max-width: 768px) {
-  .hero h1     { font-size: 2.5rem; }
-  .verse-text  { font-size: 1.35rem; }
+  .hero h1    { font-size: 2.5rem; }
+  .verse-text { font-size: 1.35rem; }
 
   .challenge-item {
     flex-direction: column;
@@ -826,9 +856,9 @@ body {
     padding: 24px;
   }
 
-  .challenge-details p  { margin-bottom: 16px; }
+  .challenge-details p { margin-bottom: 16px; }
 
-  .quiz-card { padding: 28px 20px; }
+  .quiz-card        { padding: 28px 20px; }
   .quiz-result-card { padding: 32px 20px; }
 
   .nav-links a:not(:last-child) { display: none; }
@@ -837,71 +867,26 @@ body {
 
   .verse-inputs { grid-template-columns: 1fr; gap: 12px; }
 
-  /* ===== تعديل بطاقة التحليل على الموبايل ===== */
+  /* بطاقة التحليل على الموبايل */
   .analysis-card {
-    /* تثبيتها في الجزء السفلي مع هامش كافٍ */
-    position: fixed;
-    bottom: 12px;
-    top: auto;
-    left: 50%;
-    transform: translateX(-50%);
     width: calc(100% - 32px);
     max-width: 420px;
-
-    /* تحديد ارتفاع أقصى حتى لا تغطي الشاشة */
     max-height: 38vh;
     overflow-y: auto;
-
-    /* تصغير الحشوة الخارجية */
     padding: 10px 12px;
     border-radius: 12px;
     border-width: 1.5px;
+    bottom: 12px;
   }
 
-  /* تصغير header داخل البطاقة */
-  .analysis-header {
-    margin-bottom: 6px;
-  }
-
-  /* ضغط أقسام المحتوى الداخلية */
-  .bahr-info {
-    padding: 8px 10px;
-  }
-
-  .bahr-name {
-    font-size: 0.95rem;
-  }
-
-  .kitaba-section {
-    padding: 8px 10px;
-  }
-
-  .kitaba-text {
-    font-size: 0.82rem;
-    padding: 6px 8px;
-    line-height: 1.4;
-  }
-
-  .scansion-section {
-    padding: 8px 10px;
-  }
-
-  .scansion-display {
-    padding: 7px 10px;
-  }
-
-  .scansion-text {
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
-  }
-
-  .label {
-    margin-bottom: 4px;
-  }
-
-  /* تصغير رسالة التحميل */
-  .loading-box {
-    padding: 16px 12px;
-    font-size: 0.8rem;
-  }
+  .analysis-header  { margin-bottom: 6px; }
+  .bahr-info        { padding: 8px 10px; }
+  .bahr-name        { font-size: 0.95rem; }
+  .kitaba-section   { padding: 8px 10px; }
+  .kitaba-text      { font-size: 0.82rem; padding: 6px 8px; line-height: 1.4; }
+  .scansion-section { padding: 8px 10px; }
+  .scansion-display { padding: 7px 10px; }
+  .scansion-text    { font-size: 0.75rem; letter-spacing: 0.2em; }
+  .label            { margin-bottom: 4px; }
+  .loading-box      { padding: 16px 12px; font-size: 0.8rem; }
 }
