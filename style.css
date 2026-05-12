@@ -713,6 +713,7 @@ body {
   flex-direction: column;
   gap: 12px;
 }
+
 .bahr-info {
   display: flex;
   justify-content: space-between;
@@ -836,35 +837,71 @@ body {
 
   .verse-inputs { grid-template-columns: 1fr; gap: 12px; }
 
-  /* تحسين بطاقة التحليل في الجوال لمنع التغطية */
+  /* ===== تعديل بطاقة التحليل على الموبايل ===== */
   .analysis-card {
-    width: 100% !important;
-    left: 0 !important;
-    bottom: 0 !important;
-    top: auto !important;
-    transform: none !important;
-    position: fixed !important;
-    border-radius: 20px 20px 0 0;
-    border: none;
-    border-top: 3px solid var(--color-text);
-    padding: 12px 16px;
+    /* تثبيتها في الجزء السفلي مع هامش كافٍ */
+    position: fixed;
+    bottom: 12px;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 420px;
+
+    /* تحديد ارتفاع أقصى حتى لا تغطي الشاشة */
     max-height: 38vh;
     overflow-y: auto;
-    margin-top: 0;
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.15);
+
+    /* تصغير الحشوة الخارجية */
+    padding: 10px 12px;
+    border-radius: 12px;
+    border-width: 1.5px;
   }
 
-  /* تصغير المسافات الداخلية لتوفير مساحة */
-  .bahr-info, .kitaba-section, .scansion-section {
-    padding: 8px 12px !important;
+  /* تصغير header داخل البطاقة */
+  .analysis-header {
+    margin-bottom: 6px;
   }
 
-  .bahr-name { font-size: 1rem; }
-  .kitaba-text { font-size: 0.85rem; padding: 8px; }
-  .scansion-text { font-size: 0.8rem; }
+  /* ضغط أقسام المحتوى الداخلية */
+  .bahr-info {
+    padding: 8px 10px;
+  }
 
-  /* إضافة مساحة سفلية للأبيات لكي لا تختفي خلف البطاقة */
-  .verses-form {
-    padding-bottom: 42vh;
+  .bahr-name {
+    font-size: 0.95rem;
+  }
+
+  .kitaba-section {
+    padding: 8px 10px;
+  }
+
+  .kitaba-text {
+    font-size: 0.82rem;
+    padding: 6px 8px;
+    line-height: 1.4;
+  }
+
+  .scansion-section {
+    padding: 8px 10px;
+  }
+
+  .scansion-display {
+    padding: 7px 10px;
+  }
+
+  .scansion-text {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+  }
+
+  .label {
+    margin-bottom: 4px;
+  }
+
+  /* تصغير رسالة التحميل */
+  .loading-box {
+    padding: 16px 12px;
+    font-size: 0.8rem;
   }
 }
