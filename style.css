@@ -23,9 +23,7 @@
   --color-input-bg: #1C1917;
 }
 
-/* =============================================
-   الإصلاح ٢: منع scroll الصفحة عند المحلل
-   ============================================= */
+/* الإصلاح ٢ */
 html.arud-active,
 html.arud-active body {
   overflow: hidden;
@@ -171,10 +169,9 @@ body {
 .score-message { color: var(--color-muted); font-size: 1.1rem; margin-bottom: 32px; font-style: italic; font-family: var(--font-serif); }
 
 /* =============================================
-   المحلل العروضي — الإصلاح ٢
+   المحلل العروضي
    ============================================= */
 #arud-section {
-  /* الارتفاع يُحدَّد بـ JS عبر updateArudHeight() */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -196,11 +193,11 @@ body {
 .arud-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* =============================================
-   محرر الأبيات — الإصلاح ٤
+   محرر الأبيات
    ============================================= */
 .verses-form {
   flex: 1;
-  overflow-y: scroll;   /* الإصلاح ٤: scroll دائماً مرئي */
+  overflow-y: scroll;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
@@ -209,7 +206,7 @@ body {
   width: 100%;
   margin: 0 auto;
   position: relative;
-  padding: 4px 4px 200px 4px; /* الإصلاح ٤: padding كبير يضمن قابلية التمرير دائماً */
+  padding: 4px 4px 200px 4px;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
@@ -222,23 +219,15 @@ body {
 .verse-line-num { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; background-color: var(--color-surface); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: var(--color-muted); font-family: monospace; flex-shrink: 0; }
 .verse-inputs  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; }
 
-.verse-input {
-  width: 100%; height: 54px; padding: 0 16px;
-  border-radius: 10px; border: 1px solid var(--color-border);
-  background-color: var(--color-input-bg); outline: none;
-  text-align: center; font-family: var(--font-serif); font-size: 1.1rem;
-  transition: all 0.2s; color: var(--color-text); direction: rtl;
-}
-
+.verse-input { width: 100%; height: 54px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--color-border); background-color: var(--color-input-bg); outline: none; text-align: center; font-family: var(--font-serif); font-size: 1.1rem; transition: all 0.2s; color: var(--color-text); direction: rtl; }
 .verse-input:focus { border-color: var(--color-text); background-color: var(--color-bg); box-shadow: 0 0 0 3px rgba(28,25,23,0.06); }
 .verse-input::placeholder { color: var(--color-muted); opacity: 0.5; font-style: italic; }
 
 /* =============================================
-   بطاقة التحليل — JS يتحكم بالموضع كاملاً
+   بطاقة التحليل العائمة (ديسكتوب فقط)
    ============================================= */
 .analysis-card {
   position: fixed;
-  /* top / left / right / bottom / maxHeight : يُحدَّد بـ positionBox() في JS */
   width: 380px;
   background-color: var(--color-bg);
   border: 2px solid var(--color-text);
@@ -252,30 +241,183 @@ body {
 
 .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: grab; user-select: none; }
 .analysis-header:active { cursor: grabbing; }
-
 .close-btn, .copy-mini-btn { background: none; border: none; cursor: pointer; color: var(--color-muted); display: flex; align-items: center; justify-content: center; }
 .copy-mini-btn { font-size: 9px; font-weight: bold; border: 1px solid var(--color-border); padding: 3px 8px; border-radius: 4px; }
 .close-btn:hover, .copy-mini-btn:hover { color: var(--color-text); }
 
 .analysis-body { display: flex; flex-direction: column; gap: 12px; }
-
 .bahr-info { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding: 16px 20px; }
 .bahr-label { font-size: 9px; text-transform: uppercase; font-weight: 700; color: var(--color-muted); letter-spacing: 0.08em; }
 .bahr-name  { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--color-text); }
-
 .kitaba-section  { padding: 16px 20px; border-bottom: 1px solid var(--color-border); }
 .scansion-section { padding: 16px 20px; }
 .label { font-size: 9px; font-weight: 700; color: var(--color-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
-
 .kitaba-text { font-family: var(--font-serif); font-size: 1rem; padding: 10px 12px; background-color: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); color: var(--color-text); line-height: 1.6; }
-
 .scansion-display { background-color: #000; color: #fff; padding: 12px; border-radius: 8px; text-align: center; overflow-x: auto; }
 .dark .scansion-display { background-color: #1a1a1a; }
 .scansion-text { font-family: var(--font-serif), monospace; font-size: 0.9rem; letter-spacing: 0.3em; white-space: nowrap; display: inline-block; padding: 0 4px; }
 .scansion-display::-webkit-scrollbar { height: 4px; }
 .scansion-display::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-
 .loading-box { text-align: center; padding: 40px 24px; font-style: italic; font-size: 0.85rem; color: var(--color-muted); font-family: var(--font-serif); }
+
+/* =============================================
+   بطاقة التحليل المضمّنة (موبايل فقط) ← جديد
+   ============================================= */
+.inline-analysis {
+  /* الانيميشن: انزلاق للأسفل */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* التصميم: يبدو متصلاً بالسطر أعلاه */
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-text);
+  border-radius: 12px;
+  margin-top: 2px;    /* فاصل صغير من السطر */
+  margin-bottom: 4px;
+  flex-shrink: 0;
+
+  /* محاذاة مع حقول الكتابة (تخطي رقم السطر في RTL) */
+  /* verse-line-num: 36px + gap: 16px = 52px */
+  margin-right: 52px;
+}
+
+.dark .inline-analysis {
+  background-color: var(--color-surface);
+}
+
+/* المحتوى يبدأ شفافاً ثم يظهر بعد انفتاح الصندوق */
+.inline-analysis-inner {
+  opacity: 0;
+  transition: opacity 0.22s ease 0.18s;
+}
+
+.inline-analysis.open {
+  max-height: 360px;
+}
+
+.inline-analysis.open .inline-analysis-inner {
+  opacity: 1;
+}
+
+/* رأس الـ inline box */
+.inline-analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inline-analysis-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-sans);
+}
+
+.inline-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.inline-close-btn:hover {
+  color: var(--color-text);
+  background-color: var(--color-border);
+}
+
+/* محتوى الـ inline box — مضغوط */
+.inline-analysis-body .bahr-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inline-analysis-body .bahr-label {
+  font-size: 8px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-muted);
+  letter-spacing: 0.08em;
+}
+
+.inline-analysis-body .bahr-name {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.inline-analysis-body .kitaba-section {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inline-analysis-body .scansion-section {
+  padding: 8px 12px 10px;
+}
+
+.inline-analysis-body .label {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--color-muted);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.inline-analysis-body .kitaba-text {
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  background-color: var(--color-bg);
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.inline-analysis-body .scansion-display {
+  background-color: #000;
+  color: #fff;
+  padding: 7px 10px;
+  border-radius: 6px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.dark .inline-analysis-body .scansion-display { background-color: #1a1a1a; }
+
+.inline-analysis-body .scansion-text {
+  font-family: monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.inline-analysis-body .loading-box {
+  padding: 16px 12px;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  font-family: var(--font-serif);
+}
 
 /* =============================================
    مساعدات
@@ -304,27 +446,9 @@ body {
   .arud-header { flex-direction: column; align-items: flex-start; }
   .verse-inputs { grid-template-columns: 1fr; gap: 12px; }
 
-  /* الإصلاح ١ + ٤: البوكس موضعه بـ JS، فقط نضبط الشكل */
-  .analysis-card {
-    border-radius: 12px;
-    border-width: 1.5px;
-    padding: 10px 12px;
-    /* width / top / left / right / maxHeight : يُحدَّد بـ positionBox() */
-  }
+  /* إخفاء البوكس العائم على الموبايل — JS لا يستدعيه أصلاً */
+  #analysis-box { display: none !important; }
 
-  .analysis-header  { margin-bottom: 6px; }
-  .bahr-info        { padding: 8px 10px; }
-  .bahr-name        { font-size: 0.95rem; }
-  .kitaba-section   { padding: 8px 10px; }
-  .kitaba-text      { font-size: 0.82rem; padding: 6px 8px; line-height: 1.4; }
-  .scansion-section { padding: 8px 10px; }
-  .scansion-display { padding: 7px 10px; }
-  .scansion-text    { font-size: 0.75rem; letter-spacing: 0.2em; }
-  .label            { margin-bottom: 4px; }
-  .loading-box      { padding: 16px 12px; font-size: 0.8rem; }
-
-  /* الإصلاح ٤: padding إضافي يضمن scroll دائماً */
-  .verses-form {
-    padding-bottom: 60vh;
-  }
+  /* padding الأبيات للموبايل */
+  .verses-form { padding-bottom: 60vh; }
 }
