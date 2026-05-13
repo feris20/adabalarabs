@@ -34,15 +34,15 @@ const SAMPLE_VERSES = [
 async function analyzeVerses(text) {
   if (!text || !text.trim()) return { phonetic: "", symbols: "", meter: "..." };
   try {
-    const response = await fetch('/api/analyze', {
+    const r = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text.trim() })
     });
-    if (!response.ok) throw new Error(`${response.status}`);
-    const result = await response.json();
-    return { phonetic: result.phonetic||"", symbols: result.symbols||"", meter: result.meter||"..." };
-  } catch (err) {
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    return { phonetic: d.phonetic||"", symbols: d.symbols||"", meter: d.meter||"..." };
+  } catch {
     return { phonetic: "السيرفر لا يستجيب..", symbols: "---", meter: "خطأ اتصال" };
   }
 }
@@ -67,15 +67,13 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 applyTheme();
 
 // =============================================
-// ضبط ارتفاع قسم المحلل (الإصلاح ٢)
+// ضبط ارتفاع قسم المحلل
 // =============================================
 function updateArudHeight() {
   const el = document.getElementById('arud-section');
   if (!el || el.style.display === 'none') return;
-  // window.innerHeight يعطي الارتفاع الحقيقي المرئي على الموبايل
   el.style.height = (window.innerHeight - 64) + 'px';
 }
-
 window.addEventListener('resize', updateArudHeight);
 
 // =============================================
@@ -90,18 +88,17 @@ function showSection(id) {
   });
 
   if (id === 'arud') {
-    // الإصلاح ٢: منع scroll الصفحة على كل الأجهزة
     document.documentElement.classList.add('arud-active');
     document.body.style.overflow = 'hidden';
-    const target = document.getElementById('arud-section');
-    target.style.display = 'flex';
-    updateArudHeight(); // ضبط الارتفاع الدقيق
+    const t = document.getElementById('arud-section');
+    t.style.display = 'flex';
+    updateArudHeight();
     renderVerses();
   } else {
     document.documentElement.classList.remove('arud-active');
     document.body.style.overflow = '';
-    const target = document.getElementById(`${id}-section`);
-    if (target) target.style.display = 'block';
+    const t = document.getElementById(`${id}-section`);
+    if (t) t.style.display = 'block';
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -121,27 +118,27 @@ function startQuiz(type) {
 }
 
 function renderQuiz() {
-  const qData = QUIZZES[activeQuizType][quizIndex];
+  const q = QUIZZES[activeQuizType][quizIndex];
   const total = QUIZZES[activeQuizType].length;
   document.getElementById('quiz-number').textContent   = `السؤال ${quizIndex + 1}`;
-  document.getElementById('quiz-question').textContent = qData.question;
+  document.getElementById('quiz-question').textContent = q.question;
   const prog = document.getElementById('quiz-progress');
-  prog.innerHTML = Array.from({ length: total }, (_, i) =>
-    `<div class="progress-dot ${i <= quizIndex ? 'active' : ''}"></div>`).join('');
-  const optsContainer = document.getElementById('quiz-options');
-  optsContainer.innerHTML = '';
-  qData.options.forEach((opt, i) => {
+  prog.innerHTML = Array.from({length:total},(_,i)=>
+    `<div class="progress-dot ${i<=quizIndex?'active':''}"></div>`).join('');
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = '';
+  q.options.forEach((opt,i) => {
     const btn = document.createElement('button');
-    btn.className = 'quiz-option'; btn.textContent = opt;
-    btn.addEventListener('click', () => handleAnswer(i, qData.correct));
-    optsContainer.appendChild(btn);
+    btn.className='quiz-option'; btn.textContent=opt;
+    btn.addEventListener('click',()=>handleAnswer(i,q.correct));
+    opts.appendChild(btn);
   });
 }
 
-function handleAnswer(selected, correct) {
-  if (selected === correct) score++;
+function handleAnswer(sel, correct) {
+  if (sel === correct) score++;
   const total = QUIZZES[activeQuizType].length;
-  if (quizIndex < total - 1) { quizIndex++; renderQuiz(); } else showResult();
+  if (quizIndex < total-1) { quizIndex++; renderQuiz(); } else showResult();
 }
 
 function showResult() {
@@ -151,31 +148,37 @@ function showResult() {
   document.getElementById('score-text').textContent  = score;
   document.getElementById('score-denom').textContent = total;
   document.getElementById('score-message').textContent =
-    score === total ? 'مذهل! لقد أثبتّ جدارتك.' : 'لا بأس، المعرفة تراكمية.';
+    score===total ? 'مذهل! لقد أثبتّ جدارتك.' : 'لا بأس، المعرفة تراكمية.';
   setTimeout(() => {
-    const c = 283;
-    document.getElementById('score-circle').style.strokeDasharray =
-      `${(score / total) * c} ${c}`;
+    const c=283;
+    document.getElementById('score-circle').style.strokeDasharray=`${(score/total)*c} ${c}`;
   }, 120);
 }
 
 // =============================================
 // المحلل — الحالة
 // =============================================
-let verses        = ['', '', '', ''];
-let activeIndex   = 0;
+let verses      = ['','','',''];
+let activeIndex = 0;
 let typingTimer;
+let manualClosed  = false;
+
+// ديسكتوب
 let analysisBox     = null;
 let analysisContent = null;
 let userMovedBox    = false;
-let manualClosed    = false; // الإصلاح ٣: منع إعادة الفتح بعد الإغلاق
+
+// موبايل — inline
+let inlineBox        = null;
+let inlineContent    = null;
+let inlineActiveRow  = null;
 
 // =============================================
-// بناء محتوى البطاقة
+// بناء محتوى التحليل (مشترك بين الوضعين)
 // =============================================
 function createAnalysisPanel(data, loading = false) {
   if (loading) return `<div class="loading-box">جاري النظم عروضيًا...</div>`;
-  if (!data)   return `<div class="analysis-placeholder"><i data-lucide="feather"></i><p>انقر على شطر لتحليله عروضياً</p></div>`;
+  if (!data)   return `<div class="loading-box">—</div>`;
   return `
     <div class="bahr-info">
       <div class="bahr-label">بحر القصيد:</div>
@@ -194,74 +197,81 @@ function createAnalysisPanel(data, loading = false) {
 }
 
 // =============================================
-// تحديد موضع البوكس (الإصلاح ١)
+// الحصول على inline box أو إنشاؤه
 // =============================================
-function positionBox(inputElement) {
-  if (!analysisBox || !inputElement) return;
+function getInlineBox() {
+  if (!inlineBox) {
+    inlineBox = document.createElement('div');
+    inlineBox.className = 'inline-analysis';
+    inlineBox.innerHTML = `
+      <div class="inline-analysis-inner">
+        <div class="inline-analysis-header">
+          <span class="inline-analysis-label">التحليل العروضي</span>
+          <button class="inline-close-btn" onclick="window.closeInlineAnalysis()">✕</button>
+        </div>
+        <div class="inline-analysis-body"></div>
+      </div>`;
+    inlineContent = inlineBox.querySelector('.inline-analysis-body');
+  }
+  return inlineBox;
+}
 
-  const rect = inputElement.getBoundingClientRect();
+// =============================================
+// تحديث التحليل — موبايل (inline accordion)
+// =============================================
+async function updateAnalysisMobile(idx, text, inputElement) {
+  const box       = getInlineBox();
+  const targetRow = inputElement.closest('.verse-row');
 
-  if (window.innerWidth > 768) {
-    // ===== ديسكتوب: نفس المنطق الجيد السابق =====
-    if (userMovedBox) return;
+  // هل البوكس مباشرةً بعد هذا السطر؟
+  const alreadyAfterRow = box.previousElementSibling === targetRow;
 
-    const boxW = 380, boxH = 310;
-    let left = rect.left + rect.width / 2 - boxW / 2;
-    left = Math.max(16, Math.min(left, window.innerWidth - boxW - 16));
-
-    analysisBox.style.position  = 'fixed';
-    analysisBox.style.width     = boxW + 'px';
-    analysisBox.style.left      = left + 'px';
-    analysisBox.style.right     = 'auto';
-    analysisBox.style.transform = 'none';
-
-    const spaceBelow = window.innerHeight - rect.bottom;
-    if (spaceBelow >= boxH + 16) {
-      analysisBox.style.top    = (rect.bottom + 12) + 'px';
-      analysisBox.style.bottom = 'auto';
-    } else {
-      analysisBox.style.top    = 'auto';
-      analysisBox.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+  if (!alreadyAfterRow) {
+    // أغلق الـ box الحالي بانيميشن إن كان مفتوحاً
+    if (box.classList.contains('open')) {
+      box.classList.remove('open');
+      await new Promise(r => setTimeout(r, 420)); // انتظر انتهاء الانيميشن
+      if (manualClosed) return;
     }
+    // انقله للسطر الجديد
+    targetRow.after(box);
+    inlineActiveRow = targetRow;
+  }
 
-  } else {
-    // ===== موبايل: الإصلاح ١ — الحافة العلوية للبوكس لا تتجاوز الحافة السفلية للحقل =====
-    const margin    = 8;
-    const topPos    = rect.bottom + margin; // ← أسفل الحقل مباشرةً
-    const maxHeight = Math.max(80, window.innerHeight - topPos - 8);
+  // أظهر حالة التحميل
+  inlineContent.innerHTML = createAnalysisPanel(null, true);
 
-    analysisBox.style.position  = 'fixed';
-    analysisBox.style.top       = topPos + 'px';
-    analysisBox.style.bottom    = 'auto';
-    analysisBox.style.left      = '16px';
-    analysisBox.style.right     = '16px';
-    analysisBox.style.width     = 'auto';
-    analysisBox.style.transform = 'none';
-    analysisBox.style.maxHeight = maxHeight + 'px';
-    analysisBox.style.overflowY = 'auto';
+  // افتح بانيميشن إن لم يكن مفتوحاً
+  if (!box.classList.contains('open')) {
+    requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('open')));
+  }
+
+  // اجلب التحليل
+  const data = await analyzeVerses(text);
+
+  if (idx === activeIndex && !manualClosed) {
+    inlineContent.innerHTML = createAnalysisPanel(data);
+    lucide.createIcons();
+    window.currentAnalysis = { bahr: data.meter, kitaba: data.phonetic, scansion: data.symbols };
   }
 }
 
 // =============================================
-// تحديث واجهة التحليل
+// تحديث التحليل — ديسكتوب (box عائم)
 // =============================================
-async function updateAnalysisUI(idx, text, inputElement) {
+async function updateAnalysisDesktop(idx, text, inputElement) {
   if (!analysisBox) {
     analysisBox     = document.getElementById('analysis-box');
     analysisContent = document.getElementById('analysis-content');
   }
-  if (!text || text.trim().length === 0) return;
-
-  // الإصلاح ٣: لا تفتح إذا أغلقه المستخدم يدوياً
-  if (manualClosed) return;
 
   analysisBox.style.display = 'block';
   analysisContent.innerHTML = createAnalysisPanel(null, true);
-  positionBox(inputElement);
+
+  if (!userMovedBox) positionBox(inputElement);
 
   const data = await analyzeVerses(text);
 
-  // الإصلاح ٣: تحقق مرة ثانية بعد الـ await (قد يكون أُغلق أثناء الانتظار)
   if (idx === activeIndex && !manualClosed && analysisBox.style.display !== 'none') {
     analysisContent.innerHTML = createAnalysisPanel(data);
     lucide.createIcons();
@@ -270,35 +280,88 @@ async function updateAnalysisUI(idx, text, inputElement) {
 }
 
 // =============================================
-// إغلاق / نسخ
+// الدالة الرئيسية للتحديث — تُوجَّه حسب الجهاز
 // =============================================
-window.closeAnalysis = () => {
-  clearTimeout(typingTimer);     // أوقف أي debounce معلّق
-  manualClosed = true;           // الإصلاح ٣: لا تُعِد الفتح
-  if (analysisBox) analysisBox.style.display = 'none';
+async function updateAnalysisUI(idx, text, inputElement) {
+  if (!text || text.trim().length === 0) return;
+  if (manualClosed) return;
+
+  if (window.innerWidth <= 768) {
+    await updateAnalysisMobile(idx, text, inputElement);
+  } else {
+    await updateAnalysisDesktop(idx, text, inputElement);
+  }
+}
+
+// =============================================
+// تحديد موضع البوكس العائم (ديسكتوب)
+// =============================================
+function positionBox(inputElement) {
+  if (!analysisBox || !inputElement || window.innerWidth <= 768) return;
+  if (userMovedBox) return;
+
+  const rect = inputElement.getBoundingClientRect();
+  const boxW = 380, boxH = 310;
+
+  let left = rect.left + rect.width/2 - boxW/2;
+  left = Math.max(16, Math.min(left, window.innerWidth - boxW - 16));
+
+  analysisBox.style.position  = 'fixed';
+  analysisBox.style.width     = boxW + 'px';
+  analysisBox.style.left      = left + 'px';
+  analysisBox.style.right     = 'auto';
+  analysisBox.style.transform = 'none';
+
+  const spaceBelow = window.innerHeight - rect.bottom;
+  if (spaceBelow >= boxH + 16) {
+    analysisBox.style.top    = (rect.bottom + 12) + 'px';
+    analysisBox.style.bottom = 'auto';
+  } else {
+    analysisBox.style.top    = 'auto';
+    analysisBox.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+  }
+}
+
+// =============================================
+// إغلاق
+// =============================================
+window.closeInlineAnalysis = () => {
+  clearTimeout(typingTimer);
+  manualClosed = true;
+  if (inlineBox) inlineBox.classList.remove('open');
 };
 
+window.closeAnalysis = () => {
+  clearTimeout(typingTimer);
+  manualClosed = true;
+  if (analysisBox)  analysisBox.style.display = 'none';
+  if (inlineBox)    inlineBox.classList.remove('open');
+};
+
+// =============================================
+// نسخ
+// =============================================
 window.copyAnalysis = () => {
   if (!window.currentAnalysis) return;
   const { bahr, kitaba, scansion } = window.currentAnalysis;
   navigator.clipboard.writeText(`البحر: ${bahr}\nالكتابة: ${kitaba}\nالترميز: ${scansion}`);
   const btn = document.getElementById('copy-btn-text');
-  if (btn) { btn.textContent = 'تم!'; setTimeout(() => btn.textContent = 'نسخ', 2000); }
+  if (btn) { btn.textContent='تم!'; setTimeout(()=>btn.textContent='نسخ',2000); }
 };
 
 window.copyAllVerses = (btn) => {
   const lines = [];
-  for (let i = 0; i < verses.length; i += 2) {
-    const s = verses[i]||'', a = verses[i+1]||'';
-    if (s || a) lines.push(`${s} ... ${a}`);
+  for (let i=0; i<verses.length; i+=2) {
+    const s=verses[i]||'', a=verses[i+1]||'';
+    if (s||a) lines.push(`${s} ... ${a}`);
   }
   if (!lines.length) return;
   navigator.clipboard.writeText(lines.join('\n'));
   if (btn) {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<i data-lucide="check"></i> تم النسخ';
+    const orig=btn.innerHTML;
+    btn.innerHTML='<i data-lucide="check"></i> تم النسخ';
     lucide.createIcons();
-    setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 2000);
+    setTimeout(()=>{ btn.innerHTML=orig; lucide.createIcons(); },2000);
   }
 };
 
@@ -308,14 +371,15 @@ window.copyAllVerses = (btn) => {
 function renderVerses() {
   const container = document.getElementById('verses-container');
   if (!container) return;
+
+  // الـ inline box سيُزال مع innerHTML=''، لا بأس
   container.innerHTML = '';
 
-  for (let i = 0; i < verses.length; i += 2) {
-    const n = Math.floor(i/2) + 1;
-    const si = i, ai = i+1;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'verse-row';
-    wrapper.innerHTML = `
+  for (let i=0; i<verses.length; i+=2) {
+    const n=Math.floor(i/2)+1, si=i, ai=i+1;
+    const w=document.createElement('div');
+    w.className='verse-row';
+    w.innerHTML=`
       <div class="verse-line-num">${String(n).padStart(2,'0')}</div>
       <div class="verse-inputs">
         <input type="text" value="${(verses[si]||'').replace(/"/g,'&quot;')}"
@@ -323,13 +387,13 @@ function renderVerses() {
         <input type="text" value="${(verses[ai]||'').replace(/"/g,'&quot;')}"
                placeholder="عجز البيت ${n}" class="verse-input" data-idx="${ai}" dir="rtl">
       </div>`;
-    container.appendChild(wrapper);
+    container.appendChild(w);
   }
 
   container.querySelectorAll('.verse-input').forEach(input => {
 
     input.addEventListener('focus', e => {
-      manualClosed = false;      // الإصلاح ٣: المستخدم يتفاعل من جديد
+      manualClosed = false;  // المستخدم يتفاعل من جديد
       userMovedBox = false;
       activeIndex  = parseInt(e.target.dataset.idx, 10);
       updateAnalysisUI(activeIndex, e.target.value, e.target);
@@ -339,19 +403,19 @@ function renderVerses() {
       const idx = parseInt(e.target.dataset.idx, 10);
       verses[idx] = e.target.value;
       clearTimeout(typingTimer);
-      typingTimer = setTimeout(() => updateAnalysisUI(idx, e.target.value, e.target), 400);
+      typingTimer = setTimeout(()=>updateAnalysisUI(idx, e.target.value, e.target), 400);
 
-      // إضافة بيت جديد تلقائياً
-      if (idx >= verses.length - 2 && e.target.value.trim()) {
-        const lS = verses.length-2, lA = verses.length-1;
-        if ((verses[lS]||'').trim() || (verses[lA]||'').trim()) {
-          if (verses.length-1 === lA) {
-            verses.push('', '');
-            const st = container.scrollTop;
+      // بيت جديد تلقائياً
+      if (idx >= verses.length-2 && e.target.value.trim()) {
+        const lS=verses.length-2, lA=verses.length-1;
+        if ((verses[lS]||'').trim()||(verses[lA]||'').trim()) {
+          if (verses.length-1===lA) {
+            verses.push('','');
+            const st=container.scrollTop;
             renderVerses();
-            container.scrollTop = st;
-            const same = container.querySelector(`input[data-idx="${idx}"]`);
-            if (same) { same.focus(); same.setSelectionRange(same.value.length, same.value.length); }
+            container.scrollTop=st;
+            const same=container.querySelector(`input[data-idx="${idx}"]`);
+            if (same) { same.focus(); same.setSelectionRange(same.value.length,same.value.length); }
           }
         }
       }
@@ -361,8 +425,15 @@ function renderVerses() {
   lucide.createIcons();
 }
 
-function fillSample()  { verses = [...SAMPLE_VERSES]; activeIndex=0; renderVerses(); window.closeAnalysis(); }
-function clearVerses() { verses=['','','','']; activeIndex=0; renderVerses(); window.closeAnalysis(); }
+function fillSample() {
+  verses=[...SAMPLE_VERSES]; activeIndex=0;
+  renderVerses(); window.closeAnalysis();
+}
+
+function clearVerses() {
+  verses=['','','','']; activeIndex=0;
+  renderVerses(); window.closeAnalysis();
+}
 
 // =============================================
 // Drag — ديسكتوب فقط
@@ -371,26 +442,26 @@ let isDragging=false, startX, startY, initialLeft, initialTop;
 
 document.addEventListener('mousedown', e => {
   if (!e.target.closest('.analysis-header')) return;
-  if (window.innerWidth <= 768 || e.target.closest('button')) return;
-  if (!analysisBox) analysisBox = document.getElementById('analysis-box');
-  isDragging = true; userMovedBox = true;
-  startX = e.clientX; startY = e.clientY;
-  const r = analysisBox.getBoundingClientRect();
-  initialLeft = r.left; initialTop = r.top;
-  analysisBox.style.transform = 'none';
-  analysisBox.style.left   = initialLeft + 'px';
-  analysisBox.style.top    = initialTop  + 'px';
-  analysisBox.style.bottom = 'auto';
+  if (window.innerWidth<=768 || e.target.closest('button')) return;
+  if (!analysisBox) analysisBox=document.getElementById('analysis-box');
+  isDragging=true; userMovedBox=true;
+  startX=e.clientX; startY=e.clientY;
+  const r=analysisBox.getBoundingClientRect();
+  initialLeft=r.left; initialTop=r.top;
+  analysisBox.style.transform='none';
+  analysisBox.style.left=initialLeft+'px';
+  analysisBox.style.top=initialTop+'px';
+  analysisBox.style.bottom='auto';
 });
 
 document.addEventListener('mousemove', e => {
   if (!isDragging) return;
   e.preventDefault();
-  analysisBox.style.left = (initialLeft + e.clientX - startX) + 'px';
-  analysisBox.style.top  = (initialTop  + e.clientY - startY) + 'px';
+  analysisBox.style.left=(initialLeft+e.clientX-startX)+'px';
+  analysisBox.style.top=(initialTop+e.clientY-startY)+'px';
 });
 
-document.addEventListener('mouseup', () => { isDragging = false; });
+document.addEventListener('mouseup', ()=>{ isDragging=false; });
 
 // =============================================
 // التهيئة
@@ -403,27 +474,27 @@ document.addEventListener('DOMContentLoaded', () => {
     { id:'rhetoric', title:'أسرار البلاغة',desc:'سبر أغوار الجمال البياني في لغة الضاد.', icon:'book-open', badge:'صعب',   badgeClass:'gold' }
   ];
 
-  const grid = document.getElementById('tests-grid');
+  const grid=document.getElementById('tests-grid');
   if (grid) {
-    testsData.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'challenge-item';
-      el.innerHTML = `
+    testsData.forEach(item=>{
+      const el=document.createElement('div');
+      el.className='challenge-item';
+      el.innerHTML=`
         <div class="challenge-visual ${item.badgeClass}"><i data-lucide="${item.icon}"></i></div>
         <div class="challenge-details">
           <span class="badge ${item.badgeClass}">${item.badge}</span>
           <h3>${item.title}</h3><p>${item.desc}</p>
           <button class="btn-primary btn-sm">ابدأ التحدي الآن</button>
         </div>`;
-      el.addEventListener('click', () => startQuiz(item.id));
+      el.addEventListener('click',()=>startQuiz(item.id));
       grid.appendChild(el);
     });
   }
 
-  window.showSection = showSection;
-  window.startQuiz   = startQuiz;
-  window.fillSample  = fillSample;
-  window.clearVerses = clearVerses;
+  window.showSection=showSection;
+  window.startQuiz=startQuiz;
+  window.fillSample=fillSample;
+  window.clearVerses=clearVerses;
 
   lucide.createIcons();
 });
