@@ -1,5 +1,5 @@
 /* =============================================
-   المتغيرات والألوان
+   المتغيرات
    ============================================= */
 :root {
   --font-sans: "Alexandria", sans-serif;
@@ -24,6 +24,15 @@
 }
 
 /* =============================================
+   الإصلاح ٢: منع scroll الصفحة عند المحلل
+   ============================================= */
+html.arud-active,
+html.arud-active body {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* =============================================
    الأساسيات
    ============================================= */
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,14 +48,10 @@ body {
   min-height: 100vh;
 }
 
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
 /* =============================================
-   شريط التنقل
+   الناف بار
    ============================================= */
 .navbar {
   border-bottom: 1px solid var(--color-border);
@@ -60,185 +65,51 @@ body {
   transition: background-color 0.3s;
 }
 
-.nav-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 100%;
-}
+.nav-content { display: flex; justify-content: space-between; align-items: center; height: 100%; }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.25rem; color: var(--color-text); text-decoration: none; }
 .logo i { width: 20px; height: 20px; }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
-
-.nav-links a {
-  text-decoration: none;
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
+.nav-links { display: flex; align-items: center; gap: 32px; }
+.nav-links a { text-decoration: none; color: var(--color-muted); font-size: 0.875rem; font-weight: 500; transition: color 0.2s; }
 .nav-links a:hover { color: var(--color-text); }
 
-.theme-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text);
-  padding: 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-}
-
+.theme-btn { background: none; border: none; cursor: pointer; color: var(--color-text); padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; }
 .theme-btn:hover { background-color: var(--color-surface); }
 
 /* =============================================
-   قسم الهيرو
+   هيرو
    ============================================= */
 .hero { padding: 80px 0; text-align: center; }
-
-.hero h1 {
-  font-family: var(--font-serif);
-  font-size: clamp(2.5rem, 8vw, 4.5rem);
-  font-weight: 700;
-  line-height: 1.1;
-  margin-bottom: 24px;
-}
-
+.hero h1 { font-family: var(--font-serif); font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 700; line-height: 1.1; margin-bottom: 24px; }
 .hero .italic { font-style: italic; }
-
-.hero-sub {
-  font-size: 1.25rem;
-  color: var(--color-muted);
-  max-width: 700px;
-  margin: 0 auto 40px;
-  font-family: var(--font-serif);
-  font-style: italic;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.hero-actions .btn-primary,
-.hero-actions .btn-secondary {
-  min-width: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
+.hero-sub { font-size: 1.25rem; color: var(--color-muted); max-width: 700px; margin: 0 auto 40px; font-family: var(--font-serif); font-style: italic; }
+.hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.hero-actions .btn-primary, .hero-actions .btn-secondary { min-width: 200px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
 /* =============================================
    بطاقات الميزات
    ============================================= */
-.features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 32px;
-  margin-top: 64px;
-}
-
-.card {
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 32px;
-  transition: transform 0.2s;
-}
-
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; margin-top: 64px; }
+.card { background-color: var(--color-bg); border: 1px solid var(--color-border); border-radius: 12px; padding: 32px; transition: transform 0.2s; }
 .card:hover { transform: translateY(-4px); }
-
-.card-icon {
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-
+.card-icon { background-color: var(--color-surface); color: var(--color-text); width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
 .card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }
 .card p  { color: var(--color-muted); font-size: 0.875rem; line-height: 1.6; }
 
 /* =============================================
-   الأزرار
+   أزرار
    ============================================= */
-.btn-primary {
-  background-color: var(--color-accent);
-  color: var(--color-bg);
-  border: none;
-  padding: 14px 40px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.875rem;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  transition: opacity 0.2s, transform 0.1s;
-}
-
+.btn-primary { background-color: var(--color-accent); color: var(--color-bg); border: none; padding: 14px 40px; border-radius: 8px; font-weight: 700; font-size: 0.875rem; cursor: pointer; font-family: var(--font-sans); transition: opacity 0.2s, transform 0.1s; }
 .btn-primary:hover  { opacity: 0.88; }
 .btn-primary:active { transform: scale(0.95); }
 
-.btn-secondary {
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-family: var(--font-sans);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
+.btn-secondary { background-color: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text); padding: 10px 20px; border-radius: 6px; font-size: 0.875rem; font-family: var(--font-sans); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background-color 0.2s; }
 .btn-secondary:hover { background-color: var(--color-surface); }
 
 .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
 
-.back-btn {
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  margin-bottom: 8px;
-  padding: 0;
-  transition: color 0.2s;
-}
-
+.back-btn { background: none; border: none; color: var(--color-muted); display: flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600; font-family: var(--font-sans); cursor: pointer; margin-bottom: 8px; padding: 0; transition: color 0.2s; }
 .back-btn:hover { color: var(--color-text); }
 .back-btn i { width: 14px; height: 14px; }
 
@@ -246,193 +117,67 @@ body {
    مكتبة الشعر
    ============================================= */
 .library { padding: 80px 0; margin-top: 80px; }
-
 .section-header { text-align: center; margin-bottom: 64px; }
-
-.header-icon {
-  margin: 0 auto 24px;
-  width: 56px;
-  height: 56px;
-  background-color: var(--color-surface);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+.header-icon { margin: 0 auto 24px; width: 56px; height: 56px; background-color: var(--color-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .section-header h2 { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 12px; }
 .section-header p  { color: var(--color-muted); font-style: italic; font-family: var(--font-serif); }
-
-.verses-list {
-  max-width: 800px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-}
-
+.verses-list { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
 .verse-item { text-align: center; }
-
-.verse-text {
-  font-family: var(--font-serif);
-  font-size: 1.75rem;
-  line-height: 1.6;
-  margin-bottom: 24px;
-  color: var(--color-text);
-}
-
-.verse-divider {
-  width: 48px;
-  height: 1px;
-  background-color: var(--color-border);
-  margin: 0 auto 16px;
-}
-
-.verse-author {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+.verse-text { font-family: var(--font-serif); font-size: 1.75rem; line-height: 1.6; margin-bottom: 24px; color: var(--color-text); }
+.verse-divider { width: 48px; height: 1px; background-color: var(--color-border); margin: 0 auto 16px; }
+.verse-author { font-size: 0.75rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
 /* =============================================
-   التحديات / ميدان المعرفة
+   التحديات
    ============================================= */
-.challenges-grid-full {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.challenge-item {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 32px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.challenge-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-}
-
-.challenge-visual {
-  width: 80px; height: 80px; min-width: 80px;
-  background-color: #f0fdf4; color: #16a34a;
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-
+.challenges-grid-full { display: flex; flex-direction: column; gap: 24px; max-width: 800px; margin: 0 auto; }
+.challenge-item { display: flex; align-items: center; gap: 24px; padding: 32px; background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 20px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+.challenge-item:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+.challenge-visual { width: 80px; height: 80px; min-width: 80px; background-color: #f0fdf4; color: #16a34a; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .challenge-visual.purple { background-color: #f5f3ff; color: #7c3aed; }
 .challenge-visual.blue   { background-color: #eff6ff; color: #2563eb; }
 .challenge-visual.gold   { background-color: #fffbeb; color: #d97706; }
 .challenge-visual i { width: 32px; height: 32px; }
-
 .challenge-details { flex: 1; }
-
-.badge {
-  display: inline-block;
-  font-size: 0.65rem; font-weight: 700;
-  padding: 2px 8px; border-radius: 6px;
-  background-color: #16a34a; color: #fff;
-  margin-bottom: 8px;
-}
-
+.badge { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; background-color: #16a34a; color: #fff; margin-bottom: 8px; }
 .badge.purple { background-color: #7c3aed; }
 .badge.blue   { background-color: #2563eb; }
 .badge.gold   { background-color: #d97706; }
-
 .challenge-details h3 { font-size: 1.25rem; margin-bottom: 6px; font-weight: 700; }
 .challenge-details p  { color: var(--color-muted); font-size: 0.875rem; margin-bottom: 20px; line-height: 1.6; }
 
 /* =============================================
-   الاختبار (Quiz)
+   Quiz
    ============================================= */
 .quiz-wrapper { max-width: 720px; margin: 0 auto; padding-top: 60px; padding-bottom: 60px; }
-
-.quiz-card {
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 24px;
-  padding: 40px;
-}
-
-.quiz-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+.quiz-card { background-color: var(--color-bg); border: 1px solid var(--color-border); border-radius: 24px; padding: 40px; }
+.quiz-top  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
 .quiz-progress { display: flex; gap: 6px; }
-
-.progress-dot {
-  height: 6px; width: 40px; border-radius: 3px;
-  background-color: var(--color-border);
-  transition: background-color 0.3s;
-}
-
+.progress-dot { height: 6px; width: 40px; border-radius: 3px; background-color: var(--color-border); transition: background-color 0.3s; }
 .progress-dot.active { background-color: var(--color-accent); }
-
 .quiz-label { font-size: 0.7rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em; }
-
-.quiz-question {
-  font-family: var(--font-serif);
-  font-size: clamp(1.4rem, 4vw, 2rem);
-  line-height: 1.65; margin-bottom: 40px;
-  color: var(--color-text); text-align: right;
-}
-
+.quiz-question { font-family: var(--font-serif); font-size: clamp(1.4rem, 4vw, 2rem); line-height: 1.65; margin-bottom: 40px; color: var(--color-text); text-align: right; }
 .quiz-options { display: flex; flex-direction: column; gap: 12px; }
-
-.quiz-option {
-  padding: 18px 24px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background-color: var(--color-bg);
-  text-align: right;
-  font-family: var(--font-serif); font-size: 1.1rem;
-  cursor: pointer; color: var(--color-text); width: 100%;
-  transition: all 0.18s;
-}
-
+.quiz-option { padding: 18px 24px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-bg); text-align: right; font-family: var(--font-serif); font-size: 1.1rem; cursor: pointer; color: var(--color-text); width: 100%; transition: all 0.18s; }
 .quiz-option:hover { border-color: var(--color-accent); background-color: var(--color-surface); }
-
-.quiz-result-card {
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 24px; padding: 48px 40px; text-align: center;
-}
-
+.quiz-result-card { background-color: var(--color-bg); border: 1px solid var(--color-border); border-radius: 24px; padding: 48px 40px; text-align: center; }
 .quiz-result-title { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 32px; color: var(--color-text); }
-
 .score-circle-wrapper { position: relative; display: inline-block; width: 160px; height: 160px; margin-bottom: 32px; }
-
-.score-svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
-.score-arc { transition: stroke-dasharray 1s ease-out; }
-
-.score-inner {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-weight: 700; color: var(--color-text);
-}
-
+.score-svg   { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+.score-arc   { transition: stroke-dasharray 1s ease-out; }
+.score-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--color-text); }
 .score-num   { font-size: 3rem; line-height: 1; }
 .score-denom { font-size: 0.875rem; color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: 4px; margin-top: 4px; width: 40%; text-align: center; }
-
 .score-message { color: var(--color-muted); font-size: 1.1rem; margin-bottom: 32px; font-style: italic; font-family: var(--font-serif); }
 
 /* =============================================
-   المحلل العروضي — تخطيط ثابت بالشاشة (الإصلاح ٢)
+   المحلل العروضي — الإصلاح ٢
    ============================================= */
 #arud-section {
-  height: calc(100vh - 64px);
+  /* الارتفاع يُحدَّد بـ JS عبر updateArudHeight() */
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* يمنع تمدد القسم */
+  overflow: hidden;
 }
 
 #arud-section > .container {
@@ -445,26 +190,17 @@ body {
   height: 100%;
 }
 
-.arud-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
+.arud-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; flex-shrink: 0; }
 .page-title { font-size: 1.75rem; font-family: var(--font-serif); font-weight: 700; margin-bottom: 4px; color: var(--color-text); }
 .page-sub   { color: var(--color-muted); font-style: italic; font-size: 0.8rem; }
 .arud-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* =============================================
-   محرر الأبيات — منطقة scroll مستقلة
+   محرر الأبيات — الإصلاح ٤
    ============================================= */
 .verses-form {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;   /* الإصلاح ٤: scroll دائماً مرئي */
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
@@ -473,7 +209,7 @@ body {
   width: 100%;
   margin: 0 auto;
   position: relative;
-  padding: 4px 4px 24px 4px;
+  padding: 4px 4px 200px 4px; /* الإصلاح ٤: padding كبير يضمن قابلية التمرير دائماً */
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
@@ -482,24 +218,9 @@ body {
 .verses-form::-webkit-scrollbar-track { background: transparent; }
 .verses-form::-webkit-scrollbar-thumb { background-color: var(--color-border); border-radius: 4px; }
 
-.verse-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.verse-line-num {
-  width: 36px; height: 36px; min-width: 36px;
-  border-radius: 50%;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.75rem; font-weight: bold;
-  color: var(--color-muted); font-family: monospace; flex-shrink: 0;
-}
-
-.verse-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; }
+.verse-row     { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.verse-line-num { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; background-color: var(--color-surface); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: var(--color-muted); font-family: monospace; flex-shrink: 0; }
+.verse-inputs  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; }
 
 .verse-input {
   width: 100%; height: 54px; padding: 0 16px;
@@ -509,19 +230,15 @@ body {
   transition: all 0.2s; color: var(--color-text); direction: rtl;
 }
 
-.verse-input:focus {
-  border-color: var(--color-text);
-  background-color: var(--color-bg);
-  box-shadow: 0 0 0 3px rgba(28, 25, 23, 0.06);
-}
-
+.verse-input:focus { border-color: var(--color-text); background-color: var(--color-bg); box-shadow: 0 0 0 3px rgba(28,25,23,0.06); }
 .verse-input::placeholder { color: var(--color-muted); opacity: 0.5; font-style: italic; }
 
 /* =============================================
-   بطاقة التحليل — JS يتحكم بموضعها على الديسكتوب
+   بطاقة التحليل — JS يتحكم بالموضع كاملاً
    ============================================= */
 .analysis-card {
-  position: fixed; /* موضع top/left/bottom يحدده JS */
+  position: fixed;
+  /* top / left / right / bottom / maxHeight : يُحدَّد بـ positionBox() في JS */
   width: 380px;
   background-color: var(--color-bg);
   border: 2px solid var(--color-text);
@@ -531,85 +248,43 @@ body {
   z-index: 200;
 }
 
-.dark .analysis-card {
-  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-  background-color: var(--color-surface);
-}
+.dark .analysis-card { box-shadow: 0 15px 30px rgba(0,0,0,0.4); background-color: var(--color-surface); }
 
-.analysis-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px; cursor: grab; user-select: none;
-}
-
+.analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: grab; user-select: none; }
 .analysis-header:active { cursor: grabbing; }
 
-.close-btn, .copy-mini-btn {
-  background: none; border: none; cursor: pointer;
-  color: var(--color-muted);
-  display: flex; align-items: center; justify-content: center;
-}
-
-.copy-mini-btn {
-  font-size: 9px; font-weight: bold;
-  border: 1px solid var(--color-border); padding: 3px 8px; border-radius: 4px;
-}
-
+.close-btn, .copy-mini-btn { background: none; border: none; cursor: pointer; color: var(--color-muted); display: flex; align-items: center; justify-content: center; }
+.copy-mini-btn { font-size: 9px; font-weight: bold; border: 1px solid var(--color-border); padding: 3px 8px; border-radius: 4px; }
 .close-btn:hover, .copy-mini-btn:hover { color: var(--color-text); }
 
 .analysis-body { display: flex; flex-direction: column; gap: 12px; }
 
-.bahr-info {
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid var(--color-border); padding: 16px 20px;
-}
-
+.bahr-info { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding: 16px 20px; }
 .bahr-label { font-size: 9px; text-transform: uppercase; font-weight: 700; color: var(--color-muted); letter-spacing: 0.08em; }
 .bahr-name  { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--color-text); }
 
 .kitaba-section  { padding: 16px 20px; border-bottom: 1px solid var(--color-border); }
 .scansion-section { padding: 16px 20px; }
-
 .label { font-size: 9px; font-weight: 700; color: var(--color-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
 
-.kitaba-text {
-  font-family: var(--font-serif); font-size: 1rem;
-  padding: 10px 12px;
-  background-color: var(--color-surface);
-  border-radius: 8px; border: 1px solid var(--color-border);
-  color: var(--color-text); line-height: 1.6;
-}
+.kitaba-text { font-family: var(--font-serif); font-size: 1rem; padding: 10px 12px; background-color: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); color: var(--color-text); line-height: 1.6; }
 
-.scansion-display {
-  background-color: #000; color: #fff;
-  padding: 12px; border-radius: 8px;
-  text-align: center; overflow-x: auto;
-}
-
+.scansion-display { background-color: #000; color: #fff; padding: 12px; border-radius: 8px; text-align: center; overflow-x: auto; }
 .dark .scansion-display { background-color: #1a1a1a; }
-
-.scansion-text {
-  font-family: var(--font-serif), monospace;
-  font-size: 0.9rem; letter-spacing: 0.3em;
-  white-space: nowrap; display: inline-block; padding: 0 4px;
-}
-
+.scansion-text { font-family: var(--font-serif), monospace; font-size: 0.9rem; letter-spacing: 0.3em; white-space: nowrap; display: inline-block; padding: 0 4px; }
 .scansion-display::-webkit-scrollbar { height: 4px; }
 .scansion-display::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
 
-.loading-box {
-  text-align: center; padding: 40px 24px;
-  font-style: italic; font-size: 0.85rem;
-  color: var(--color-muted); font-family: var(--font-serif);
-}
+.loading-box { text-align: center; padding: 40px 24px; font-style: italic; font-size: 0.85rem; color: var(--color-muted); font-family: var(--font-serif); }
 
 /* =============================================
    مساعدات
    ============================================= */
 .border-top  { border-top: 1px solid var(--color-border); }
 .text-center { text-align: center; }
-.mb-12  { margin-bottom: 48px; }
-.py-8   { padding-top: 32px; padding-bottom: 32px; }
-.py-12  { padding-top: 48px; padding-bottom: 48px; }
+.mb-12 { margin-bottom: 48px; }
+.py-8  { padding-top: 32px; padding-bottom: 32px; }
+.py-12 { padding-top: 48px; padding-bottom: 48px; }
 .section-full-header { margin-bottom: 40px; }
 
 /* =============================================
@@ -620,7 +295,7 @@ body {
   .verse-text { font-size: 1.35rem; }
 
   .challenge-item { flex-direction: column; text-align: center; padding: 24px; }
-  .challenge-details p  { margin-bottom: 16px; }
+  .challenge-details p { margin-bottom: 16px; }
 
   .quiz-card        { padding: 28px 20px; }
   .quiz-result-card { padding: 32px 20px; }
@@ -629,19 +304,12 @@ body {
   .arud-header { flex-direction: column; align-items: flex-start; }
   .verse-inputs { grid-template-columns: 1fr; gap: 12px; }
 
-  /* البوكس على الموبايل — يتجاوز قيم JS بـ !important */
+  /* الإصلاح ١ + ٤: البوكس موضعه بـ JS، فقط نضبط الشكل */
   .analysis-card {
-    bottom: 12px !important;
-    top: auto !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: calc(100% - 32px) !important;
-    max-width: 420px;
-    max-height: 38vh;
-    overflow-y: auto;
-    padding: 10px 12px;
     border-radius: 12px;
     border-width: 1.5px;
+    padding: 10px 12px;
+    /* width / top / left / right / maxHeight : يُحدَّد بـ positionBox() */
   }
 
   .analysis-header  { margin-bottom: 6px; }
@@ -654,4 +322,9 @@ body {
   .scansion-text    { font-size: 0.75rem; letter-spacing: 0.2em; }
   .label            { margin-bottom: 4px; }
   .loading-box      { padding: 16px 12px; font-size: 0.8rem; }
+
+  /* الإصلاح ٤: padding إضافي يضمن scroll دائماً */
+  .verses-form {
+    padding-bottom: 60vh;
+  }
 }
