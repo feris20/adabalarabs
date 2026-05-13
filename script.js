@@ -1,5 +1,5 @@
 /* =============================================
-   script.js u
+   script.js
    ============================================= */
 
 const QUIZZES = {
@@ -64,16 +64,14 @@ const SAMPLE_VERSES = [
 // التحليل العروضي عبر API
 // =============================================
 async function analyzeVerses(text) {
-  if (!text || !text.trim()) {
-    return { phonetic: "", symbols: "", meter: "..." };
-  }
+  if (!text || !text.trim()) return { phonetic: "", symbols: "", meter: "..." };
   try {
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text.trim() })
     });
-    if (!response.ok) throw new Error(`خطأ من السيرفر: ${response.status}`);
+    if (!response.ok) throw new Error(`خطأ: ${response.status}`);
     const result = await response.json();
     return {
       phonetic: result.phonetic || "",
@@ -82,11 +80,7 @@ async function analyzeVerses(text) {
     };
   } catch (err) {
     console.error("خطأ في التحليل:", err);
-    return {
-      phonetic: "السيرفر لا يستجيب..",
-      symbols:  "---",
-      meter:    "خطأ اتصال"
-    };
+    return { phonetic: "السيرفر لا يستجيب..", symbols: "---", meter: "خطأ اتصال" };
   }
 }
 
@@ -119,11 +113,14 @@ function showSection(id) {
     const el = document.getElementById(`${s}-section`);
     if (el) el.style.display = 'none';
   });
+
+  // ← الإصلاح ٢: منع body من التمدد عند المحلل
+  document.body.style.overflow = id === 'arud' ? 'hidden' : '';
+
   const target = document.getElementById(`${id}-section`);
   if (target) target.style.display = id === 'arud' ? 'flex' : 'block';
 
   if (id === 'arud') renderVerses();
-
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -147,7 +144,6 @@ function startQuiz(type) {
 function renderQuiz() {
   const qData = QUIZZES[activeQuizType][quizIndex];
   const total = QUIZZES[activeQuizType].length;
-
   document.getElementById('quiz-number').textContent   = `السؤال ${quizIndex + 1}`;
   document.getElementById('quiz-question').textContent = qData.question;
 
@@ -183,68 +179,101 @@ function showResult() {
   document.getElementById('score-message').textContent    =
     score === total ? 'مذهل! لقد أثبتّ جدارتك.' : 'لا بأس، المعرفة تراكمية.';
   setTimeout(() => {
-    const circumference = 283;
+    const c = 283;
     document.getElementById('score-circle').style.strokeDasharray =
-      `${(score / total) * circumference} ${circumference}`;
+      `${(score / total) * c} ${c}`;
   }, 120);
 }
 
 // =============================================
-// المحلل العروضي — حالة التطبيق
+// المحلل — حالة التطبيق
 // =============================================
-let verses = ['', '', '', ''];
-let activeIndex = 0;
+let verses       = ['', '', '', ''];
+let activeIndex  = 0;
 let typingTimer;
-let analysisBox = null;
+let analysisBox     = null;
 let analysisContent = null;
+let userMovedBox    = false; // هل حرّك المستخدم البوكس يدوياً
 
+// =============================================
+// بناء محتوى بطاقة التحليل
+// =============================================
 function createAnalysisPanel(data, loading = false) {
-  if (loading) {
-    return `<div class="loading-box">جاري النظم عروضيًا...</div>`;
-  }
-  if (!data) {
-    return `
-      <div class="analysis-placeholder">
-        <i data-lucide="feather"></i>
-        <p>انقر على شطر لتحليله عروضياً</p>
-      </div>`;
-  }
-  const meter    = data.meter    || '...';
-  const phonetic = data.phonetic || 'بانتظار قلمك...';
-  const symbols  = data.symbols  || '----';
+  if (loading) return `<div class="loading-box">جاري النظم عروضيًا...</div>`;
+  if (!data) return `
+    <div class="analysis-placeholder">
+      <i data-lucide="feather"></i>
+      <p>انقر على شطر لتحليله عروضياً</p>
+    </div>`;
+
   return `
     <div class="bahr-info">
       <div class="bahr-label">بحر القصيد:</div>
-      <h3 class="bahr-name">${meter}</h3>
+      <h3 class="bahr-name">${data.meter || '...'}</h3>
     </div>
     <div class="kitaba-section">
       <div class="label">الكتابة والتفعيلات:</div>
-      <p class="kitaba-text">${phonetic}</p>
+      <p class="kitaba-text">${data.phonetic || 'بانتظار قلمك...'}</p>
     </div>
     <div class="scansion-section">
       <div class="label">الترميز العروضي:</div>
       <div class="scansion-display">
-        <p class="scansion-text" dir="ltr">${symbols}</p>
+        <p class="scansion-text" dir="ltr">${data.symbols || '----'}</p>
       </div>
     </div>`;
 }
 
 // =============================================
-// تحديث واجهة التحليل — البوكس fixed دائماً
+// تحديد موضع البوكس بالنسبة للحقل المفعّل
+// =============================================
+function positionBox(inputElement) {
+  if (!analysisBox || !inputElement) return;
+  if (window.innerWidth <= 768) return; // الموبايل يتحكم به CSS
+
+  const rect   = inputElement.getBoundingClientRect();
+  const boxW   = 380;
+  const boxH   = 310; // تقدير ارتفاع البوكس
+
+  // ← تمركز أفقي على الحقل، مع تقييد حدود الشاشة
+  let left = rect.left + rect.width / 2 - boxW / 2;
+  left = Math.max(16, Math.min(left, window.innerWidth - boxW - 16));
+
+  // ← رأسياً: أسفل الحقل إن توفّر المكان، وإلا فوقه
+  const spaceBelow = window.innerHeight - rect.bottom - 12;
+
+  analysisBox.style.position  = 'fixed';
+  analysisBox.style.left      = left + 'px';
+  analysisBox.style.transform = 'none';
+
+  if (spaceBelow >= boxH) {
+    analysisBox.style.top    = (rect.bottom + 12) + 'px';
+    analysisBox.style.bottom = 'auto';
+  } else {
+    analysisBox.style.top    = 'auto';
+    analysisBox.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+  }
+}
+
+// =============================================
+// تحديث واجهة التحليل
 // =============================================
 async function updateAnalysisUI(idx, text, inputElement) {
   if (!analysisBox) {
-    analysisBox    = document.getElementById('analysis-box');
+    analysisBox     = document.getElementById('analysis-box');
     analysisContent = document.getElementById('analysis-content');
   }
   if (!text || text.trim().length === 0) return;
 
-  analysisBox.style.display = 'block';
-  analysisContent.innerHTML = createAnalysisPanel(null, true);
+  analysisBox.style.display  = 'block';
+  analysisContent.innerHTML  = createAnalysisPanel(null, true);
+
+  // ← الإصلاح ١: ضع البوكس أسفل الحقل (إن لم يحرّكه المستخدم)
+  if (!userMovedBox) positionBox(inputElement);
 
   const data = await analyzeVerses(text);
 
-  if (idx === activeIndex) {
+  // ← الإصلاح ٣: لا تُعِد الإظهار إن كان المستخدم أغلق البوكس أثناء الانتظار
+  if (idx === activeIndex && analysisBox.style.display !== 'none') {
     analysisContent.innerHTML = createAnalysisPanel(data);
     lucide.createIcons();
     window.currentAnalysis = {
@@ -255,7 +284,11 @@ async function updateAnalysisUI(idx, text, inputElement) {
   }
 }
 
+// =============================================
+// إغلاق / نسخ
+// =============================================
 window.closeAnalysis = () => {
+  clearTimeout(typingTimer); // ← الإصلاح ٣: أوقف أي debounce معلّق
   if (analysisBox) analysisBox.style.display = 'none';
 };
 
@@ -268,15 +301,13 @@ window.copyAnalysis = () => {
 };
 
 window.copyAllVerses = (btn) => {
-  let versesText = [];
+  const versesText = [];
   for (let i = 0; i < verses.length; i += 2) {
-    const sadr = verses[i] || '';
-    const ajuz = verses[i+1] || '';
+    const sadr = verses[i] || '', ajuz = verses[i+1] || '';
     if (sadr || ajuz) versesText.push(`${sadr} ... ${ajuz}`);
   }
-  const textToCopy = versesText.join('\n');
-  if (!textToCopy) return;
-  navigator.clipboard.writeText(textToCopy);
+  if (!versesText.length) return;
+  navigator.clipboard.writeText(versesText.join('\n'));
   if (btn) {
     const original = btn.innerHTML;
     btn.innerHTML = '<i data-lucide="check"></i> تم النسخ';
@@ -295,30 +326,27 @@ function renderVerses() {
 
   for (let i = 0; i < verses.length; i += 2) {
     const verseNum = Math.floor(i / 2) + 1;
-    const sadrIdx  = i;
-    const ajuzIdx  = i + 1;
-
-    const wrapper = document.createElement('div');
+    const sadrIdx  = i, ajuzIdx = i + 1;
+    const wrapper  = document.createElement('div');
     wrapper.className = 'verse-row';
-
-    const sadrValue = (verses[sadrIdx] || '').replace(/"/g, '&quot;');
-    const ajuzValue = (verses[ajuzIdx] || '').replace(/"/g, '&quot;');
-
     wrapper.innerHTML = `
       <div class="verse-line-num">${String(verseNum).padStart(2, '0')}</div>
       <div class="verse-inputs">
-        <input type="text" value="${sadrValue}" placeholder="صدر البيت ${verseNum}"
-               class="verse-input" data-idx="${sadrIdx}" dir="rtl">
-        <input type="text" value="${ajuzValue}" placeholder="عجز البيت ${verseNum}"
-               class="verse-input" data-idx="${ajuzIdx}" dir="rtl">
+        <input type="text" value="${(verses[sadrIdx]||'').replace(/"/g,'&quot;')}"
+               placeholder="صدر البيت ${verseNum}" class="verse-input"
+               data-idx="${sadrIdx}" dir="rtl">
+        <input type="text" value="${(verses[ajuzIdx]||'').replace(/"/g,'&quot;')}"
+               placeholder="عجز البيت ${verseNum}" class="verse-input"
+               data-idx="${ajuzIdx}" dir="rtl">
       </div>`;
-
     container.appendChild(wrapper);
   }
 
   container.querySelectorAll('.verse-input').forEach(input => {
+
     input.addEventListener('focus', e => {
-      activeIndex = parseInt(e.target.dataset.idx, 10);
+      activeIndex  = parseInt(e.target.dataset.idx, 10);
+      userMovedBox = false; // ← أعد الضبط حتى يتمركز البوكس على الحقل الجديد
       updateAnalysisUI(activeIndex, e.target.value, e.target);
     });
 
@@ -331,13 +359,13 @@ function renderVerses() {
         updateAnalysisUI(idx, e.target.value, e.target), 400
       );
 
-      const isLastSadrOrAjuz = idx >= verses.length - 2;
+      // إضافة بيت جديد تلقائياً
+      const isLast    = idx >= verses.length - 2;
       const hasContent = e.target.value.trim() !== '';
-      if (isLastSadrOrAjuz && hasContent) {
-        const lastAjuzIdx = verses.length - 1;
-        const lastSadrIdx = verses.length - 2;
-        if (verses[lastSadrIdx].trim() !== '' || verses[lastAjuzIdx].trim() !== '') {
-          if (verses.length - 1 === lastAjuzIdx) {
+      if (isLast && hasContent) {
+        const lastS = verses.length - 2, lastA = verses.length - 1;
+        if ((verses[lastS]||'').trim() !== '' || (verses[lastA]||'').trim() !== '') {
+          if (verses.length - 1 === lastA) {
             verses.push('', '');
             const scrollTop = container.scrollTop;
             renderVerses();
@@ -353,6 +381,9 @@ function renderVerses() {
   lucide.createIcons();
 }
 
+// =============================================
+// وظائف مساعدة
+// =============================================
 function fillSample() {
   verses = [...SAMPLE_VERSES];
   activeIndex = 0;
@@ -368,7 +399,7 @@ function clearVerses() {
 }
 
 // =============================================
-// Drag — للديسكتوب فقط
+// Drag — ديسكتوب فقط
 // =============================================
 let isDragging = false;
 let startX, startY, initialLeft, initialTop;
@@ -378,17 +409,19 @@ document.addEventListener('mousedown', (e) => {
   if (window.innerWidth <= 768 || e.target.closest('button')) return;
   if (!analysisBox) analysisBox = document.getElementById('analysis-box');
 
-  isDragging = true;
+  isDragging   = true;
+  userMovedBox = true; // ← المستخدم يتحكم بالموضع يدوياً
   startX = e.clientX;
   startY = e.clientY;
-  const rect = analysisBox.getBoundingClientRect();
-  initialLeft = rect.left;
-  initialTop  = rect.top;
+
+  const rect   = analysisBox.getBoundingClientRect();
+  initialLeft  = rect.left;
+  initialTop   = rect.top;
 
   analysisBox.style.transform = 'none';
-  analysisBox.style.left   = initialLeft + 'px';
-  analysisBox.style.top    = initialTop  + 'px';
-  analysisBox.style.bottom = 'auto';
+  analysisBox.style.left      = initialLeft + 'px';
+  analysisBox.style.top       = initialTop  + 'px';
+  analysisBox.style.bottom    = 'auto';
 });
 
 document.addEventListener('mousemove', (e) => {
@@ -401,14 +434,14 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', () => { isDragging = false; });
 
 // =============================================
-// التهيئة عند تحميل الصفحة
+// التهيئة
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {
   const testsData = [
-    { id: 'complete',  title: 'أكمل الفراغ',    desc: 'اختبر حصيلتك من أبيات الشعر الخالدة.',          icon: 'quote',     badge: 'سهل',   badgeClass: '' },
-    { id: 'meter',     title: 'فراسة البحور',    desc: 'هل تستطيع تمييز البحر من نظرة واحدة؟',          icon: 'target',    badge: 'متوسط', badgeClass: 'purple' },
-    { id: 'poet',      title: 'من القائل',       desc: 'أعد كل بيت مجيد إلى قائله الأصيل.',             icon: 'feather',   badge: 'متوسط', badgeClass: 'blue' },
-    { id: 'rhetoric',  title: 'أسرار البلاغة',   desc: 'سبر أغوار الجمال البياني في لغة الضاد.',        icon: 'book-open', badge: 'صعب',   badgeClass: 'gold' }
+    { id: 'complete', title: 'أكمل الفراغ',  desc: 'اختبر حصيلتك من أبيات الشعر الخالدة.',   icon: 'quote',     badge: 'سهل',   badgeClass: '' },
+    { id: 'meter',    title: 'فراسة البحور', desc: 'هل تستطيع تمييز البحر من نظرة واحدة؟',   icon: 'target',    badge: 'متوسط', badgeClass: 'purple' },
+    { id: 'poet',     title: 'من القائل',    desc: 'أعد كل بيت مجيد إلى قائله الأصيل.',      icon: 'feather',   badge: 'متوسط', badgeClass: 'blue' },
+    { id: 'rhetoric', title: 'أسرار البلاغة',desc: 'سبر أغوار الجمال البياني في لغة الضاد.', icon: 'book-open', badge: 'صعب',   badgeClass: 'gold' }
   ];
 
   const grid = document.getElementById('tests-grid');
@@ -417,9 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const el = document.createElement('div');
       el.className = 'challenge-item';
       el.innerHTML = `
-        <div class="challenge-visual ${item.badgeClass}">
-          <i data-lucide="${item.icon}"></i>
-        </div>
+        <div class="challenge-visual ${item.badgeClass}"><i data-lucide="${item.icon}"></i></div>
         <div class="challenge-details">
           <span class="badge ${item.badgeClass}">${item.badge}</span>
           <h3>${item.title}</h3>
