@@ -1,5 +1,5 @@
 /* =============================================
-   script.js
+   script.js — مع حل مشكلة إعادة التشغيل
    ============================================= */
 
 const QUIZZES = {
@@ -29,10 +29,44 @@ const SAMPLE_VERSES = [
 ];
 
 // =============================================
+// ① حفظ واسترجاع الأبيات من localStorage
+// =============================================
+const STORAGE_KEY = 'arudh_verses_v1';
+
+function saveVerses() {
+  try {
+    // احذف الأسطر الفارغة من النهاية قبل الحفظ لتوفير المساحة
+    const trimmed = [...verses];
+    while (trimmed.length > 4 &&
+           !trimmed[trimmed.length-1].trim() &&
+           !trimmed[trimmed.length-2].trim()) {
+      trimmed.splice(trimmed.length-2, 2);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+  } catch(e) { /* localStorage ممتلئ أو غير متاح */ }
+}
+
+function loadVerses() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed) && parsed.length >= 4) {
+      verses = parsed;
+      // تأكد أن الطول زوجي
+      if (verses.length % 2 !== 0) verses.push('');
+      // أضف سطراً فارغاً في النهاية إن لم يكن موجوداً
+      const last = verses.length - 1;
+      if (verses[last].trim() || verses[last-1].trim()) verses.push('','');
+    }
+  } catch(e) {}
+}
+
+// =============================================
 // API
 // =============================================
 async function analyzeVerses(text) {
-  if (!text || !text.trim()) return { phonetic: "", symbols: "", meter: "..." };
+  if (!text || !text.trim()) return { phonetic:"", symbols:"", meter:"..." };
   try {
     const r = await fetch('/api/analyze', {
       method: 'POST',
@@ -43,7 +77,7 @@ async function analyzeVerses(text) {
     const d = await r.json();
     return { phonetic: d.phonetic||"", symbols: d.symbols||"", meter: d.meter||"..." };
   } catch {
-    return { phonetic: "السيرفر لا يستجيب..", symbols: "---", meter: "خطأ اتصال" };
+    return { phonetic:"السيرفر لا يستجيب..", symbols:"---", meter:"خطأ اتصال" };
   }
 }
 
@@ -79,7 +113,7 @@ window.addEventListener('resize', updateArudHeight);
 // =============================================
 // التنقل
 // =============================================
-const ALL_SECTIONS = ['home', 'tests', 'quiz', 'arud'];
+const ALL_SECTIONS = ['home','tests','quiz','arud'];
 
 function showSection(id) {
   ALL_SECTIONS.forEach(s => {
@@ -101,58 +135,58 @@ function showSection(id) {
     if (t) t.style.display = 'block';
   }
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
 
 // =============================================
 // Quiz
 // =============================================
-let activeQuizType = null, quizIndex = 0, score = 0;
+let activeQuizType=null, quizIndex=0, score=0;
 
 function startQuiz(type) {
-  activeQuizType = type; quizIndex = 0; score = 0;
-  document.getElementById('quiz-container').style.display = 'block';
-  document.getElementById('quiz-result').style.display   = 'none';
+  activeQuizType=type; quizIndex=0; score=0;
+  document.getElementById('quiz-container').style.display='block';
+  document.getElementById('quiz-result').style.display='none';
   renderQuiz();
   showSection('quiz');
 }
 
 function renderQuiz() {
-  const q = QUIZZES[activeQuizType][quizIndex];
-  const total = QUIZZES[activeQuizType].length;
-  document.getElementById('quiz-number').textContent   = `السؤال ${quizIndex + 1}`;
-  document.getElementById('quiz-question').textContent = q.question;
-  const prog = document.getElementById('quiz-progress');
-  prog.innerHTML = Array.from({length:total},(_,i)=>
+  const q=QUIZZES[activeQuizType][quizIndex];
+  const total=QUIZZES[activeQuizType].length;
+  document.getElementById('quiz-number').textContent=`السؤال ${quizIndex+1}`;
+  document.getElementById('quiz-question').textContent=q.question;
+  const prog=document.getElementById('quiz-progress');
+  prog.innerHTML=Array.from({length:total},(_,i)=>
     `<div class="progress-dot ${i<=quizIndex?'active':''}"></div>`).join('');
-  const opts = document.getElementById('quiz-options');
-  opts.innerHTML = '';
-  q.options.forEach((opt,i) => {
-    const btn = document.createElement('button');
+  const opts=document.getElementById('quiz-options');
+  opts.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    const btn=document.createElement('button');
     btn.className='quiz-option'; btn.textContent=opt;
     btn.addEventListener('click',()=>handleAnswer(i,q.correct));
     opts.appendChild(btn);
   });
 }
 
-function handleAnswer(sel, correct) {
-  if (sel === correct) score++;
-  const total = QUIZZES[activeQuizType].length;
-  if (quizIndex < total-1) { quizIndex++; renderQuiz(); } else showResult();
+function handleAnswer(sel,correct) {
+  if(sel===correct) score++;
+  const total=QUIZZES[activeQuizType].length;
+  if(quizIndex<total-1){quizIndex++;renderQuiz();}else showResult();
 }
 
 function showResult() {
-  const total = QUIZZES[activeQuizType].length;
-  document.getElementById('quiz-container').style.display = 'none';
-  document.getElementById('quiz-result').style.display   = 'block';
-  document.getElementById('score-text').textContent  = score;
-  document.getElementById('score-denom').textContent = total;
-  document.getElementById('score-message').textContent =
-    score===total ? 'مذهل! لقد أثبتّ جدارتك.' : 'لا بأس، المعرفة تراكمية.';
-  setTimeout(() => {
+  const total=QUIZZES[activeQuizType].length;
+  document.getElementById('quiz-container').style.display='none';
+  document.getElementById('quiz-result').style.display='block';
+  document.getElementById('score-text').textContent=score;
+  document.getElementById('score-denom').textContent=total;
+  document.getElementById('score-message').textContent=
+    score===total?'مذهل! لقد أثبتّ جدارتك.':'لا بأس، المعرفة تراكمية.';
+  setTimeout(()=>{
     const c=283;
     document.getElementById('score-circle').style.strokeDasharray=`${(score/total)*c} ${c}`;
-  }, 120);
+  },120);
 }
 
 // =============================================
@@ -169,14 +203,14 @@ let analysisContent = null;
 let userMovedBox    = false;
 
 // موبايل — inline
-let inlineBox        = null;
-let inlineContent    = null;
-let inlineActiveRow  = null;
+let inlineBox       = null;
+let inlineContent   = null;
+let inlineActiveRow = null;
 
 // =============================================
-// بناء محتوى التحليل (مشترك بين الوضعين)
+// بناء محتوى التحليل
 // =============================================
-function createAnalysisPanel(data, loading = false) {
+function createAnalysisPanel(data, loading=false) {
   if (loading) return `<div class="loading-box">جاري النظم عروضيًا...</div>`;
   if (!data)   return `<div class="loading-box">—</div>`;
   return `
@@ -197,7 +231,7 @@ function createAnalysisPanel(data, loading = false) {
 }
 
 // =============================================
-// الحصول على inline box أو إنشاؤه
+// Inline box (موبايل)
 // =============================================
 function getInlineBox() {
   if (!inlineBox) {
@@ -217,73 +251,82 @@ function getInlineBox() {
 }
 
 // =============================================
-// تحديث التحليل — موبايل (inline accordion)
+// ② تحديث التحليل — موبايل مع فحص isConnected
 // =============================================
 async function updateAnalysisMobile(idx, text, inputElement) {
-  const box       = getInlineBox();
-  const targetRow = inputElement.closest('.verse-row');
+  try {
+    const box = getInlineBox();
+    const targetRow = inputElement.closest('.verse-row');
 
-  // هل البوكس مباشرةً بعد هذا السطر؟
-  const alreadyAfterRow = box.previousElementSibling === targetRow;
+    // ② فحص: هل العنصر لا يزال في الـ DOM؟
+    if (!targetRow || !targetRow.isConnected) return;
 
-  if (!alreadyAfterRow) {
-    // أغلق الـ box الحالي بانيميشن إن كان مفتوحاً
-    if (box.classList.contains('open')) {
-      box.classList.remove('open');
-      await new Promise(r => setTimeout(r, 420)); // انتظر انتهاء الانيميشن
-      if (manualClosed) return;
+    const alreadyAfterRow = box.previousElementSibling === targetRow;
+
+    if (!alreadyAfterRow) {
+      if (box.classList.contains('open')) {
+        box.classList.remove('open');
+        await new Promise(r => setTimeout(r, 420));
+        if (manualClosed) return;
+        // ② فحص مرة ثانية بعد الانتظار — قد يكون renderVerses() استُدعي خلاله
+        if (!targetRow.isConnected) return;
+      }
+      targetRow.after(box);
+      inlineActiveRow = targetRow;
     }
-    // انقله للسطر الجديد
-    targetRow.after(box);
-    inlineActiveRow = targetRow;
-  }
 
-  // أظهر حالة التحميل
-  inlineContent.innerHTML = createAnalysisPanel(null, true);
+    if (!inlineContent) inlineContent = box.querySelector('.inline-analysis-body');
+    inlineContent.innerHTML = createAnalysisPanel(null, true);
 
-  // افتح بانيميشن إن لم يكن مفتوحاً
-  if (!box.classList.contains('open')) {
-    requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('open')));
-  }
+    if (!box.classList.contains('open')) {
+      requestAnimationFrame(()=>requestAnimationFrame(()=>box.classList.add('open')));
+    }
 
-  // اجلب التحليل
-  const data = await analyzeVerses(text);
+    const data = await analyzeVerses(text);
 
-  if (idx === activeIndex && !manualClosed) {
-    inlineContent.innerHTML = createAnalysisPanel(data);
-    lucide.createIcons();
-    window.currentAnalysis = { bahr: data.meter, kitaba: data.phonetic, scansion: data.symbols };
+    // ② فحص نهائي بعد await الـ API
+    if (idx === activeIndex && !manualClosed && targetRow.isConnected) {
+      inlineContent.innerHTML = createAnalysisPanel(data);
+      lucide.createIcons();
+      window.currentAnalysis = { bahr:data.meter, kitaba:data.phonetic, scansion:data.symbols };
+    }
+  } catch(err) {
+    // أخطاء صامتة لا تُوقف الموقع
+    console.warn('updateAnalysisMobile:', err);
   }
 }
 
 // =============================================
-// تحديث التحليل — ديسكتوب (box عائم)
+// تحديث التحليل — ديسكتوب
 // =============================================
 async function updateAnalysisDesktop(idx, text, inputElement) {
-  if (!analysisBox) {
-    analysisBox     = document.getElementById('analysis-box');
-    analysisContent = document.getElementById('analysis-content');
-  }
+  try {
+    if (!analysisBox) {
+      analysisBox     = document.getElementById('analysis-box');
+      analysisContent = document.getElementById('analysis-content');
+    }
 
-  analysisBox.style.display = 'block';
-  analysisContent.innerHTML = createAnalysisPanel(null, true);
+    analysisBox.style.display = 'block';
+    analysisContent.innerHTML = createAnalysisPanel(null, true);
+    if (!userMovedBox) positionBox(inputElement);
 
-  if (!userMovedBox) positionBox(inputElement);
+    const data = await analyzeVerses(text);
 
-  const data = await analyzeVerses(text);
-
-  if (idx === activeIndex && !manualClosed && analysisBox.style.display !== 'none') {
-    analysisContent.innerHTML = createAnalysisPanel(data);
-    lucide.createIcons();
-    window.currentAnalysis = { bahr: data.meter, kitaba: data.phonetic, scansion: data.symbols };
+    if (idx===activeIndex && !manualClosed && analysisBox.style.display!=='none') {
+      analysisContent.innerHTML = createAnalysisPanel(data);
+      lucide.createIcons();
+      window.currentAnalysis = { bahr:data.meter, kitaba:data.phonetic, scansion:data.symbols };
+    }
+  } catch(err) {
+    console.warn('updateAnalysisDesktop:', err);
   }
 }
 
 // =============================================
-// الدالة الرئيسية للتحديث — تُوجَّه حسب الجهاز
+// الدالة الرئيسية
 // =============================================
 async function updateAnalysisUI(idx, text, inputElement) {
-  if (!text || text.trim().length === 0) return;
+  if (!text || text.trim().length===0) return;
   if (manualClosed) return;
 
   if (window.innerWidth <= 768) {
@@ -297,33 +340,33 @@ async function updateAnalysisUI(idx, text, inputElement) {
 // تحديد موضع البوكس العائم (ديسكتوب)
 // =============================================
 function positionBox(inputElement) {
-  if (!analysisBox || !inputElement || window.innerWidth <= 768) return;
+  if (!analysisBox||!inputElement||window.innerWidth<=768) return;
   if (userMovedBox) return;
 
-  const rect = inputElement.getBoundingClientRect();
-  const boxW = 380, boxH = 310;
+  const rect=inputElement.getBoundingClientRect();
+  const boxW=380, boxH=310;
 
-  let left = rect.left + rect.width/2 - boxW/2;
-  left = Math.max(16, Math.min(left, window.innerWidth - boxW - 16));
+  let left=rect.left+rect.width/2-boxW/2;
+  left=Math.max(16,Math.min(left,window.innerWidth-boxW-16));
 
-  analysisBox.style.position  = 'fixed';
-  analysisBox.style.width     = boxW + 'px';
-  analysisBox.style.left      = left + 'px';
-  analysisBox.style.right     = 'auto';
-  analysisBox.style.transform = 'none';
+  analysisBox.style.position='fixed';
+  analysisBox.style.width=boxW+'px';
+  analysisBox.style.left=left+'px';
+  analysisBox.style.right='auto';
+  analysisBox.style.transform='none';
 
-  const spaceBelow = window.innerHeight - rect.bottom;
-  if (spaceBelow >= boxH + 16) {
-    analysisBox.style.top    = (rect.bottom + 12) + 'px';
-    analysisBox.style.bottom = 'auto';
+  const spaceBelow=window.innerHeight-rect.bottom;
+  if (spaceBelow>=boxH+16) {
+    analysisBox.style.top=(rect.bottom+12)+'px';
+    analysisBox.style.bottom='auto';
   } else {
-    analysisBox.style.top    = 'auto';
-    analysisBox.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+    analysisBox.style.top='auto';
+    analysisBox.style.bottom=(window.innerHeight-rect.top+12)+'px';
   }
 }
 
 // =============================================
-// إغلاق
+// إغلاق / نسخ
 // =============================================
 window.closeInlineAnalysis = () => {
   clearTimeout(typingTimer);
@@ -334,34 +377,31 @@ window.closeInlineAnalysis = () => {
 window.closeAnalysis = () => {
   clearTimeout(typingTimer);
   manualClosed = true;
-  if (analysisBox)  analysisBox.style.display = 'none';
-  if (inlineBox)    inlineBox.classList.remove('open');
+  if (analysisBox) analysisBox.style.display = 'none';
+  if (inlineBox)   inlineBox.classList.remove('open');
 };
 
-// =============================================
-// نسخ
-// =============================================
 window.copyAnalysis = () => {
   if (!window.currentAnalysis) return;
-  const { bahr, kitaba, scansion } = window.currentAnalysis;
+  const {bahr,kitaba,scansion}=window.currentAnalysis;
   navigator.clipboard.writeText(`البحر: ${bahr}\nالكتابة: ${kitaba}\nالترميز: ${scansion}`);
-  const btn = document.getElementById('copy-btn-text');
-  if (btn) { btn.textContent='تم!'; setTimeout(()=>btn.textContent='نسخ',2000); }
+  const btn=document.getElementById('copy-btn-text');
+  if (btn){btn.textContent='تم!';setTimeout(()=>btn.textContent='نسخ',2000);}
 };
 
 window.copyAllVerses = (btn) => {
-  const lines = [];
-  for (let i=0; i<verses.length; i+=2) {
-    const s=verses[i]||'', a=verses[i+1]||'';
-    if (s||a) lines.push(`${s} ... ${a}`);
+  const lines=[];
+  for(let i=0;i<verses.length;i+=2){
+    const s=verses[i]||'',a=verses[i+1]||'';
+    if(s||a) lines.push(`${s} ... ${a}`);
   }
   if (!lines.length) return;
   navigator.clipboard.writeText(lines.join('\n'));
-  if (btn) {
+  if (btn){
     const orig=btn.innerHTML;
     btn.innerHTML='<i data-lucide="check"></i> تم النسخ';
     lucide.createIcons();
-    setTimeout(()=>{ btn.innerHTML=orig; lucide.createIcons(); },2000);
+    setTimeout(()=>{btn.innerHTML=orig;lucide.createIcons();},2000);
   }
 };
 
@@ -369,13 +409,11 @@ window.copyAllVerses = (btn) => {
 // رسم حقول الأبيات
 // =============================================
 function renderVerses() {
-  const container = document.getElementById('verses-container');
+  const container=document.getElementById('verses-container');
   if (!container) return;
+  container.innerHTML='';
 
-  // الـ inline box سيُزال مع innerHTML=''، لا بأس
-  container.innerHTML = '';
-
-  for (let i=0; i<verses.length; i+=2) {
+  for(let i=0;i<verses.length;i+=2){
     const n=Math.floor(i/2)+1, si=i, ai=i+1;
     const w=document.createElement('div');
     w.className='verse-row';
@@ -390,32 +428,37 @@ function renderVerses() {
     container.appendChild(w);
   }
 
-  container.querySelectorAll('.verse-input').forEach(input => {
+  container.querySelectorAll('.verse-input').forEach(input=>{
 
-    input.addEventListener('focus', e => {
-      manualClosed = false;  // المستخدم يتفاعل من جديد
-      userMovedBox = false;
-      activeIndex  = parseInt(e.target.dataset.idx, 10);
+    input.addEventListener('focus', e=>{
+      manualClosed=false;
+      userMovedBox=false;
+      activeIndex=parseInt(e.target.dataset.idx,10);
       updateAnalysisUI(activeIndex, e.target.value, e.target);
     });
 
-    input.addEventListener('input', e => {
-      const idx = parseInt(e.target.dataset.idx, 10);
-      verses[idx] = e.target.value;
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(()=>updateAnalysisUI(idx, e.target.value, e.target), 400);
+    input.addEventListener('input', e=>{
+      const idx=parseInt(e.target.dataset.idx,10);
+      verses[idx]=e.target.value;
 
-      // بيت جديد تلقائياً
-      if (idx >= verses.length-2 && e.target.value.trim()) {
+      // ① حفظ فوري في localStorage
+      saveVerses();
+
+      clearTimeout(typingTimer);
+      typingTimer=setTimeout(()=>updateAnalysisUI(idx,e.target.value,e.target),400);
+
+      // إضافة بيت جديد تلقائياً
+      if(idx>=verses.length-2 && e.target.value.trim()){
         const lS=verses.length-2, lA=verses.length-1;
-        if ((verses[lS]||'').trim()||(verses[lA]||'').trim()) {
-          if (verses.length-1===lA) {
+        if((verses[lS]||'').trim()||(verses[lA]||'').trim()){
+          if(verses.length-1===lA){
             verses.push('','');
+            saveVerses(); // ① احفظ مع الزيادة
             const st=container.scrollTop;
             renderVerses();
             container.scrollTop=st;
             const same=container.querySelector(`input[data-idx="${idx}"]`);
-            if (same) { same.focus(); same.setSelectionRange(same.value.length,same.value.length); }
+            if(same){same.focus();same.setSelectionRange(same.value.length,same.value.length);}
           }
         }
       }
@@ -425,25 +468,30 @@ function renderVerses() {
   lucide.createIcons();
 }
 
+// =============================================
+// وظائف مساعدة
+// =============================================
 function fillSample() {
   verses=[...SAMPLE_VERSES]; activeIndex=0;
+  saveVerses();
   renderVerses(); window.closeAnalysis();
 }
 
 function clearVerses() {
   verses=['','','','']; activeIndex=0;
+  saveVerses();
   renderVerses(); window.closeAnalysis();
 }
 
 // =============================================
 // Drag — ديسكتوب فقط
 // =============================================
-let isDragging=false, startX, startY, initialLeft, initialTop;
+let isDragging=false,startX,startY,initialLeft,initialTop;
 
-document.addEventListener('mousedown', e => {
-  if (!e.target.closest('.analysis-header')) return;
-  if (window.innerWidth<=768 || e.target.closest('button')) return;
-  if (!analysisBox) analysisBox=document.getElementById('analysis-box');
+document.addEventListener('mousedown',e=>{
+  if(!e.target.closest('.analysis-header'))return;
+  if(window.innerWidth<=768||e.target.closest('button'))return;
+  if(!analysisBox) analysisBox=document.getElementById('analysis-box');
   isDragging=true; userMovedBox=true;
   startX=e.clientX; startY=e.clientY;
   const r=analysisBox.getBoundingClientRect();
@@ -454,28 +502,55 @@ document.addEventListener('mousedown', e => {
   analysisBox.style.bottom='auto';
 });
 
-document.addEventListener('mousemove', e => {
-  if (!isDragging) return;
+document.addEventListener('mousemove',e=>{
+  if(!isDragging)return;
   e.preventDefault();
   analysisBox.style.left=(initialLeft+e.clientX-startX)+'px';
   analysisBox.style.top=(initialTop+e.clientY-startY)+'px';
 });
 
-document.addEventListener('mouseup', ()=>{ isDragging=false; });
+document.addEventListener('mouseup',()=>{isDragging=false;});
 
 // =============================================
 // التهيئة
 // =============================================
-document.addEventListener('DOMContentLoaded', () => {
-  const testsData = [
-    { id:'complete', title:'أكمل الفراغ',  desc:'اختبر حصيلتك من أبيات الشعر الخالدة.',   icon:'quote',     badge:'سهل',   badgeClass:'' },
-    { id:'meter',    title:'فراسة البحور', desc:'هل تستطيع تمييز البحر من نظرة واحدة؟',   icon:'target',    badge:'متوسط', badgeClass:'purple' },
-    { id:'poet',     title:'من القائل',    desc:'أعد كل بيت مجيد إلى قائله الأصيل.',      icon:'feather',   badge:'متوسط', badgeClass:'blue' },
-    { id:'rhetoric', title:'أسرار البلاغة',desc:'سبر أغوار الجمال البياني في لغة الضاد.', icon:'book-open', badge:'صعب',   badgeClass:'gold' }
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // ① استرجاع الأبيات المحفوظة
+  loadVerses();
+
+  // إشعار للمستخدم إن وُجدت أبيات محفوظة
+  const hasContent = verses.some(v=>v.trim());
+  if (hasContent) {
+    const notice = document.createElement('div');
+    notice.id = 'restore-notice';
+    notice.style.cssText = `
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:var(--color-text); color:var(--color-bg);
+      padding:10px 20px; border-radius:8px; font-size:0.8rem;
+      font-family:var(--font-sans); z-index:999;
+      opacity:0; transition:opacity 0.3s;
+    `;
+    notice.textContent = 'تم استرجاع أبياتك المحفوظة ✓';
+    document.body.appendChild(notice);
+    requestAnimationFrame(()=>{
+      notice.style.opacity='1';
+      setTimeout(()=>{
+        notice.style.opacity='0';
+        setTimeout(()=>notice.remove(),300);
+      },3000);
+    });
+  }
+
+  const testsData=[
+    {id:'complete',title:'أكمل الفراغ', desc:'اختبر حصيلتك من أبيات الشعر الخالدة.',  icon:'quote',     badge:'سهل',   badgeClass:''},
+    {id:'meter',   title:'فراسة البحور',desc:'هل تستطيع تمييز البحر من نظرة واحدة؟',  icon:'target',    badge:'متوسط', badgeClass:'purple'},
+    {id:'poet',    title:'من القائل',   desc:'أعد كل بيت مجيد إلى قائله الأصيل.',     icon:'feather',   badge:'متوسط', badgeClass:'blue'},
+    {id:'rhetoric',title:'أسرار البلاغة',desc:'سبر أغوار الجمال البياني في لغة الضاد.',icon:'book-open', badge:'صعب',   badgeClass:'gold'}
   ];
 
   const grid=document.getElementById('tests-grid');
-  if (grid) {
+  if(grid){
     testsData.forEach(item=>{
       const el=document.createElement('div');
       el.className='challenge-item';
