@@ -1,23 +1,44 @@
 /* =============================================
-   script.js — مع حل مشكلة إعادة التشغيل
+   script.js — النسخة الكاملة
    ============================================= */
 
+// =============================================
+// ① إعدادات الأدمن — غيّر الرمز هنا
+// =============================================
+const ADMIN_SECRET = 'معلقات1432';
+
+// =============================================
+// بيانات المعلقات السبع
+// =============================================
+const MUALLAQAT = [
+  { id:'imru_al_qays', name:'امرؤ القيس',       matla:'قِفَا نَبْكِ مِنْ ذِكْرَى حَبِيبٍ وَمَنزِلِ',    icon:'crown',  color:'gold'   },
+  { id:'tarafa',       name:'طرفة بن العبد',     matla:'لِخَوْلَةَ أَطْلالٌ بِبُرْقَةِ ثَهْمَدِ',        icon:'anchor', color:'blue'   },
+  { id:'zuhair',       name:'زهير بن أبي سلمى', matla:'أَمِنْ أُمِّ أَوْفَى دِمْنَةٌ لَمْ تَكَلَّمِ',    icon:'shield', color:'green'  },
+  { id:'labid',        name:'لبيد بن ربيعة',     matla:'عَفَتِ الدِّيَارُ مَحَلُّهَا فَمُقَامُهَا',       icon:'mountain',color:'purple' },
+  { id:'antara',       name:'عنترة بن شداد',     matla:'هَلْ غَادَرَ الشُّعَرَاءُ مِنْ مُتَرَدَّمِ',      icon:'sword',  color:'red'    },
+  { id:'amr_kulthum',  name:'عمرو بن كلثوم',     matla:'أَلَا هُبِّي بِصَحْنِكِ فَاصْبَحِينَا',           icon:'zap',    color:'orange' },
+  { id:'harith',       name:'الحارث بن حلزة',    matla:'آذَنَتْنَا بِبَيْنِهَا أَسْمَاءُ',                icon:'sun',    color:'teal'   }
+];
+
+// =============================================
+// بيانات التحديات
+// =============================================
 const QUIZZES = {
   complete: [
-    { question: "الخيلُ والليلُ والبيداءُ تعرفُني... والرمحُ والقرطاسُ و____", options: ["السيفُ","القلمُ","الكتابُ","الحبرُ"], correct: 1 },
-    { question: "وما حبُّ الديارِ شغفنَ قلبي... ولكن حبُّ من ____", options: ["بنى الديارا","سكنَ الديارا","هجرَ الديارا","زارَ الديارا"], correct: 1 }
+    { question:"الخيلُ والليلُ والبيداءُ تعرفُني... والرمحُ والقرطاسُ و____", options:["السيفُ","القلمُ","الكتابُ","الحبرُ"], correct:1 },
+    { question:"وما حبُّ الديارِ شغفنَ قلبي... ولكن حبُّ من ____", options:["بنى الديارا","سكنَ الديارا","هجرَ الديارا","زارَ الديارا"], correct:1 }
   ],
   meter: [
-    { question: "ما البحر الذي وزنه: فعولن مفاعيلن فعولن مفاعلن؟", options: ["الطويل","الكامل","البسيط","الوافر"], correct: 0 },
-    { question: "على أي بحر نظم الشوقي نهج البردة؟", options: ["البسيط","الخفيف","الوافر","الكامل"], correct: 1 }
+    { question:"ما البحر الذي وزنه: فعولن مفاعيلن فعولن مفاعلن؟", options:["الطويل","الكامل","البسيط","الوافر"], correct:0 },
+    { question:"على أي بحر نظم الشوقي نهج البردة؟", options:["البسيط","الخفيف","الوافر","الكامل"], correct:1 }
   ],
   poet: [
-    { question: "من القائل: نَقِّل فُؤادَكَ حَيثُ شِئتَ مِنَ الهَوى... ما الحُبُّ إِلّا لِلحَبيبِ الأَوَّلِ؟", options: ["المتنبي","أبو تمام","بشار بن برد","البحتري"], correct: 1 },
-    { question: "من الملقب بـ شاعر النيل؟", options: ["أحمد شوقي","حافظ إبراهيم","إيليا أبو ماضي","خليل مطران"], correct: 1 }
+    { question:"من القائل: نَقِّل فُؤادَكَ حَيثُ شِئتَ مِنَ الهَوى... ما الحُبُّ إِلّا لِلحَبيبِ الأَوَّلِ؟", options:["المتنبي","أبو تمام","بشار بن برد","البحتري"], correct:1 },
+    { question:"من الملقب بـ شاعر النيل؟", options:["أحمد شوقي","حافظ إبراهيم","إيليا أبو ماضي","خليل مطران"], correct:1 }
   ],
   rhetoric: [
-    { question: "ما نوع التشبيه في: 'العمر مثل الضيف'؟", options: ["بليغ","مجمل","مرسل","مؤكد"], correct: 2 },
-    { question: "ما الغرض من الاستفهام في قوله تعالى: 'أليس الله بأحكم الحاكمين'؟", options: ["التقرير","التعجب","النفي","التمني"], correct: 0 }
+    { question:"ما نوع التشبيه في: 'العمر مثل الضيف'؟", options:["بليغ","مجمل","مرسل","مؤكد"], correct:2 },
+    { question:"ما الغرض من الاستفهام في قوله تعالى: 'أليس الله بأحكم الحاكمين'؟", options:["التقرير","التعجب","النفي","التمني"], correct:0 }
   ]
 };
 
@@ -29,83 +50,88 @@ const SAMPLE_VERSES = [
 ];
 
 // =============================================
-// ① حفظ واسترجاع الأبيات من localStorage
+// حفظ/استرجاع الأبيات
 // =============================================
-const STORAGE_KEY = 'arudh_verses_v1';
+const VERSES_KEY  = 'arudh_verses_v1';
+const MUSEUM_KEY  = 'museum_data_v1';
 
 function saveVerses() {
   try {
-    // احذف الأسطر الفارغة من النهاية قبل الحفظ لتوفير المساحة
-    const trimmed = [...verses];
-    while (trimmed.length > 4 &&
-           !trimmed[trimmed.length-1].trim() &&
-           !trimmed[trimmed.length-2].trim()) {
-      trimmed.splice(trimmed.length-2, 2);
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-  } catch(e) { /* localStorage ممتلئ أو غير متاح */ }
+    const t = [...verses];
+    while (t.length > 4 && !t[t.length-1].trim() && !t[t.length-2].trim()) t.splice(t.length-2,2);
+    localStorage.setItem(VERSES_KEY, JSON.stringify(t));
+  } catch {}
 }
 
 function loadVerses() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-    const parsed = JSON.parse(saved);
-    if (Array.isArray(parsed) && parsed.length >= 4) {
-      verses = parsed;
-      // تأكد أن الطول زوجي
+    const s = localStorage.getItem(VERSES_KEY);
+    if (!s) return;
+    const p = JSON.parse(s);
+    if (Array.isArray(p) && p.length >= 4) {
+      verses = p;
       if (verses.length % 2 !== 0) verses.push('');
-      // أضف سطراً فارغاً في النهاية إن لم يكن موجوداً
-      const last = verses.length - 1;
-      if (verses[last].trim() || verses[last-1].trim()) verses.push('','');
+      const l = verses.length-1;
+      if ((verses[l]||'').trim() || (verses[l-1]||'').trim()) verses.push('','');
     }
-  } catch(e) {}
+  } catch {}
+}
+
+// =============================================
+// متحف — تخزين
+// =============================================
+let museumData = {};
+
+function loadMuseumData() {
+  try {
+    const d = localStorage.getItem(MUSEUM_KEY);
+    museumData = d ? JSON.parse(d) : {};
+  } catch { museumData = {}; }
+}
+
+function saveMuseumData() {
+  try { localStorage.setItem(MUSEUM_KEY, JSON.stringify(museumData)); } catch {}
+}
+
+function genId() {
+  return 'e' + Date.now().toString(36) + Math.random().toString(36).substr(2,5);
 }
 
 // =============================================
 // API
 // =============================================
 async function analyzeVerses(text) {
-  if (!text || !text.trim()) return { phonetic:"", symbols:"", meter:"..." };
+  if (!text||!text.trim()) return {phonetic:"",symbols:"",meter:"..."};
   try {
-    const r = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text.trim() })
-    });
+    const r = await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text.trim()})});
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
-    return { phonetic: d.phonetic||"", symbols: d.symbols||"", meter: d.meter||"..." };
-  } catch {
-    return { phonetic:"السيرفر لا يستجيب..", symbols:"---", meter:"خطأ اتصال" };
-  }
+    return {phonetic:d.phonetic||"",symbols:d.symbols||"",meter:d.meter||"..."};
+  } catch { return {phonetic:"السيرفر لا يستجيب..",symbols:"---",meter:"خطأ اتصال"}; }
 }
 
 // =============================================
 // المظهر
 // =============================================
 let isDark = localStorage.getItem('theme') === 'dark';
-
 function applyTheme() {
   document.documentElement.classList.toggle('dark', isDark);
   document.getElementById('moon-icon').style.display = isDark ? 'none' : 'block';
   document.getElementById('sun-icon').style.display  = isDark ? 'block' : 'none';
 }
-
 document.getElementById('theme-toggle').addEventListener('click', () => {
   isDark = !isDark;
   localStorage.setItem('theme', isDark ? 'dark' : 'light');
   applyTheme();
 });
-
 applyTheme();
 
 // =============================================
-// ضبط ارتفاع قسم المحلل
+// ارتفاع المحلل
 // =============================================
 function updateArudHeight() {
   const el = document.getElementById('arud-section');
-  if (!el || el.style.display === 'none') return;
+  if (!el || el.style.display==='none') return;
   el.style.height = (window.innerHeight - 64) + 'px';
 }
 window.addEventListener('resize', updateArudHeight);
@@ -113,7 +139,7 @@ window.addEventListener('resize', updateArudHeight);
 // =============================================
 // التنقل
 // =============================================
-const ALL_SECTIONS = ['home','tests','quiz','arud'];
+const ALL_SECTIONS = ['home','tests','quiz','arud','museum','museum-poet'];
 
 function showSection(id) {
   ALL_SECTIONS.forEach(s => {
@@ -133,9 +159,10 @@ function showSection(id) {
     document.body.style.overflow = '';
     const t = document.getElementById(`${id}-section`);
     if (t) t.style.display = 'block';
+    if (id === 'museum') renderMuseumLanding();
   }
 
-  window.scrollTo({ top:0, behavior:'smooth' });
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 // =============================================
@@ -147,20 +174,16 @@ function startQuiz(type) {
   activeQuizType=type; quizIndex=0; score=0;
   document.getElementById('quiz-container').style.display='block';
   document.getElementById('quiz-result').style.display='none';
-  renderQuiz();
-  showSection('quiz');
+  renderQuiz(); showSection('quiz');
 }
 
 function renderQuiz() {
-  const q=QUIZZES[activeQuizType][quizIndex];
-  const total=QUIZZES[activeQuizType].length;
+  const q=QUIZZES[activeQuizType][quizIndex], total=QUIZZES[activeQuizType].length;
   document.getElementById('quiz-number').textContent=`السؤال ${quizIndex+1}`;
   document.getElementById('quiz-question').textContent=q.question;
   const prog=document.getElementById('quiz-progress');
-  prog.innerHTML=Array.from({length:total},(_,i)=>
-    `<div class="progress-dot ${i<=quizIndex?'active':''}"></div>`).join('');
-  const opts=document.getElementById('quiz-options');
-  opts.innerHTML='';
+  prog.innerHTML=Array.from({length:total},(_,i)=>`<div class="progress-dot ${i<=quizIndex?'active':''}"></div>`).join('');
+  const opts=document.getElementById('quiz-options'); opts.innerHTML='';
   q.options.forEach((opt,i)=>{
     const btn=document.createElement('button');
     btn.className='quiz-option'; btn.textContent=opt;
@@ -181,34 +204,21 @@ function showResult() {
   document.getElementById('quiz-result').style.display='block';
   document.getElementById('score-text').textContent=score;
   document.getElementById('score-denom').textContent=total;
-  document.getElementById('score-message').textContent=
-    score===total?'مذهل! لقد أثبتّ جدارتك.':'لا بأس، المعرفة تراكمية.';
-  setTimeout(()=>{
-    const c=283;
-    document.getElementById('score-circle').style.strokeDasharray=`${(score/total)*c} ${c}`;
-  },120);
+  document.getElementById('score-message').textContent=score===total?'مذهل! لقد أثبتّ جدارتك.':'لا بأس، المعرفة تراكمية.';
+  setTimeout(()=>{ const c=283; document.getElementById('score-circle').style.strokeDasharray=`${(score/total)*c} ${c}`; },120);
 }
 
 // =============================================
-// المحلل — الحالة
+// المحلل — حالة
 // =============================================
-let verses      = ['','','',''];
-let activeIndex = 0;
-let typingTimer;
-let manualClosed  = false;
-
-// ديسكتوب
-let analysisBox     = null;
-let analysisContent = null;
-let userMovedBox    = false;
-
-// موبايل — inline
-let inlineBox       = null;
-let inlineContent   = null;
-let inlineActiveRow = null;
+let verses=['','','',''], activeIndex=0, typingTimer;
+let manualClosed=false;
+let analysisBox=null, analysisContent=null;
+let userMovedBox=false;
+let inlineBox=null, inlineContent=null, inlineActiveRow=null;
 
 // =============================================
-// بناء محتوى التحليل
+// بناء لوحة التحليل
 // =============================================
 function createAnalysisPanel(data, loading=false) {
   if (loading) return `<div class="loading-box">جاري النظم عروضيًا...</div>`;
@@ -224,9 +234,7 @@ function createAnalysisPanel(data, loading=false) {
     </div>
     <div class="scansion-section">
       <div class="label">الترميز العروضي:</div>
-      <div class="scansion-display">
-        <p class="scansion-text" dir="ltr">${data.symbols||'----'}</p>
-      </div>
+      <div class="scansion-display"><p class="scansion-text" dir="ltr">${data.symbols||'----'}</p></div>
     </div>`;
 }
 
@@ -251,24 +259,20 @@ function getInlineBox() {
 }
 
 // =============================================
-// ② تحديث التحليل — موبايل مع فحص isConnected
+// تحديث التحليل — موبايل
 // =============================================
 async function updateAnalysisMobile(idx, text, inputElement) {
   try {
     const box = getInlineBox();
     const targetRow = inputElement.closest('.verse-row');
+    if (!targetRow||!targetRow.isConnected) return;
 
-    // ② فحص: هل العنصر لا يزال في الـ DOM؟
-    if (!targetRow || !targetRow.isConnected) return;
-
-    const alreadyAfterRow = box.previousElementSibling === targetRow;
-
-    if (!alreadyAfterRow) {
+    const alreadyThere = box.previousElementSibling === targetRow;
+    if (!alreadyThere) {
       if (box.classList.contains('open')) {
         box.classList.remove('open');
-        await new Promise(r => setTimeout(r, 420));
+        await new Promise(r=>setTimeout(r,420));
         if (manualClosed) return;
-        // ② فحص مرة ثانية بعد الانتظار — قد يكون renderVerses() استُدعي خلاله
         if (!targetRow.isConnected) return;
       }
       targetRow.after(box);
@@ -277,23 +281,16 @@ async function updateAnalysisMobile(idx, text, inputElement) {
 
     if (!inlineContent) inlineContent = box.querySelector('.inline-analysis-body');
     inlineContent.innerHTML = createAnalysisPanel(null, true);
-
-    if (!box.classList.contains('open')) {
+    if (!box.classList.contains('open'))
       requestAnimationFrame(()=>requestAnimationFrame(()=>box.classList.add('open')));
-    }
 
     const data = await analyzeVerses(text);
-
-    // ② فحص نهائي بعد await الـ API
-    if (idx === activeIndex && !manualClosed && targetRow.isConnected) {
+    if (idx===activeIndex && !manualClosed && targetRow.isConnected) {
       inlineContent.innerHTML = createAnalysisPanel(data);
       lucide.createIcons();
-      window.currentAnalysis = { bahr:data.meter, kitaba:data.phonetic, scansion:data.symbols };
+      window.currentAnalysis = {bahr:data.meter, kitaba:data.phonetic, scansion:data.symbols};
     }
-  } catch(err) {
-    // أخطاء صامتة لا تُوقف الموقع
-    console.warn('updateAnalysisMobile:', err);
-  }
+  } catch(e){ console.warn('mobile analysis:',e); }
 }
 
 // =============================================
@@ -301,84 +298,54 @@ async function updateAnalysisMobile(idx, text, inputElement) {
 // =============================================
 async function updateAnalysisDesktop(idx, text, inputElement) {
   try {
-    if (!analysisBox) {
-      analysisBox     = document.getElementById('analysis-box');
-      analysisContent = document.getElementById('analysis-content');
-    }
-
-    analysisBox.style.display = 'block';
-    analysisContent.innerHTML = createAnalysisPanel(null, true);
+    if (!analysisBox) { analysisBox=document.getElementById('analysis-box'); analysisContent=document.getElementById('analysis-content'); }
+    analysisBox.style.display='block';
+    analysisContent.innerHTML=createAnalysisPanel(null,true);
+    // ② البوكس يبقى في مكانه إن كان المستخدم حرّكه
     if (!userMovedBox) positionBox(inputElement);
-
     const data = await analyzeVerses(text);
-
     if (idx===activeIndex && !manualClosed && analysisBox.style.display!=='none') {
-      analysisContent.innerHTML = createAnalysisPanel(data);
+      analysisContent.innerHTML=createAnalysisPanel(data);
       lucide.createIcons();
-      window.currentAnalysis = { bahr:data.meter, kitaba:data.phonetic, scansion:data.symbols };
+      window.currentAnalysis={bahr:data.meter,kitaba:data.phonetic,scansion:data.symbols};
     }
-  } catch(err) {
-    console.warn('updateAnalysisDesktop:', err);
-  }
+  } catch(e){ console.warn('desktop analysis:',e); }
 }
 
-// =============================================
-// الدالة الرئيسية
-// =============================================
 async function updateAnalysisUI(idx, text, inputElement) {
-  if (!text || text.trim().length===0) return;
+  if (!text||text.trim().length===0) return;
   if (manualClosed) return;
-
-  if (window.innerWidth <= 768) {
-    await updateAnalysisMobile(idx, text, inputElement);
-  } else {
-    await updateAnalysisDesktop(idx, text, inputElement);
-  }
+  if (window.innerWidth<=768) await updateAnalysisMobile(idx,text,inputElement);
+  else await updateAnalysisDesktop(idx,text,inputElement);
 }
 
 // =============================================
-// تحديد موضع البوكس العائم (ديسكتوب)
+// تحديد موضع بطاقة الديسكتوب
 // =============================================
 function positionBox(inputElement) {
-  if (!analysisBox||!inputElement||window.innerWidth<=768) return;
-  if (userMovedBox) return;
-
-  const rect=inputElement.getBoundingClientRect();
-  const boxW=380, boxH=310;
-
+  if (!analysisBox||!inputElement||window.innerWidth<=768||userMovedBox) return;
+  const rect=inputElement.getBoundingClientRect(), boxW=380, boxH=310;
   let left=rect.left+rect.width/2-boxW/2;
   left=Math.max(16,Math.min(left,window.innerWidth-boxW-16));
-
-  analysisBox.style.position='fixed';
-  analysisBox.style.width=boxW+'px';
-  analysisBox.style.left=left+'px';
-  analysisBox.style.right='auto';
-  analysisBox.style.transform='none';
-
+  analysisBox.style.position='fixed'; analysisBox.style.width=boxW+'px';
+  analysisBox.style.left=left+'px'; analysisBox.style.right='auto'; analysisBox.style.transform='none';
   const spaceBelow=window.innerHeight-rect.bottom;
-  if (spaceBelow>=boxH+16) {
-    analysisBox.style.top=(rect.bottom+12)+'px';
-    analysisBox.style.bottom='auto';
-  } else {
-    analysisBox.style.top='auto';
-    analysisBox.style.bottom=(window.innerHeight-rect.top+12)+'px';
-  }
+  if (spaceBelow>=boxH+16){ analysisBox.style.top=(rect.bottom+12)+'px'; analysisBox.style.bottom='auto'; }
+  else { analysisBox.style.top='auto'; analysisBox.style.bottom=(window.innerHeight-rect.top+12)+'px'; }
 }
 
 // =============================================
 // إغلاق / نسخ
 // =============================================
 window.closeInlineAnalysis = () => {
-  clearTimeout(typingTimer);
-  manualClosed = true;
+  clearTimeout(typingTimer); manualClosed=true;
   if (inlineBox) inlineBox.classList.remove('open');
 };
 
 window.closeAnalysis = () => {
-  clearTimeout(typingTimer);
-  manualClosed = true;
-  if (analysisBox) analysisBox.style.display = 'none';
-  if (inlineBox)   inlineBox.classList.remove('open');
+  clearTimeout(typingTimer); manualClosed=true;
+  if (analysisBox) analysisBox.style.display='none';
+  if (inlineBox) inlineBox.classList.remove('open');
 };
 
 window.copyAnalysis = () => {
@@ -391,18 +358,10 @@ window.copyAnalysis = () => {
 
 window.copyAllVerses = (btn) => {
   const lines=[];
-  for(let i=0;i<verses.length;i+=2){
-    const s=verses[i]||'',a=verses[i+1]||'';
-    if(s||a) lines.push(`${s} ... ${a}`);
-  }
-  if (!lines.length) return;
+  for(let i=0;i<verses.length;i+=2){const s=verses[i]||'',a=verses[i+1]||'';if(s||a)lines.push(`${s} ... ${a}`);}
+  if(!lines.length)return;
   navigator.clipboard.writeText(lines.join('\n'));
-  if (btn){
-    const orig=btn.innerHTML;
-    btn.innerHTML='<i data-lucide="check"></i> تم النسخ';
-    lucide.createIcons();
-    setTimeout(()=>{btn.innerHTML=orig;lucide.createIcons();},2000);
-  }
+  if(btn){const orig=btn.innerHTML;btn.innerHTML='<i data-lucide="check"></i> تم النسخ';lucide.createIcons();setTimeout(()=>{btn.innerHTML=orig;lucide.createIcons();},2000);}
 };
 
 // =============================================
@@ -410,53 +369,39 @@ window.copyAllVerses = (btn) => {
 // =============================================
 function renderVerses() {
   const container=document.getElementById('verses-container');
-  if (!container) return;
+  if(!container)return;
   container.innerHTML='';
-
   for(let i=0;i<verses.length;i+=2){
-    const n=Math.floor(i/2)+1, si=i, ai=i+1;
-    const w=document.createElement('div');
-    w.className='verse-row';
+    const n=Math.floor(i/2)+1,si=i,ai=i+1;
+    const w=document.createElement('div'); w.className='verse-row';
     w.innerHTML=`
       <div class="verse-line-num">${String(n).padStart(2,'0')}</div>
       <div class="verse-inputs">
-        <input type="text" value="${(verses[si]||'').replace(/"/g,'&quot;')}"
-               placeholder="صدر البيت ${n}" class="verse-input" data-idx="${si}" dir="rtl">
-        <input type="text" value="${(verses[ai]||'').replace(/"/g,'&quot;')}"
-               placeholder="عجز البيت ${n}" class="verse-input" data-idx="${ai}" dir="rtl">
+        <input type="text" value="${(verses[si]||'').replace(/"/g,'&quot;')}" placeholder="صدر البيت ${n}" class="verse-input" data-idx="${si}" dir="rtl">
+        <input type="text" value="${(verses[ai]||'').replace(/"/g,'&quot;')}" placeholder="عجز البيت ${n}" class="verse-input" data-idx="${ai}" dir="rtl">
       </div>`;
     container.appendChild(w);
   }
 
   container.querySelectorAll('.verse-input').forEach(input=>{
-
     input.addEventListener('focus', e=>{
       manualClosed=false;
-      userMovedBox=false;
+      // ② لا نُعيد ضبط userMovedBox — البوكس يبقى في مكانه
       activeIndex=parseInt(e.target.dataset.idx,10);
-      updateAnalysisUI(activeIndex, e.target.value, e.target);
+      updateAnalysisUI(activeIndex,e.target.value,e.target);
     });
-
     input.addEventListener('input', e=>{
       const idx=parseInt(e.target.dataset.idx,10);
       verses[idx]=e.target.value;
-
-      // ① حفظ فوري في localStorage
       saveVerses();
-
       clearTimeout(typingTimer);
       typingTimer=setTimeout(()=>updateAnalysisUI(idx,e.target.value,e.target),400);
-
-      // إضافة بيت جديد تلقائياً
-      if(idx>=verses.length-2 && e.target.value.trim()){
-        const lS=verses.length-2, lA=verses.length-1;
+      if(idx>=verses.length-2&&e.target.value.trim()){
+        const lS=verses.length-2,lA=verses.length-1;
         if((verses[lS]||'').trim()||(verses[lA]||'').trim()){
           if(verses.length-1===lA){
-            verses.push('','');
-            saveVerses(); // ① احفظ مع الزيادة
-            const st=container.scrollTop;
-            renderVerses();
-            container.scrollTop=st;
+            verses.push('',''); saveVerses();
+            const st=container.scrollTop; renderVerses(); container.scrollTop=st;
             const same=container.querySelector(`input[data-idx="${idx}"]`);
             if(same){same.focus();same.setSelectionRange(same.value.length,same.value.length);}
           }
@@ -464,81 +409,441 @@ function renderVerses() {
       }
     });
   });
-
   lucide.createIcons();
 }
 
+function fillSample()  { verses=[...SAMPLE_VERSES];activeIndex=0;userMovedBox=false;saveVerses();renderVerses();window.closeAnalysis(); }
+function clearVerses() { verses=['','','',''];activeIndex=0;userMovedBox=false;saveVerses();renderVerses();window.closeAnalysis(); }
+
 // =============================================
-// وظائف مساعدة
+// ① Drag من أي حافة (12px) — ديسكتوب
 // =============================================
-function fillSample() {
-  verses=[...SAMPLE_VERSES]; activeIndex=0;
-  saveVerses();
-  renderVerses(); window.closeAnalysis();
+let isDragging=false, startX, startY, initialLeft, initialTop;
+const EDGE = 12;
+
+function isOnEdge(e, rect) {
+  return e.clientX>=rect.left && e.clientX<=rect.right &&
+         e.clientY>=rect.top  && e.clientY<=rect.bottom &&
+         (e.clientX-rect.left<EDGE || rect.right-e.clientX<EDGE ||
+          e.clientY-rect.top<EDGE  || rect.bottom-e.clientY<EDGE);
 }
 
-function clearVerses() {
-  verses=['','','','']; activeIndex=0;
-  saveVerses();
-  renderVerses(); window.closeAnalysis();
-}
+document.addEventListener('mousemove', e=>{
+  if (isDragging) {
+    e.preventDefault();
+    analysisBox.style.left=(initialLeft+e.clientX-startX)+'px';
+    analysisBox.style.top=(initialTop+e.clientY-startY)+'px';
+    return;
+  }
+  // تحديث المؤشر عند الاقتراب من الحواف
+  if (!analysisBox||analysisBox.style.display==='none'||window.innerWidth<=768) return;
+  const rect=analysisBox.getBoundingClientRect();
+  const inside=e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom;
+  if (!inside) { analysisBox.style.cursor=''; return; }
+  analysisBox.style.cursor = isOnEdge(e,rect) ? 'move' : 'default';
+});
 
-// =============================================
-// Drag — ديسكتوب فقط
-// =============================================
-let isDragging=false,startX,startY,initialLeft,initialTop;
-
-document.addEventListener('mousedown',e=>{
-  if(!e.target.closest('.analysis-header'))return;
-  if(window.innerWidth<=768||e.target.closest('button'))return;
-  if(!analysisBox) analysisBox=document.getElementById('analysis-box');
+document.addEventListener('mousedown', e=>{
+  if (window.innerWidth<=768) return;
+  if (!analysisBox||analysisBox.style.display==='none') return;
+  if (e.target.closest('button,input,textarea,[contenteditable]')) return;
+  const rect=analysisBox.getBoundingClientRect();
+  if (!isOnEdge(e,rect)) return;
   isDragging=true; userMovedBox=true;
   startX=e.clientX; startY=e.clientY;
-  const r=analysisBox.getBoundingClientRect();
-  initialLeft=r.left; initialTop=r.top;
+  initialLeft=rect.left; initialTop=rect.top;
   analysisBox.style.transform='none';
-  analysisBox.style.left=initialLeft+'px';
-  analysisBox.style.top=initialTop+'px';
-  analysisBox.style.bottom='auto';
-});
-
-document.addEventListener('mousemove',e=>{
-  if(!isDragging)return;
+  analysisBox.style.left=initialLeft+'px'; analysisBox.style.top=initialTop+'px'; analysisBox.style.bottom='auto';
   e.preventDefault();
-  analysisBox.style.left=(initialLeft+e.clientX-startX)+'px';
-  analysisBox.style.top=(initialTop+e.clientY-startY)+'px';
 });
 
-document.addEventListener('mouseup',()=>{isDragging=false;});
+document.addEventListener('mouseup', ()=>{ isDragging=false; });
 
 // =============================================
-// التهيئة
+// ========== متحف المعلقات ==========
+// =============================================
+
+let isAdmin = sessionStorage.getItem('isAdmin')==='true';
+let currentPoetId = null;
+let editingEntryId = null;
+let annotationCtx  = null; // {poetId, entryId, verseIdx}
+let museumModalVerses = [];
+
+// ----- Modals -----
+function openModal(id)  { const m=document.getElementById(id); if(m){m.style.display='flex'; lucide.createIcons();} }
+function closeModal(id) { const m=document.getElementById(id); if(m) m.style.display='none'; }
+function handleModalBackdrop(e, id) { if(e.target===e.currentTarget) closeModal(id); }
+
+// ----- Auth -----
+function tryAdminLogin() {
+  const input=document.getElementById('admin-code-input');
+  const err=document.getElementById('admin-error');
+  if (!input) return;
+  if (input.value.trim()===ADMIN_SECRET) {
+    isAdmin=true;
+    sessionStorage.setItem('isAdmin','true');
+    closeModal('admin-modal');
+    input.value='';
+    err.style.display='none';
+    renderMuseumLanding();
+    // إذا كنا داخل صفحة شاعر، أعد عرضها
+    if (currentPoetId) {
+      document.getElementById('admin-add-btn-area').style.display='flex';
+      renderPoetContent(currentPoetId);
+    }
+  } else {
+    err.style.display='block';
+    input.value='';
+    input.focus();
+  }
+}
+
+function adminLogout(e) {
+  if(e) e.stopPropagation();
+  isAdmin=false;
+  sessionStorage.removeItem('isAdmin');
+  renderMuseumLanding();
+  if (currentPoetId) {
+    document.getElementById('admin-add-btn-area').style.display='none';
+    renderPoetContent(currentPoetId);
+  }
+}
+
+// ----- رسم صفحة المتحف -----
+function renderMuseumLanding() {
+  const grid=document.getElementById('museum-grid');
+  if(!grid) return;
+  grid.innerHTML='';
+
+  MUALLAQAT.forEach(poet=>{
+    const card=document.createElement('div');
+    card.className='museum-card';
+    card.innerHTML=`
+      <div class="museum-card-icon ${poet.color}"><i data-lucide="${poet.icon}"></i></div>
+      <div class="museum-card-details">
+        <h3 class="museum-poet-name">${poet.name}</h3>
+        <p class="museum-matla">"${poet.matla}"</p>
+        <button class="btn-primary btn-sm">دخول المتحف</button>
+      </div>`;
+    card.addEventListener('click', ()=>showMuseumPoet(poet.id));
+    grid.appendChild(card);
+  });
+
+  // بطاقة الأدمن
+  const adminCard=document.createElement('div');
+  adminCard.className=`museum-card admin-card${isAdmin?' logged-in':''}`;
+  if(isAdmin) {
+    adminCard.innerHTML=`
+      <div class="museum-card-icon muted"><i data-lucide="shield-check"></i></div>
+      <div class="museum-card-details">
+        <h3 class="museum-poet-name">وضع الأدمن</h3>
+        <p class="museum-matla">أنت مسجل الدخول كأدمن</p>
+        <button class="btn-secondary btn-sm" onclick="adminLogout(event)">تسجيل الخروج</button>
+      </div>`;
+  } else {
+    adminCard.innerHTML=`
+      <div class="museum-card-icon muted"><i data-lucide="lock"></i></div>
+      <div class="museum-card-details">
+        <h3 class="museum-poet-name">سجل دخول كأدمن</h3>
+        <p class="museum-matla">للإدارة والنشر في متحف المعلقات</p>
+        <button class="btn-secondary btn-sm">دخول</button>
+      </div>`;
+    adminCard.addEventListener('click', ()=>openModal('admin-modal'));
+  }
+  grid.appendChild(adminCard);
+  lucide.createIcons();
+}
+
+// ----- صفحة الشاعر -----
+function showMuseumPoet(poetId) {
+  currentPoetId=poetId;
+  const poet=MUALLAQAT.find(p=>p.id===poetId);
+  if(!poet) return;
+
+  showSection('museum-poet');
+
+  document.getElementById('poet-title-area').innerHTML=`
+    <div class="poet-page-title">
+      <div class="poet-icon-sm ${poet.color}"><i data-lucide="${poet.icon}"></i></div>
+      <div>
+        <h1 class="page-title">${poet.name}</h1>
+        <p class="poet-matla-hero">"${poet.matla}"</p>
+      </div>
+    </div>`;
+
+  document.getElementById('admin-add-btn-area').style.display = isAdmin ? 'flex' : 'none';
+  renderPoetContent(poetId);
+  lucide.createIcons();
+}
+
+function renderPoetContent(poetId) {
+  const entries=museumData[poetId]||[];
+  const container=document.getElementById('poet-content-area');
+  container.innerHTML='';
+
+  if(entries.length===0){
+    container.innerHTML=`<div class="empty-state"><i data-lucide="scroll"></i><p>لم يُضَف محتوى بعد لهذه المعلقة</p></div>`;
+    lucide.createIcons(); return;
+  }
+
+  entries.forEach(entry=>{
+    const el=document.createElement('div');
+    el.className='museum-entry';
+    el.dataset.entryId=entry.id;
+    el.innerHTML = entry.type==='text' ? buildTextHTML(entry,poetId) : buildVersesHTML(entry,poetId);
+    container.appendChild(el);
+  });
+
+  lucide.createIcons();
+  setupAnnotationEvents(poetId);
+}
+
+function buildTextHTML(entry, poetId) {
+  const adminCtrl = isAdmin ? `
+    <div class="entry-admin-controls">
+      <button class="admin-ctrl-btn edit" onclick="showAddTextModal('${entry.id}')" title="تعديل"><i data-lucide="pencil"></i></button>
+      <button class="admin-ctrl-btn delete" onclick="deleteEntry('${poetId}','${entry.id}')" title="حذف"><i data-lucide="trash-2"></i></button>
+    </div>` : '';
+  return `
+    <div class="text-entry">
+      ${entry.title ? `<div class="entry-title">${escHtml(entry.title)}</div>` : ''}
+      <div class="entry-content">${entry.html}</div>
+    </div>
+    ${adminCtrl}`;
+}
+
+function buildVersesHTML(entry, poetId) {
+  const linesHtml = entry.verses.map((v,i)=>{
+    const hasAnno = v.annotation && v.annotation.trim();
+    const annoBtn = isAdmin ? `
+      <button class="verse-annotate-btn ${hasAnno?'has-annotation':''}" title="${hasAnno?'تعديل الشرح':'إضافة شرح'}">
+        <i data-lucide="${hasAnno?'message-square':'message-square-plus'}"></i>
+        ${hasAnno?'':'شرح'}
+      </button>` : '';
+    const annoDisplay = hasAnno ? `<div class="verse-annotation-display">${escHtml(v.annotation)}</div>` : '';
+    return `
+      <div class="museum-verse-line" data-entry-id="${entry.id}" data-verse-idx="${i}">
+        <div>
+          <div class="museum-verse-text">
+            <span class="verse-sadr">${escHtml(v.sadr)}</span>
+            <span class="verse-sep">...</span>
+            <span class="verse-ajuz">${escHtml(v.ajuz)}</span>
+          </div>
+          ${annoDisplay}
+        </div>
+        ${annoBtn}
+      </div>`;
+  }).join('');
+
+  const adminCtrl = isAdmin ? `
+    <div class="entry-admin-controls">
+      <button class="admin-ctrl-btn edit" onclick="showAddVersesModal('${entry.id}')" title="تعديل"><i data-lucide="pencil"></i></button>
+      <button class="admin-ctrl-btn delete" onclick="deleteEntry('${poetId}','${entry.id}')" title="حذف"><i data-lucide="trash-2"></i></button>
+    </div>` : '';
+  return `<div class="verses-entry"><div class="museum-verses-display">${linesHtml}</div>${adminCtrl}</div>`;
+}
+
+function escHtml(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ----- تعليقات الأبيات -----
+function setupAnnotationEvents(poetId) {
+  if(!isAdmin) return;
+  const container=document.getElementById('poet-content-area');
+
+  // ديسكتوب: click على زر التعليق
+  container.querySelectorAll('.verse-annotate-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const line=btn.closest('.museum-verse-line');
+      showAnnotationModal(poetId, line.dataset.entryId, parseInt(line.dataset.verseIdx));
+    });
+  });
+
+  // موبايل: long-press على السطر
+  if(window.innerWidth<=768){
+    let lpTimer=null;
+    container.querySelectorAll('.museum-verse-line').forEach(line=>{
+      line.addEventListener('touchstart', ()=>{
+        lpTimer=setTimeout(()=>{
+          navigator.vibrate&&navigator.vibrate(50);
+          showAnnotationModal(poetId, line.dataset.entryId, parseInt(line.dataset.verseIdx));
+        }, 600);
+      },{passive:true});
+      line.addEventListener('touchend',  ()=>clearTimeout(lpTimer));
+      line.addEventListener('touchmove', ()=>clearTimeout(lpTimer));
+    });
+  }
+}
+
+function showAnnotationModal(poetId, entryId, verseIdx) {
+  const entry=(museumData[poetId]||[]).find(e=>e.id===entryId);
+  if(!entry||!entry.verses) return;
+  const verse=entry.verses[verseIdx];
+  if(!verse) return;
+
+  annotationCtx={poetId, entryId, verseIdx};
+
+  document.getElementById('annotation-verse-preview').textContent=`${verse.sadr} ... ${verse.ajuz}`;
+  document.getElementById('annotation-text').value=verse.annotation||'';
+
+  const delBtn=document.getElementById('delete-annotation-btn');
+  delBtn.style.display = verse.annotation ? 'flex' : 'none';
+
+  openModal('annotation-modal');
+  setTimeout(()=>document.getElementById('annotation-text').focus(),100);
+}
+
+function saveAnnotation() {
+  if(!annotationCtx) return;
+  const {poetId,entryId,verseIdx}=annotationCtx;
+  const text=document.getElementById('annotation-text').value.trim();
+  const entry=(museumData[poetId]||[]).find(e=>e.id===entryId);
+  if(!entry) return;
+  entry.verses[verseIdx].annotation=text;
+  saveMuseumData();
+  closeModal('annotation-modal');
+  renderPoetContent(poetId);
+  annotationCtx=null;
+}
+
+function deleteAnnotation() {
+  if(!annotationCtx) return;
+  const {poetId,entryId,verseIdx}=annotationCtx;
+  const entry=(museumData[poetId]||[]).find(e=>e.id===entryId);
+  if(!entry) return;
+  entry.verses[verseIdx].annotation='';
+  saveMuseumData();
+  closeModal('annotation-modal');
+  renderPoetContent(poetId);
+  annotationCtx=null;
+}
+
+// ----- إضافة/تعديل محتوى -----
+function showAddContentOptions() { openModal('add-options-modal'); }
+
+function showAddTextModal(entryId) {
+  editingEntryId=entryId;
+  document.getElementById('text-modal-title').textContent = entryId ? 'تعديل النص' : 'إضافة نص';
+  const editor=document.getElementById('text-editor');
+  const titleInput=document.getElementById('text-entry-title');
+
+  if(entryId) {
+    const entry=(museumData[currentPoetId]||[]).find(e=>e.id===entryId);
+    titleInput.value=entry?entry.title:'';
+    editor.innerHTML=entry?entry.html:'';
+  } else {
+    titleInput.value=''; editor.innerHTML='';
+  }
+  openModal('text-modal');
+  setTimeout(()=>editor.focus(),100);
+}
+
+function publishText() {
+  const title=document.getElementById('text-entry-title').value.trim();
+  const html=document.getElementById('text-editor').innerHTML.trim();
+  if(!html||html==='<br>') { alert('يرجى إضافة نص'); return; }
+  if(!museumData[currentPoetId]) museumData[currentPoetId]=[];
+
+  if(editingEntryId) {
+    const idx=museumData[currentPoetId].findIndex(e=>e.id===editingEntryId);
+    if(idx!==-1){museumData[currentPoetId][idx].title=title;museumData[currentPoetId][idx].html=html;}
+  } else {
+    museumData[currentPoetId].push({id:genId(),type:'text',title,html,createdAt:Date.now()});
+  }
+  saveMuseumData(); closeModal('text-modal'); renderPoetContent(currentPoetId); editingEntryId=null;
+}
+
+function showAddVersesModal(entryId) {
+  editingEntryId=entryId;
+  document.getElementById('verses-modal-title').textContent = entryId ? 'تعديل الأبيات' : 'إضافة أبيات';
+
+  if(entryId){
+    const entry=(museumData[currentPoetId]||[]).find(e=>e.id===entryId);
+    museumModalVerses=entry?entry.verses.map(v=>[v.sadr,v.ajuz]):[['','']];
+  } else {
+    museumModalVerses=[['','']];
+  }
+  renderMuseumVersesInput();
+  openModal('verses-modal');
+}
+
+function renderMuseumVersesInput() {
+  const c=document.getElementById('museum-verses-container'); c.innerHTML='';
+  museumModalVerses.forEach((v,i)=>{
+    const row=document.createElement('div'); row.className='museum-verse-input-row';
+    row.innerHTML=`
+      <span class="verse-num-label">${String(i+1).padStart(2,'0')}</span>
+      <input type="text" value="${escHtml(v[0])}" placeholder="صدر البيت ${i+1}" class="modal-verse-input" data-r="${i}" data-c="0" dir="rtl">
+      <input type="text" value="${escHtml(v[1])}" placeholder="عجز البيت ${i+1}"  class="modal-verse-input" data-r="${i}" data-c="1" dir="rtl">
+      ${museumModalVerses.length>1?`<button class="verse-del-btn" onclick="removeMuseumVerse(${i})">✕</button>`:''}`;
+    c.appendChild(row);
+  });
+  c.querySelectorAll('.modal-verse-input').forEach(inp=>{
+    inp.addEventListener('input',e=>{
+      museumModalVerses[parseInt(e.target.dataset.r)][parseInt(e.target.dataset.c)]=e.target.value;
+    });
+  });
+}
+
+function addMuseumVersePair() { museumModalVerses.push(['','']); renderMuseumVersesInput(); }
+function removeMuseumVerse(i) { museumModalVerses.splice(i,1); renderMuseumVersesInput(); }
+
+function publishVerses() {
+  const valid=museumModalVerses.filter(v=>v[0].trim()||v[1].trim());
+  if(!valid.length){alert('يرجى إضافة بيت واحد على الأقل');return;}
+
+  if(!museumData[currentPoetId]) museumData[currentPoetId]=[];
+
+  if(editingEntryId){
+    const idx=museumData[currentPoetId].findIndex(e=>e.id===editingEntryId);
+    if(idx!==-1){
+      const existing=museumData[currentPoetId][idx];
+      const newVerses=valid.map((v,i)=>({sadr:v[0],ajuz:v[1],annotation:(existing.verses[i]||{}).annotation||''}));
+      museumData[currentPoetId][idx].verses=newVerses;
+    }
+  } else {
+    museumData[currentPoetId].push({id:genId(),type:'verses',verses:valid.map(v=>({sadr:v[0],ajuz:v[1],annotation:''})),createdAt:Date.now()});
+  }
+  saveMuseumData(); closeModal('verses-modal'); renderPoetContent(currentPoetId); editingEntryId=null;
+}
+
+function deleteEntry(poetId, entryId) {
+  if(!confirm('هل أنت متأكد من حذف هذا المحتوى؟')) return;
+  if(museumData[poetId]) museumData[poetId]=museumData[poetId].filter(e=>e.id!==entryId);
+  saveMuseumData(); renderPoetContent(poetId);
+}
+
+// ----- محرر النص -----
+function execFmt(cmd) { document.execCommand(cmd,false,null); document.getElementById('text-editor').focus(); }
+function execBlk(tag) { document.execCommand('formatBlock',false,tag); document.getElementById('text-editor').focus(); }
+function applySpanStyle(cls) {
+  const editor=document.getElementById('text-editor'); if(!editor) return;
+  const sel=window.getSelection(); if(!sel.rangeCount) return;
+  const range=sel.getRangeAt(0); if(range.collapsed) return;
+  const span=document.createElement('span'); span.className=cls;
+  try{ range.surroundContents(span); }
+  catch{ const frag=range.extractContents(); span.appendChild(frag); range.insertNode(span); }
+  editor.focus();
+}
+
+// =============================================
+// التهيئة عند التحميل
 // =============================================
 document.addEventListener('DOMContentLoaded',()=>{
-
-  // ① استرجاع الأبيات المحفوظة
+  loadMuseumData();
   loadVerses();
 
-  // إشعار للمستخدم إن وُجدت أبيات محفوظة
-  const hasContent = verses.some(v=>v.trim());
-  if (hasContent) {
-    const notice = document.createElement('div');
-    notice.id = 'restore-notice';
-    notice.style.cssText = `
-      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-      background:var(--color-text); color:var(--color-bg);
-      padding:10px 20px; border-radius:8px; font-size:0.8rem;
-      font-family:var(--font-sans); z-index:999;
-      opacity:0; transition:opacity 0.3s;
-    `;
-    notice.textContent = 'تم استرجاع أبياتك المحفوظة ✓';
+  // إشعار استرجاع الأبيات
+  if(verses.some(v=>v.trim())){
+    const notice=document.createElement('div');
+    notice.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--color-text);color:var(--color-bg);padding:10px 20px;border-radius:8px;font-size:0.8rem;font-family:var(--font-sans);z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+    notice.textContent='تم استرجاع أبياتك المحفوظة ✓';
     document.body.appendChild(notice);
     requestAnimationFrame(()=>{
       notice.style.opacity='1';
-      setTimeout(()=>{
-        notice.style.opacity='0';
-        setTimeout(()=>notice.remove(),300);
-      },3000);
+      setTimeout(()=>{notice.style.opacity='0';setTimeout(()=>notice.remove(),300);},3000);
     });
   }
 
@@ -552,8 +857,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const grid=document.getElementById('tests-grid');
   if(grid){
     testsData.forEach(item=>{
-      const el=document.createElement('div');
-      el.className='challenge-item';
+      const el=document.createElement('div'); el.className='challenge-item';
       el.innerHTML=`
         <div class="challenge-visual ${item.badgeClass}"><i data-lucide="${item.icon}"></i></div>
         <div class="challenge-details">
@@ -566,10 +870,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   }
 
-  window.showSection=showSection;
-  window.startQuiz=startQuiz;
-  window.fillSample=fillSample;
-  window.clearVerses=clearVerses;
+  window.showSection=showSection; window.startQuiz=startQuiz;
+  window.fillSample=fillSample;   window.clearVerses=clearVerses;
+  window.closeModal=closeModal;   window.handleModalBackdrop=handleModalBackdrop;
+  window.openModal=openModal;     window.tryAdminLogin=tryAdminLogin;
+  window.adminLogout=adminLogout; window.showAddContentOptions=showAddContentOptions;
+  window.showAddTextModal=showAddTextModal; window.publishText=publishText;
+  window.showAddVersesModal=showAddVersesModal; window.publishVerses=publishVerses;
+  window.deleteEntry=deleteEntry; window.addMuseumVersePair=addMuseumVersePair;
+  window.removeMuseumVerse=removeMuseumVerse; window.saveAnnotation=saveAnnotation;
+  window.deleteAnnotation=deleteAnnotation; window.execFmt=execFmt;
+  window.execBlk=execBlk; window.applySpanStyle=applySpanStyle;
 
   lucide.createIcons();
 });
