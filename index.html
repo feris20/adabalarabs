@@ -19,6 +19,7 @@
             </div>
             <div class="nav-links">
                 <a href="#" onclick="showSection('home'); return false;">الرئيسية</a>
+                <a href="#" onclick="showSection('museum'); return false;">المتحف</a>
                 <a href="#" onclick="showSection('arud'); return false;">المحلل العروضي</a>
                 <button id="theme-toggle" class="theme-btn">
                     <i data-lucide="moon" id="moon-icon"></i>
@@ -43,9 +44,12 @@
                         <span>ميدان المعرفة</span>
                         <i data-lucide="trophy"></i>
                     </button>
+                    <button class="btn-secondary" onclick="showSection('museum')">
+                        <span>متحف المعلقات</span>
+                        <i data-lucide="landmark"></i>
+                    </button>
                 </div>
             </div>
-
             <div class="features container">
                 <div class="card">
                     <div class="card-icon"><i data-lucide="feather"></i></div>
@@ -57,9 +61,12 @@
                     <h3>ميدان المعرفة</h3>
                     <p>اختبر مهاراتك الأدبية عبر تحديات متجددة في الوزن والقافية والنقد الأدبي.</p>
                 </div>
+                <div class="card">
+                    <div class="card-icon"><i data-lucide="landmark"></i></div>
+                    <h3>متحف المعلقات</h3>
+                    <p>تجوّل في روائع السبع المعلقات، وتعمّق في فهم أعظم ما نظمه شعراء الجاهلية.</p>
+                </div>
             </div>
-
-            <!-- مكتبة الشعر -->
             <section class="library border-top">
                 <div class="container">
                     <div class="section-header">
@@ -102,11 +109,9 @@
             </div>
         </section>
 
-        <!-- ===== صفحة الاختبار النشط ===== -->
+        <!-- ===== الاختبار ===== -->
         <section id="quiz-section" style="display:none;">
             <div class="container py-8 quiz-wrapper">
-
-                <!-- بطاقة الأسئلة -->
                 <div id="quiz-container" class="quiz-card">
                     <div class="quiz-top">
                         <div id="quiz-progress" class="quiz-progress"></div>
@@ -115,8 +120,6 @@
                     <h3 id="quiz-question" class="quiz-question"></h3>
                     <div id="quiz-options" class="quiz-options"></div>
                 </div>
-
-                <!-- النتيجة -->
                 <div id="quiz-result" class="quiz-result-card" style="display:none;">
                     <h3 class="quiz-result-title">أنهيت التحدي</h3>
                     <div class="score-circle-wrapper">
@@ -134,7 +137,6 @@
                     <p id="score-message" class="score-message"></p>
                     <button class="btn-primary" onclick="showSection('tests')">العودة للميدان</button>
                 </div>
-
             </div>
         </section>
 
@@ -161,24 +163,161 @@
                         </button>
                     </div>
                 </div>
-
-                <div id="verses-container" class="verses-form">
-                    <!-- عمود الأبيات -->
-                </div>
-
-                <!-- Analysis Box (Draggable) -->
-                <div id="analysis-box" class="analysis-card" style="display: none;">
+                <div id="verses-container" class="verses-form"></div>
+                <div id="analysis-box" class="analysis-card" style="display:none;">
                     <div class="analysis-header">
                         <button onclick="closeAnalysis()" class="close-btn"><i data-lucide="x"></i></button>
                         <button onclick="copyAnalysis()" class="copy-mini-btn" id="copy-btn-text">نسخ</button>
                     </div>
-                    <div id="analysis-content" class="analysis-body">
-                        <!-- Content will be injected here statically matching the analysis panel -->
-                    </div>
+                    <div id="analysis-content" class="analysis-body"></div>
                 </div>
             </div>
         </section>
+
+        <!-- ===== متحف المعلقات ===== -->
+        <section id="museum-section" style="display:none;">
+            <div class="container py-8">
+                <div class="section-full-header text-center mb-12">
+                    <div class="header-icon"><i data-lucide="landmark"></i></div>
+                    <h1 class="page-title">متحف المعلقات</h1>
+                    <p class="page-sub">السبعة الذهبية — روائع الشعر الجاهلي الخالد</p>
+                </div>
+                <div id="museum-grid" class="museum-grid"></div>
+            </div>
+        </section>
+
+        <!-- ===== صفحة الشاعر ===== -->
+        <section id="museum-poet-section" style="display:none;">
+            <div class="container py-8">
+                <div class="poet-page-header">
+                    <button class="back-btn" onclick="showSection('museum')">
+                        <i data-lucide="arrow-right"></i> العودة للمتحف
+                    </button>
+                    <div id="poet-title-area"></div>
+                </div>
+                <div id="poet-content-area" class="poet-content"></div>
+            </div>
+            <div id="admin-add-btn-area" class="admin-add-area" style="display:none;">
+                <button class="admin-add-btn" onclick="showAddContentOptions()">
+                    <i data-lucide="plus"></i>
+                </button>
+            </div>
+        </section>
     </main>
+
+    <!-- ========== MODALS ========== -->
+
+    <!-- دخول الأدمن -->
+    <div id="admin-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'admin-modal')">
+        <div class="modal-card modal-small">
+            <div class="modal-header">
+                <h3>دخول الأدمن</h3>
+                <button class="modal-close" onclick="closeModal('admin-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">أدخل الرمز السري للوصول إلى لوحة الإدارة</p>
+                <input type="password" id="admin-code-input" class="modal-input"
+                       placeholder="الرمز السري..."
+                       onkeydown="if(event.key==='Enter') tryAdminLogin()">
+                <p id="admin-error" class="admin-error" style="display:none;">رمز غير صحيح، حاول مجدداً</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="tryAdminLogin()">دخول</button>
+                <button class="btn-secondary" onclick="closeModal('admin-modal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- خيارات الإضافة -->
+    <div id="add-options-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'add-options-modal')">
+        <div class="modal-card modal-small">
+            <div class="modal-header">
+                <h3>ماذا تريد إضافة؟</h3>
+                <button class="modal-close" onclick="closeModal('add-options-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body add-options">
+                <button class="add-option-btn" onclick="closeModal('add-options-modal');showAddTextModal(null)">
+                    <i data-lucide="file-text"></i>
+                    <div><span>إضافة نص</span><p>شرح أو تحليل أدبي أو مقدمة منسّقة</p></div>
+                </button>
+                <button class="add-option-btn" onclick="closeModal('add-options-modal');showAddVersesModal(null)">
+                    <i data-lucide="align-left"></i>
+                    <div><span>إضافة أبيات</span><p>أبيات المعلقة مع شرح اختياري لكل بيت</p></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- محرر النص -->
+    <div id="text-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'text-modal')">
+        <div class="modal-card modal-large">
+            <div class="modal-header">
+                <h3 id="text-modal-title">إضافة نص</h3>
+                <button class="modal-close" onclick="closeModal('text-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="text-entry-title" class="modal-input" placeholder="العنوان (اختياري)">
+                <div class="editor-toolbar">
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execFmt('bold')" title="عريض"><b>B</b></button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execFmt('italic')" title="مائل"><i>I</i></button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execFmt('underline')" title="تسطير"><u>U</u></button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execFmt('strikeThrough')" title="يتوسطه خط"><s>S</s></button>
+                    <div class="toolbar-divider"></div>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execBlk('h2')" title="عنوان كبير">A1</button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execBlk('h3')" title="عنوان متوسط">A2</button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="execBlk('p')"  title="نص عادي">A3</button>
+                    <div class="toolbar-divider"></div>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="applySpanStyle('text-primary')"   title="نص رئيسي">رئيسي</button>
+                    <button class="toolbar-btn" onmousedown="event.preventDefault()" onclick="applySpanStyle('text-secondary')" title="نص ثانوي">ثانوي</button>
+                </div>
+                <div id="text-editor" class="rich-editor" contenteditable="true" dir="rtl" data-ph="اكتب النص هنا..."></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="publishText()">نشر</button>
+                <button class="btn-secondary" onclick="closeModal('text-modal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- محرر الأبيات -->
+    <div id="verses-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'verses-modal')">
+        <div class="modal-card modal-large">
+            <div class="modal-header">
+                <h3 id="verses-modal-title">إضافة أبيات</h3>
+                <button class="modal-close" onclick="closeModal('verses-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="museum-verses-container" class="museum-verses-input"></div>
+                <button class="btn-secondary btn-sm" style="margin-top:8px;align-self:flex-start;" onclick="addMuseumVersePair()">
+                    <i data-lucide="plus"></i> إضافة بيت
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="publishVerses()">نشر</button>
+                <button class="btn-secondary" onclick="closeModal('verses-modal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- شرح البيت -->
+    <div id="annotation-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'annotation-modal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>شرح البيت</h3>
+                <button class="modal-close" onclick="closeModal('annotation-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="annotation-verse-preview" class="annotation-verse-preview"></div>
+                <textarea id="annotation-text" class="modal-textarea" rows="5"
+                          placeholder="أضف شرحاً أو تعليقاً على هذا البيت..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="saveAnnotation()">حفظ</button>
+                <button class="btn-secondary danger" id="delete-annotation-btn" onclick="deleteAnnotation()" style="display:none;">حذف الشرح</button>
+                <button class="btn-secondary" onclick="closeModal('annotation-modal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
