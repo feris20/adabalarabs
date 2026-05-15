@@ -48,14 +48,30 @@ const SAMPLE_VERSES = [
 let authToken = sessionStorage.getItem('adminToken') || null;
 let isAdmin   = false;
 
+// 🔥 ضع رابط السيرفر الخاص بك هنا! 🔥
+// إذا كان السيرفر يعمل على استضافة، ضع الرابط هنا، مثلاً:
+// const BASE_URL = 'https://your-server-domain.com';
+// إذا كنت تجربه على جهازك (Localhost):
+const BASE_URL = 'http://0.0.0.0:21346'; // تأكد من البورت!
+
 async function apiCall(method, path, body=null, auth=false) {
   const headers = { 'Content-Type': 'application/json' };
   if (auth && authToken) headers['Authorization'] = `Bearer ${authToken}`;
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(path, opts);
+  
+  // دمج الرابط الأساسي مع المسار
+  const fullUrl = BASE_URL + path; 
+  
+  const r = await fetch(fullUrl, opts); // استخدام الرابط الكامل
+  
   if (r.status === 401 && auth) { onAuthExpired(); throw new Error('unauthorized'); }
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  
+  // إذا لم يكن السيرفر يستجيب بشكل صحيح (مثلاً الرمز خطأ)
+  if (!r.ok) {
+      const errData = await r.json().catch(()=>({}));
+      throw new Error(errData.detail || `HTTP ${r.status}`);
+  }
   return r.json();
 }
 
