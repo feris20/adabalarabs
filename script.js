@@ -40,19 +40,14 @@ const SAMPLE_VERSES = [
   "إِذَا الشعبُ يوماً أرادَ الحياةَ",
   "فلا بدَّ أنْ يستجيبَ القدرْ"
 ];
-
 // =============================================
 // ① API — كل الطلبات تمر من هنا
-// ADMIN_SECRET ليس هنا — هو في السيرفر فقط
 // =============================================
 let authToken = sessionStorage.getItem('adminToken') || null;
 let isAdmin   = false;
 
-// 🔥 ضع رابط السيرفر الخاص بك هنا! 🔥
-// إذا كان السيرفر يعمل على استضافة، ضع الرابط هنا، مثلاً:
-// const BASE_URL = 'https://your-server-domain.com';
-// إذا كنت تجربه على جهازك (Localhost):
-const BASE_URL = 'http://0.0.0.0:21346'; // تأكد من البورت!
+// 🔥 هذا المتغير يوجه كل طلبات المتحف والأدمن لتمر عبر الوسيط الشامل 🔥
+const BASE_URL = '/api';
 
 async function apiCall(method, path, body=null, auth=false) {
   const headers = { 'Content-Type': 'application/json' };
@@ -60,17 +55,16 @@ async function apiCall(method, path, body=null, auth=false) {
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
   
-  // دمج الرابط الأساسي مع المسار
+  // دمج المسار، مثلاً: /api/admin/login
   const fullUrl = BASE_URL + path; 
   
-  const r = await fetch(fullUrl, opts); // استخدام الرابط الكامل
-  
+  const r = await fetch(fullUrl, opts);
   if (r.status === 401 && auth) { onAuthExpired(); throw new Error('unauthorized'); }
   
-  // إذا لم يكن السيرفر يستجيب بشكل صحيح (مثلاً الرمز خطأ)
+  // إظهار الخطأ الحقيقي إذا كان الرمز خاطئاً
   if (!r.ok) {
-      const errData = await r.json().catch(()=>({}));
-      throw new Error(errData.detail || `HTTP ${r.status}`);
+     const errData = await r.json().catch(()=>({}));
+     throw new Error(errData.detail || `HTTP ${r.status}`);
   }
   return r.json();
 }
