@@ -128,13 +128,23 @@ function loadVerses() {
 // التحليل العروضي
 // =============================================
 async function analyzeVerses(text) {
-  if (!text||!text.trim()) return {phonetic:"",symbols:"",meter:"..."};
+  if (!text || !text.trim()) return { phonetic: "", symbols: "", meter: "..." };
+  
   try {
-    const r = await fetch('/analyze', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text.trim()})});
-    if (!r.ok) throw new Error(r.status);
-    const d = await r.json();
-    return {phonetic:d.phonetic||"",symbols:d.symbols||"",meter:d.meter||"..."};
-  } catch { return {phonetic:"السيرفر لا يستجيب..",symbols:"---",meter:"خطأ اتصال"}; }
+    // استخدم دالة api التي بنيتها بنفسك ليمر الطلب عبر /api/analyze
+    const d = await api.postPublic('/analyze', { text: text.trim() });
+    return { 
+      phonetic: d.phonetic || "", 
+      symbols: d.symbols || "", 
+      meter: d.meter || "..." 
+    };
+  } catch (error) { 
+    return { 
+      phonetic: "السيرفر لا يستجيب..", 
+      symbols: "---", 
+      meter: "خطأ اتصال" 
+    }; 
+  }
 }
 
 // =============================================
