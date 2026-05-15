@@ -403,6 +403,81 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
 .py-12 { padding-top: 48px; padding-bottom: 48px; }
 .section-full-header { margin-bottom: 40px; }
 
+/* =============================================
+   Collapsible — نصوص المتحف
+   ============================================= */
+.text-entry { padding: 0; }
+
+.entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 28px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.entry-header:hover { background: var(--color-surface); }
+
+.entry-title {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text); /* إصلاح ٤ */
+}
+
+.entry-chevron {
+  width: 18px; height: 18px;
+  color: var(--color-muted);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  flex-shrink: 0;
+}
+.entry-header.open .entry-chevron { transform: rotate(180deg); }
+
+.entry-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1);
+}
+.entry-body.open { max-height: 9999px; }
+.entry-body .entry-content { padding: 4px 28px 28px; }
+
+/* =============================================
+   إصلاح ٣: الشرح يظهر عند الضغط
+   ============================================= */
+.museum-verse-line { cursor: default; }
+.museum-verse-line.has-annotation { cursor: pointer; }
+
+.verse-anno-toggle {
+  width: 16px; height: 16px;
+  color: var(--color-muted);
+  flex-shrink: 0;
+  transition: transform 0.3s;
+  opacity: 0.5;
+}
+.museum-verse-line.anno-open .verse-anno-toggle { transform: rotate(180deg); opacity: 1; }
+
+.verse-annotation-wrap {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.verse-annotation-wrap.open { max-height: 500px; }
+
+/* =============================================
+   إصلاح ٤: الوضع المظلم — إلغاء inline styles
+   ============================================= */
+.dark .entry-content { color: var(--color-text); }
+.dark .entry-content * {
+  color: var(--color-text) !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+/* أعِد ألوان العناصر المتعمَّدة */
+.dark .entry-content .text-secondary { color: var(--color-muted) !important; }
+.dark .entry-content h2,
+.dark .entry-content h3 { color: var(--color-text) !important; }
+
 /* ===== موبايل ===== */
 @media (max-width: 768px) {
   .hero h1    { font-size: 2.5rem; }
