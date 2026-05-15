@@ -433,11 +433,11 @@ function openModal(id){const m=document.getElementById(id);if(m){m.style.display
 function closeModal(id){const m=document.getElementById(id);if(m)m.style.display='none';}
 function handleModalBackdrop(e,id){if(e.target===e.currentTarget)closeModal(id);}
 
-// ----- ① Auth عبر السيرفر -----
 async function tryAdminLogin() {
   const input=document.getElementById('admin-code-input');
   const err=document.getElementById('admin-error');
   if(!input)return;
+  
   try {
     const result = await api.postPublic('/admin/login', {code: input.value.trim()});
     authToken = result.token;
@@ -447,8 +447,11 @@ async function tryAdminLogin() {
     input.value=''; err.style.display='none';
     renderMuseumLanding();
     if(currentPoetId){document.getElementById('admin-add-btn-area').style.display='flex';renderPoetContent(currentPoetId);}
-  } catch {
-    err.style.display='block'; input.value=''; input.focus();
+  } catch (error) {
+    // 🔥 عرض رسالة الخطأ القادمة من السيرفر أو خطأ الاتصال
+    err.textContent = error.message === 'Failed to fetch' ? 'لا يمكن الاتصال بالسيرفر' : error.message;
+    err.style.display='block'; 
+    input.value=''; input.focus();
   }
 }
 
