@@ -174,15 +174,555 @@ function updateArudHeight() {
 window.addEventListener('resize', updateArudHeight);
 
 // =============================================
-// التنقل
+// Practice Path & Streak Logic
 // =============================================
-const ALL_SECTIONS = ['home','tests','quiz','arud','museum','museum-poet'];
+let streakData = JSON.parse(localStorage.getItem('streakData')) || { count: 0, lastActiveDate: null };
+let practiceUnits = JSON.parse(localStorage.getItem('practiceUnits')) || [
+  { id: 1, title: 'القسم 1: مقدمة في البلاغة', desc: 'فهم الأقسام الرئيسية لعلم البلاغة' }
+];
+let currentUnitId = practiceUnits[0].id;
+
+const defaultQuestions = [
+  { type: 'translate', text: 'هذا الرجل أسدٌ في شجاعته', words: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته', 'شجاع', 'كالأسد'], correct: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته'] },
+  { type: 'mcq', text: 'ما نوع التشبيه في: "العلم كالنور"؟', options: ['تشبيه بليغ', 'تشبيه مجمل', 'تشبيه مفصل', 'استعارة'], correct: 1 }
+];
+
+let practiceNodes = JSON.parse(localStorage.getItem('practiceNodes')) || [
+  { id: 1, unitId: 1, type: 'lesson', status: 'completed', title: 'مقدمة', desc: 'أساسيات البلاغة', questions: [] },
+  { id: 2, unitId: 1, type: 'lesson', status: 'completed', title: 'التشبيه', desc: 'أركان التشبيه وأنواعه', questions: [] },
+  { id: 3, unitId: 1, type: 'review', status: 'current', title: 'مراجعة', desc: 'مراجعة ما سبق', questions: [] },
+  { id: 4, unitId: 1, type: 'challenge', status: 'locked', title: 'تحدي', desc: 'اختبار قصير', questions: [] },
+  { id: 5, unitId: 1, type: 'lesson', status: 'locked', title: 'الاستعارة', desc: 'الاستعارة المكنية والتصريحية', questions: [] },
+  { id: 6, unitId: 1, type: 'lesson', status: 'locked', title: 'الكناية', desc: 'أنواع الكناية', questions: [] },
+];
+
+function savePracticeData() {
+  localStorage.setItem('practiceUnits', JSON.stringify(practiceUnits));
+  localStorage.setItem('practiceNodes', JSON.stringify(practiceNodes));
+  localStorage.setItem('streakData', JSON.stringify(streakData));
+}
+
+function updateStreakDisplay(animateState = null) {
+  const streakItem = document.querySelector('.streak-item');
+  if (!streakItem) return;
+  streakItem.querySelector('span').textContent = streakData.count;
+  
+  streakItem.classList.remove('streak-active', 'streak-lost', 'streak-renewed');
+  // force reflow
+  void streakItem.offsetWidth;
+  
+  if (animateState) {
+    streakItem.classList.add(`streak-${animateState}`);
+  } else {
+    const today = new Date().toDateString();
+    if (streakData.lastActiveDate === today) {
+      streakItem.classList.add('streak-active');
+    }
+  }
+}
+
+function checkStreakOnLoad() {
+  const today = new Date().toDateString();
+  if (streakData.lastActiveDate && streakData.lastActiveDate !== today) {
+    const lastDate = new Date(streakData.lastActiveDate);
+    const currDate = new Date(today);
+    const diffDays = Math.floor((currDate - lastDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 1) {
+      streakData.count = 0;
+      updateStreakDisplay('lost');
+    }
+  }
+  updateStreakDisplay();
+}
+
+function activateStreak() {
+  const today = new Date().toDateString();
+  let animation = 'active';
+  let showCelebration = false;
+  
+  if (streakData.lastActiveDate !== today) {
+    const lastDate = streakData.lastActiveDate ? new Date(streakData.lastActiveDate) : null;
+    const currDate = new Date(today);
+    const diffDays = lastDate ? Math.floor((currDate - lastDate) / (1000 * 60 * 60 * 24)) : 1;
+    
+    if (diffDays === 1 || !streakData.lastActiveDate) {
+      streakData.count++;
+      animation = 'renewed';
+      showCelebration = true;
+    } else {
+      streakData.count = 1;
+      animation = 'renewed';
+      showCelebration = true;
+    }
+    streakData.lastActiveDate = today;
+    savePracticeData();
+  }
+  updateStreakDisplay(animation);
+  
+  if (showCelebration) {
+    document.getElementById('streak-celebration-count').textContent = streakData.count;
+    setTimeout(() => {
+        openModal('streak-celebration-modal');
+        lucide.createIcons(); // refresh fire icon
+    }, 600);
+  }
+}
+
+// Call on load
+document.addEventListener('DOMContentLoaded', checkStreakOnLoad);
+
+let currentNodeId = null;
+
+function renderPracticePath() {
+  const container = document.getElementById('path-container');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  // Show/Hide Admin Add Node button
+  const adminBtn = document.getElementById('admin-add-practice-btn');
+  if (adminBtn) adminBtn.style.display = isAdmin ? 'block' : 'none';
+  
+  // Update unit banner
+  const unit = practiceUnits.find(u => u.id === currentUnitId);
+  if (unit) {
+    document.getElementById('practice-unit-title').textContent = unit.title;
+    document.getElementById('practice-unit-desc').textContent = unit.desc;
+  }
+  
+  const unitNodes = practiceNodes.filter(n => n.unitId === currentUnitId);
+  const svgStr = [];
+  
+  unitNodes.forEach((node, index) => {
+    // SVG Line to next node
+    if (index < unitNodes.length - 1) {
+      const offsetX1 = Math.sin(index * 1.5) * 60;
+      const offsetX2 = Math.sin((index + 1) * 1.5) * 60;
+      const startX = 100 + offsetX1;
+      const startY = 20 + index * 110 + 35; 
+      const endX = 100 + offsetX2;
+      const endY = 20 + (index + 1) * 110 + 35;
+      svgStr.push(`
+        <path d="M ${startX} ${startY} C ${startX} ${startY + 40}, ${endX} ${endY - 40}, ${endX} ${endY}"
+              fill="none" stroke="var(--color-border)" stroke-width="12" stroke-linecap="round" />
+      `);
+    }
+
+    const el = document.createElement('div');
+    const offsetX = Math.sin(index * 1.5) * 60;
+    el.className = `path-node node-${node.status}`;
+    
+    // Winding path calculation (sine wave)
+    el.style.transform = `translateX(${offsetX}px)`;
+    
+    let icon = 'star';
+    if (node.type === 'lesson') icon = 'book-open';
+    if (node.type === 'review') icon = 'refresh-cw';
+    if (node.type === 'challenge') icon = 'zap';
+    if (node.status === 'completed') icon = 'check';
+    
+    el.innerHTML = `<i data-lucide="${icon}"></i>`;
+    
+    el.onclick = () => openNodePopup(node);
+    
+    container.appendChild(el);
+  });
+  
+  // Insert SVG background
+  const svgWrapper = document.createElement('div');
+  svgWrapper.style.position = 'absolute';
+  svgWrapper.style.top = '0';
+  svgWrapper.style.left = '0';
+  svgWrapper.style.width = '100%';
+  svgWrapper.style.height = '100%';
+  svgWrapper.style.zIndex = '1';
+  svgWrapper.style.display = 'flex';
+  svgWrapper.style.justifyContent = 'center';
+  svgWrapper.style.pointerEvents = 'none';
+  svgWrapper.innerHTML = `<svg width="200" height="100%" style="overflow:visible;">
+    ${svgStr.join('')}
+  </svg>`;
+  container.insertBefore(svgWrapper, container.firstChild);
+  
+  lucide.createIcons();
+}
+
+// === Unit Selector ===
+function openUnitSelector() {
+  const container = document.getElementById('unit-list-container');
+  container.innerHTML = practiceUnits.map(u => `
+    <div style="padding: 15px; border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; display: flex; align-items:center; justify-content:space-between; ${u.id === currentUnitId ? 'border-color: var(--color-accent); background: var(--color-surface);' : ''}" onclick="selectUnit(${u.id})">
+      <div>
+        <h4 style="margin-bottom: 5px; color: ${u.id === currentUnitId ? 'var(--color-accent)' : 'inherit'}">${u.title}</h4>
+        <p style="font-size: 0.85rem; color: var(--color-muted);">${u.desc}</p>
+      </div>
+      ${u.id === currentUnitId ? '<i data-lucide="check" style="color: var(--color-accent)"></i>' : ''}
+    </div>
+  `).join('');
+  
+  const adminContainer = document.getElementById('admin-add-unit-container');
+  if (adminContainer) adminContainer.style.display = isAdmin ? 'block' : 'none';
+  
+  openModal('unit-selector-modal');
+}
+
+function selectUnit(id) {
+  currentUnitId = id;
+  closeModal('unit-selector-modal');
+  renderPracticePath();
+}
+
+function addNewUnit() {
+  const title = document.getElementById('new-unit-title').value.trim();
+  const desc = document.getElementById('new-unit-desc').value.trim();
+  if (!title) return alert('يرجى إدخال عنوان القسم');
+  
+  const newId = practiceUnits.length > 0 ? Math.max(...practiceUnits.map(u=>u.id)) + 1 : 1;
+  practiceUnits.push({ id: newId, title, desc });
+  savePracticeData();
+  
+  document.getElementById('new-unit-title').value = '';
+  document.getElementById('new-unit-desc').value = '';
+  
+  selectUnit(newId);
+}
+
+// === Admin Practice Node Management ===
+function openAdminAddPracticeNode() {
+  document.getElementById('new-node-title').value = '';
+  document.getElementById('new-node-desc').value = '';
+  document.getElementById('new-node-questions').innerHTML = '';
+  openModal('add-practice-node-modal');
+}
+
+function addQuestionTemplate(type) {
+  const container = document.getElementById('new-node-questions');
+  const qId = Date.now() + Math.random().toString(36).substr(2, 5);
+  
+  const wrapper = document.createElement('div');
+  wrapper.className = 'admin-question-wrapper';
+  wrapper.style.cssText = 'border: 1px dashed var(--color-border); padding: 10px; border-radius: 8px; position: relative;';
+  wrapper.dataset.type = type;
+  
+  let html = `<button class="btn-secondary danger" style="position:absolute; top:10px; left:10px; padding: 5px 10px;" onclick="this.parentElement.remove()">حذف</button>`;
+  
+  if (type === 'translate') {
+    html += `
+      <strong>سؤال ترتيب:</strong>
+      <input type="text" class="modal-input q-text" placeholder="النص الأصلي (مثل: هذا الرجل أسدٌ)" style="margin-top:5px; margin-bottom:5px;">
+      <input type="text" class="modal-input q-words" placeholder="الكلمات المتاحة (مفصولة بفاصلة)" style="margin-bottom:5px;">
+      <input type="text" class="modal-input q-correct" placeholder="الإجابة الصحيحة بالترتيب (مفصولة بفاصلة)" style="margin-bottom:5px;">
+    `;
+  } else if (type === 'mcq') {
+    html += `
+      <strong>سؤال خيارات:</strong>
+      <input type="text" class="modal-input q-text" placeholder="نص السؤال" style="margin-top:5px; margin-bottom:5px;">
+      <input type="text" class="modal-input q-options" placeholder="الخيارات المتاحة (مفصولة بفاصلة)" style="margin-bottom:5px;">
+      <input type="number" class="modal-input q-correct" placeholder="رقم الخيار الصحيح (1-4)" min="1" style="margin-bottom:5px;">
+    `;
+  }
+  
+  wrapper.innerHTML = html;
+  container.appendChild(wrapper);
+}
+
+function saveNewPracticeNode() {
+  const title = document.getElementById('new-node-title').value.trim();
+  const desc = document.getElementById('new-node-desc').value.trim();
+  const type = document.getElementById('new-node-type').value;
+  
+  if (!title) return alert('يرجى إدخال عنوان العقدة');
+  
+  const questions = [];
+  const wrappers = document.querySelectorAll('.admin-question-wrapper');
+  wrappers.forEach(w => {
+    const qType = w.dataset.type;
+    const text = w.querySelector('.q-text').value.trim();
+    if (!text) return;
+    
+    if (qType === 'translate') {
+      const words = w.querySelector('.q-words').value.split(',').map(s=>s.trim()).filter(s=>s);
+      const correct = w.querySelector('.q-correct').value.split(',').map(s=>s.trim()).filter(s=>s);
+      questions.push({ type: 'translate', text, words, correct });
+    } else if (qType === 'mcq') {
+      const options = w.querySelector('.q-options').value.split(',').map(s=>s.trim()).filter(s=>s);
+      const correct = parseInt(w.querySelector('.q-correct').value) - 1;
+      questions.push({ type: 'mcq', text, options, correct });
+    }
+  });
+  
+  const newId = practiceNodes.length > 0 ? Math.max(...practiceNodes.map(n=>n.id)) + 1 : 1;
+  
+  practiceNodes.push({
+    id: newId,
+    unitId: currentUnitId,
+    type: type,
+    status: practiceNodes.filter(n=>n.unitId===currentUnitId).length === 0 ? 'current' : 'locked',
+    title,
+    desc,
+    questions: questions.length > 0 ? questions : undefined
+  });
+  
+  savePracticeData();
+  renderPracticePath();
+  closeModal('add-practice-node-modal');
+}
+
+function openNodePopup(node) {
+
+  currentNodeId = node.id;
+  document.getElementById('popup-title').textContent = node.title;
+  document.getElementById('popup-desc').textContent = node.desc;
+  
+  const actionsContainer = document.getElementById('popup-actions-container');
+  if (actionsContainer) {
+    if (node.status === 'completed') {
+      actionsContainer.innerHTML = `
+        <button class="btn-review" onclick="startLesson('review')">
+            مراجعة +5 <i data-lucide="refresh-cw"></i>
+        </button>
+        <button class="btn-start" onclick="startLesson('start')">
+            إعادة التحدي +15 <i data-lucide="play"></i>
+        </button>
+      `;
+    } else if (node.status === 'current' || node.status === 'locked') {
+      actionsContainer.innerHTML = `
+        <button class="btn-start" onclick="startLesson('start')">
+            اجتياز المرحلة +15 <i data-lucide="play"></i>
+        </button>
+      `;
+    }
+  }
+  
+  document.getElementById('node-popup').style.display = 'flex';
+  lucide.createIcons();
+}
+
+function closeNodePopup() {
+  document.getElementById('node-popup').style.display = 'none';
+}
+
+// =============================================
+// Lesson Logic
+// =============================================
+let currentLessonQuestions = [
+  {
+    type: 'translate',
+    text: 'هذا الرجل أسدٌ في شجاعته',
+    words: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته', 'شجاع', 'كالأسد'],
+    correct: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته']
+  },
+  {
+    type: 'mcq',
+    text: 'ما نوع التشبيه في: "العلم كالنور"؟',
+    options: ['تشبيه بليغ', 'تشبيه مجمل', 'تشبيه مفصل', 'استعارة'],
+    correct: 1 // index of correct option
+  }
+];
+let currentQuestionIndex = 0;
+let userAnswers = []; // For translate type
+let selectedOption = null; // For mcq type
+
+function startLesson(mode) {
+  closeNodePopup();
+  
+  const node = practiceNodes.find(n => n.id === currentNodeId);
+  if (node && node.questions && node.questions.length > 0) {
+    currentLessonQuestions = node.questions;
+  } else {
+    currentLessonQuestions = defaultQuestions; // defined above
+  }
+  
+  showSection('lesson');
+  currentQuestionIndex = 0;
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = currentLessonQuestions[currentQuestionIndex];
+  const area = document.getElementById('lesson-content-area');
+  
+  // Reset state
+  userAnswers = [];
+  selectedOption = null;
+  document.getElementById('btn-check-answer').className = 'btn-check';
+  document.getElementById('lesson-feedback-bar').className = 'lesson-feedback-bar';
+  
+  // Update progress
+  const progress = (currentQuestionIndex / currentLessonQuestions.length) * 100;
+  document.getElementById('lesson-progress').style.width = `${progress}%`;
+  
+  let html = '';
+  if (q.type === 'translate') {
+    html = `
+      <h2 class="question-title">رتب الكلمات لتكوين الجملة</h2>
+      <div class="speech-bubble">${q.text}</div>
+      <div class="answer-area" id="answer-area"></div>
+      <div class="word-bank" id="word-bank">
+        ${q.words.map((w, i) => `<button class="word-btn" onclick="selectWord('${w}', this)">${w}</button>`).join('')}
+      </div>
+    `;
+  } else if (q.type === 'mcq') {
+    html = `
+      <h2 class="question-title">${q.text}</h2>
+      <div class="mcq-options">
+        ${q.options.map((opt, i) => `<button class="mcq-btn" onclick="selectOption(${i}, this)">${opt}</button>`).join('')}
+      </div>
+    `;
+  }
+  area.innerHTML = html;
+}
+
+window.selectWord = function(word, btnEl) {
+  userAnswers.push(word);
+  btnEl.classList.add('selected');
+  renderAnswerArea();
+  checkIfReady();
+};
+
+window.removeWord = function(index) {
+  const word = userAnswers.splice(index, 1)[0];
+  renderAnswerArea();
+  // Unselect in word bank
+  const btns = document.querySelectorAll('.word-btn');
+  btns.forEach(btn => {
+    if (btn.textContent === word && btn.classList.contains('selected')) {
+      btn.classList.remove('selected');
+    }
+  });
+  checkIfReady();
+};
+
+function renderAnswerArea() {
+  const area = document.getElementById('answer-area');
+  if(!area) return;
+  area.innerHTML = userAnswers.map((w, i) => `
+    <button class="word-btn" onclick="removeWord(${i})" data-index="${i}">${w}</button>
+  `).join('');
+
+  if (window.Sortable && area) {
+    if (area.sortableInstance) {
+      area.sortableInstance.destroy();
+    }
+    area.sortableInstance = new Sortable(area, {
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      onEnd: function (evt) {
+        const oldIndex = evt.oldIndex;
+        const newIndex = evt.newIndex;
+        if (oldIndex !== newIndex) {
+          const movedWord = userAnswers.splice(oldIndex, 1)[0];
+          userAnswers.splice(newIndex, 0, movedWord);
+          renderAnswerArea();
+          checkIfReady();
+        }
+      },
+    });
+  }
+}
+
+window.selectOption = function(index, btnEl) {
+  selectedOption = index;
+  const btns = document.querySelectorAll('.mcq-btn');
+  btns.forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+  checkIfReady();
+};
+
+function checkIfReady() {
+  const q = currentLessonQuestions[currentQuestionIndex];
+  const btn = document.getElementById('btn-check-answer');
+  if (q.type === 'translate') {
+    if (userAnswers.length > 0) btn.classList.add('active');
+    else btn.classList.remove('active');
+  } else if (q.type === 'mcq') {
+    if (selectedOption !== null) btn.classList.add('active');
+    else btn.classList.remove('active');
+  }
+}
+
+window.checkAnswer = function() {
+  const btn = document.getElementById('btn-check-answer');
+  if (!btn.classList.contains('active')) return;
+  
+  const q = currentLessonQuestions[currentQuestionIndex];
+  let isCorrect = false;
+  
+  if (q.type === 'translate') {
+    isCorrect = JSON.stringify(userAnswers) === JSON.stringify(q.correct);
+  } else if (q.type === 'mcq') {
+    isCorrect = selectedOption === q.correct;
+  }
+  
+  const feedback = document.getElementById('lesson-feedback-bar');
+  const icon = document.getElementById('feedback-icon');
+  const title = document.getElementById('feedback-title');
+  const desc = document.getElementById('feedback-desc');
+  
+  if (isCorrect) {
+    feedback.className = 'lesson-feedback-bar show success';
+    icon.innerHTML = '<i data-lucide="check"></i>';
+    title.textContent = 'رائع!';
+    desc.textContent = 'إجابة صحيحة';
+  } else {
+    feedback.className = 'lesson-feedback-bar show error';
+    icon.innerHTML = '<i data-lucide="x"></i>';
+    title.textContent = 'إجابة خاطئة';
+    if (q.type === 'translate') desc.textContent = `الصحيح هو: ${q.correct.join(' ')}`;
+    if (q.type === 'mcq') desc.textContent = `الصحيح هو: ${q.options[q.correct]}`;
+    
+    // Reduce hearts
+    const hc = document.getElementById('lesson-heart-count');
+    let h = parseInt(hc.textContent);
+    if(h > 0) hc.textContent = h - 1;
+  }
+  lucide.createIcons();
+};
+
+window.nextQuestion = function() {
+  currentQuestionIndex++;
+  if (currentQuestionIndex < currentLessonQuestions.length) {
+    loadQuestion();
+  } else {
+    // Finish lesson
+    document.getElementById('lesson-progress').style.width = '100%';
+    setTimeout(() => {
+      alert("أكملت الدرس بنجاح!");
+      
+      // Mark current node as completed and unlock next
+      const nodeIndex = practiceNodes.findIndex(n => n.id === currentNodeId);
+      if (nodeIndex !== -1) {
+        practiceNodes[nodeIndex].status = 'completed';
+        if (nodeIndex + 1 < practiceNodes.length) {
+          if (practiceNodes[nodeIndex + 1].status === 'locked') {
+            practiceNodes[nodeIndex + 1].status = 'current';
+          }
+        }
+      }
+      activateStreak();
+      savePracticeData();
+      renderPracticePath();
+      showSection('practice');
+    }, 500);
+  }
+};
+
+// Update showSection to handle practice path rendering
+const ALL_SECTIONS = ['home','tests','quiz','arud','museum','museum-poet', 'practice', 'lesson'];
 
 function showSection(id) {
   ALL_SECTIONS.forEach(s => {
     const el = document.getElementById(`${s}-section`);
-    if (el) el.style.display = 'none';
+    if (el) {
+      el.style.display = 'none';
+      el.classList.remove('section-enter');
+    }
   });
+  
+  if (id === 'practice') {
+    renderPracticePath();
+  }
+
   if (id === 'arud') {
     document.documentElement.classList.add('arud-active');
     document.body.style.overflow = 'hidden';
@@ -193,7 +733,14 @@ function showSection(id) {
     document.documentElement.classList.remove('arud-active');
     document.body.style.overflow = '';
     const t = document.getElementById(`${id}-section`);
-    if (t) t.style.display = 'block';
+    if (t) {
+      if (id === 'practice' || id === 'lesson') {
+        t.style.display = 'flex';
+      } else {
+        t.style.display = 'block';
+      }
+      t.classList.add('section-enter');
+    }
     if (id === 'museum') renderMuseumLanding();
   }
   window.scrollTo({ top:0, behavior:'smooth' });
@@ -451,6 +998,7 @@ async function tryAdminLogin() {
     input.value=''; err.style.display='none';
     renderMuseumLanding();
     if(currentPoetId){document.getElementById('admin-add-btn-area').style.display='flex';renderPoetContent(currentPoetId);}
+    if(document.getElementById('admin-add-practice-btn')) document.getElementById('admin-add-practice-btn').style.display = 'block';
   } catch (error) {
     // 🔥 عرض رسالة الخطأ القادمة من السيرفر أو خطأ الاتصال
     err.textContent = error.message === 'Failed to fetch' ? 'لا يمكن الاتصال بالسيرفر' : error.message;
@@ -466,6 +1014,7 @@ async function adminLogout(e) {
   sessionStorage.removeItem('adminToken');
   renderMuseumLanding();
   if(currentPoetId){document.getElementById('admin-add-btn-area').style.display='none';renderPoetContent(currentPoetId);}
+  if(document.getElementById('admin-add-practice-btn')) document.getElementById('admin-add-practice-btn').style.display = 'none';
 }
 
 // ----- ① جلب بيانات الشاعر من السيرفر -----
@@ -875,6 +1424,9 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   window.execBlk=execBlk; window.applySpanStyle=applySpanStyle;
   window.toggleTextEntry=toggleTextEntry; window.toggleVerseAnnotation=toggleVerseAnnotation;
   window.showAnnotationModal=showAnnotationModal;
+  window.openUnitSelector=openUnitSelector; window.addNewUnit=addNewUnit; window.selectUnit=selectUnit;
+  window.openAdminAddPracticeNode=openAdminAddPracticeNode; window.addQuestionTemplate=addQuestionTemplate;
+  window.saveNewPracticeNode=saveNewPracticeNode;
 
   lucide.createIcons();
 });
