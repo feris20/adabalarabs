@@ -1,6 +1,6 @@
 export async function onRequest(context) {
   const { request } = context;
-  const targetUrl = "http://fi13.bot-hosting.cloud:21346/analyze";
+  const targetUrl = "http://fi13.bot-hosting.cloud:20035/analyze";
 
   // إذا قام أحد بفتح الرابط في المتصفح (GET)
   if (request.method === "GET") {
