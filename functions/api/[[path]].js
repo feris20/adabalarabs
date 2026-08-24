@@ -5,7 +5,7 @@ export async function onRequest(context) {
   // استخراج المسار بعد كلمة /api
   // مثال: إذا طلب الموقع /api/admin/login، سيحولها السيرفر إلى /admin/login
   const targetPath = url.pathname.replace(/^\/api/, '');
-  const targetUrl = `http://fi13.bot-hosting.cloud:21346${targetPath}`;
+  const targetUrl = `http://fi5.bot-hosting.net:20035${targetPath}`;
 
   // تجهيز الطلب لنسخه وإرساله لسيرفر Pterodactyl
   const fetchOptions = {
