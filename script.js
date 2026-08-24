@@ -352,11 +352,14 @@ function openUnitSelector() {
   const container = document.getElementById('unit-list-container');
   container.innerHTML = practiceUnits.map(u => `
     <div style="padding: 15px; border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; display: flex; align-items:center; justify-content:space-between; ${u.id === currentUnitId ? 'border-color: var(--color-accent); background: var(--color-surface);' : ''}" onclick="selectUnit(${u.id})">
-      <div>
+      <div style="flex: 1;">
         <h4 style="margin-bottom: 5px; color: ${u.id === currentUnitId ? 'var(--color-accent)' : 'inherit'}">${u.title}</h4>
         <p style="font-size: 0.85rem; color: var(--color-muted);">${u.desc}</p>
       </div>
-      ${u.id === currentUnitId ? '<i data-lucide="check" style="color: var(--color-accent)"></i>' : ''}
+      <div style="display: flex; gap: 10px; align-items: center;">
+        ${isAdmin ? `<button class="btn-secondary btn-sm danger" style="padding: 5px; color: #e11d48; border-color: #e11d48;" onclick="event.stopPropagation(); deleteUnit(${u.id})"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>` : ''}
+        ${u.id === currentUnitId ? '<i data-lucide="check" style="color: var(--color-accent)"></i>' : ''}
+      </div>
     </div>
   `).join('');
   
@@ -364,6 +367,20 @@ function openUnitSelector() {
   if (adminContainer) adminContainer.style.display = isAdmin ? 'block' : 'none';
   
   openModal('unit-selector-modal');
+  lucide.createIcons();
+}
+
+function deleteUnit(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا القسم؟ سيتم حذف جميع الدروس داخله.')) return;
+  practiceUnits = practiceUnits.filter(u => u.id !== id);
+  practiceNodes = practiceNodes.filter(n => n.unitId !== id);
+  
+  if (practiceUnits.length > 0 && currentUnitId === id) {
+    currentUnitId = practiceUnits[0].id;
+  }
+  savePracticeData();
+  openUnitSelector();
+  renderPracticePath();
 }
 
 function selectUnit(id) {
@@ -388,80 +405,187 @@ function addNewUnit() {
 }
 
 // === Admin Practice Node Management ===
+
+let editingNodeId = null;
+
 function openAdminAddPracticeNode() {
+  editingNodeId = null;
+  document.getElementById('node-modal-title').textContent = 'إضافة عقدة جديدة';
   document.getElementById('new-node-title').value = '';
   document.getElementById('new-node-desc').value = '';
-  document.getElementById('new-node-questions').innerHTML = '';
+  document.getElementById('new-node-type').value = 'lesson';
+  document.getElementById('node-levels-container').innerHTML = '';
+  addNodeLevel(); // Add default level
   openModal('add-practice-node-modal');
 }
 
-function addQuestionTemplate(type) {
-  const container = document.getElementById('new-node-questions');
-  const qId = Date.now() + Math.random().toString(36).substr(2, 5);
+function editCurrentNode() {
+  closeNodePopup();
+  const node = practiceNodes.find(n => n.id === currentNodeId);
+  if (!node) return;
   
+  editingNodeId = node.id;
+  document.getElementById('node-modal-title').textContent = 'تعديل العقدة';
+  document.getElementById('new-node-title').value = node.title || '';
+  document.getElementById('new-node-desc').value = node.desc || '';
+  document.getElementById('new-node-type').value = node.type || 'lesson';
+  
+  const levelsContainer = document.getElementById('node-levels-container');
+  levelsContainer.innerHTML = '';
+  
+  if (node.levels && node.levels.length > 0) {
+    node.levels.forEach((level, i) => {
+      const levelEl = createLevelElement(i);
+      levelsContainer.appendChild(levelEl);
+      
+      const qContainer = levelEl.querySelector('.level-questions-container');
+      if (level.questions) {
+        level.questions.forEach(q => {
+          qContainer.appendChild(createQuestionElement(q));
+        });
+      }
+    });
+  } else if (node.questions && node.questions.length > 0) {
+    // Legacy support for single level questions
+    const levelEl = createLevelElement(0);
+    levelsContainer.appendChild(levelEl);
+    const qContainer = levelEl.querySelector('.level-questions-container');
+    node.questions.forEach(q => {
+      qContainer.appendChild(createQuestionElement(q));
+    });
+  } else {
+    addNodeLevel();
+  }
+  
+  openModal('add-practice-node-modal');
+}
+
+function deleteCurrentNode() {
+  if (!confirm('هل أنت متأكد من حذف هذه العقدة؟')) return;
+  practiceNodes = practiceNodes.filter(n => n.id !== currentNodeId);
+  savePracticeData();
+  closeNodePopup();
+  renderPracticePath();
+}
+
+function createLevelElement(index) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'admin-level-wrapper';
+  wrapper.style.cssText = 'border: 2px solid var(--color-border); padding: 15px; border-radius: 12px; position: relative; background: var(--color-bg);';
+  
+  wrapper.innerHTML = `
+    <button class="btn-secondary danger" style="position:absolute; top:10px; left:10px; padding: 5px 10px;" onclick="this.parentElement.remove()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+    <h5 style="margin-bottom: 10px; color: var(--color-accent);">مستوى جديد</h5>
+    <div class="level-questions-container" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 10px;"></div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'translate')" style="flex:1;">+ سؤال ترتيب</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'mcq')" style="flex:1;">+ سؤال خيارات</button>
+    </div>
+  `;
+  return wrapper;
+}
+
+function addNodeLevel() {
+  const container = document.getElementById('node-levels-container');
+  container.appendChild(createLevelElement(container.children.length));
+  setTimeout(() => lucide.createIcons(), 10);
+}
+
+function addQuestionToLevel(btn, type) {
+  const container = btn.parentElement.previousElementSibling;
+  container.appendChild(createQuestionElement({ type }));
+}
+
+function createQuestionElement(qData) {
   const wrapper = document.createElement('div');
   wrapper.className = 'admin-question-wrapper';
-  wrapper.style.cssText = 'border: 1px dashed var(--color-border); padding: 10px; border-radius: 8px; position: relative;';
-  wrapper.dataset.type = type;
+  wrapper.style.cssText = 'border: 1px dashed var(--color-border); padding: 10px; border-radius: 8px; position: relative; background: var(--color-surface);';
+  wrapper.dataset.type = qData.type;
   
-  let html = `<button class="btn-secondary danger" style="position:absolute; top:10px; left:10px; padding: 5px 10px;" onclick="this.parentElement.remove()">حذف</button>`;
+  let html = `<button class="btn-secondary danger" style="position:absolute; top:10px; left:10px; padding: 5px 10px;" onclick="this.parentElement.remove()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>`;
   
-  if (type === 'translate') {
+  if (qData.type === 'translate') {
     html += `
       <strong>سؤال ترتيب:</strong>
-      <input type="text" class="modal-input q-text" placeholder="النص الأصلي (مثل: هذا الرجل أسدٌ)" style="margin-top:5px; margin-bottom:5px;">
-      <input type="text" class="modal-input q-words" placeholder="الكلمات المتاحة (مفصولة بفاصلة)" style="margin-bottom:5px;">
-      <input type="text" class="modal-input q-correct" placeholder="الإجابة الصحيحة بالترتيب (مفصولة بفاصلة)" style="margin-bottom:5px;">
+      <input type="text" class="modal-input q-text" placeholder="النص الأصلي" value="${qData.text || ''}" style="margin-top:5px; margin-bottom:5px;">
+      <input type="text" class="modal-input q-words" placeholder="الكلمات المتاحة (افصل بـ +)" value="${(qData.words || []).join('+')}" style="margin-bottom:5px;">
+      <input type="text" class="modal-input q-correct" placeholder="الإجابة الصحيحة بالترتيب (افصل بـ +)" value="${(qData.correct || []).join('+')}" style="margin-bottom:5px;">
     `;
-  } else if (type === 'mcq') {
+  } else if (qData.type === 'mcq') {
     html += `
       <strong>سؤال خيارات:</strong>
-      <input type="text" class="modal-input q-text" placeholder="نص السؤال" style="margin-top:5px; margin-bottom:5px;">
-      <input type="text" class="modal-input q-options" placeholder="الخيارات المتاحة (مفصولة بفاصلة)" style="margin-bottom:5px;">
-      <input type="number" class="modal-input q-correct" placeholder="رقم الخيار الصحيح (1-4)" min="1" style="margin-bottom:5px;">
+      <input type="text" class="modal-input q-text" placeholder="نص السؤال" value="${qData.text || ''}" style="margin-top:5px; margin-bottom:5px;">
+      <input type="text" class="modal-input q-options" placeholder="الخيارات المتاحة (افصل بـ +)" value="${(qData.options || []).join('+')}" style="margin-bottom:5px;">
+      <input type="number" class="modal-input q-correct" placeholder="رقم الخيار الصحيح (1-4)" min="1" value="${qData.correct !== undefined ? qData.correct + 1 : ''}" style="margin-bottom:5px;">
     `;
   }
   
   wrapper.innerHTML = html;
-  container.appendChild(wrapper);
+  setTimeout(() => {
+    if (window.lucide) lucide.createIcons();
+  }, 10);
+  return wrapper;
 }
 
-function saveNewPracticeNode() {
+function savePracticeNode() {
   const title = document.getElementById('new-node-title').value.trim();
   const desc = document.getElementById('new-node-desc').value.trim();
   const type = document.getElementById('new-node-type').value;
   
   if (!title) return alert('يرجى إدخال عنوان العقدة');
   
-  const questions = [];
-  const wrappers = document.querySelectorAll('.admin-question-wrapper');
-  wrappers.forEach(w => {
-    const qType = w.dataset.type;
-    const text = w.querySelector('.q-text').value.trim();
-    if (!text) return;
+  const levels = [];
+  const levelWrappers = document.querySelectorAll('.admin-level-wrapper');
+  
+  levelWrappers.forEach((lw, i) => {
+    const questions = [];
+    const qWrappers = lw.querySelectorAll('.admin-question-wrapper');
+    qWrappers.forEach(w => {
+      const qType = w.dataset.type;
+      const text = w.querySelector('.q-text').value.trim();
+      if (!text) return;
+      
+      if (qType === 'translate') {
+        const words = w.querySelector('.q-words').value.split('+').map(s=>s.trim()).filter(s=>s);
+        const correct = w.querySelector('.q-correct').value.split('+').map(s=>s.trim()).filter(s=>s);
+        questions.push({ type: 'translate', text, words, correct });
+      } else if (qType === 'mcq') {
+        const options = w.querySelector('.q-options').value.split('+').map(s=>s.trim()).filter(s=>s);
+        const correct = parseInt(w.querySelector('.q-correct').value) - 1;
+        questions.push({ type: 'mcq', text, options, correct });
+      }
+    });
     
-    if (qType === 'translate') {
-      const words = w.querySelector('.q-words').value.split(',').map(s=>s.trim()).filter(s=>s);
-      const correct = w.querySelector('.q-correct').value.split(',').map(s=>s.trim()).filter(s=>s);
-      questions.push({ type: 'translate', text, words, correct });
-    } else if (qType === 'mcq') {
-      const options = w.querySelector('.q-options').value.split(',').map(s=>s.trim()).filter(s=>s);
-      const correct = parseInt(w.querySelector('.q-correct').value) - 1;
-      questions.push({ type: 'mcq', text, options, correct });
+    if (questions.length > 0) {
+      levels.push({
+        id: i + 1,
+        title: `المستوى ${i + 1}`,
+        questions
+      });
     }
   });
   
-  const newId = practiceNodes.length > 0 ? Math.max(...practiceNodes.map(n=>n.id)) + 1 : 1;
-  
-  practiceNodes.push({
-    id: newId,
-    unitId: currentUnitId,
-    type: type,
-    status: practiceNodes.filter(n=>n.unitId===currentUnitId).length === 0 ? 'current' : 'locked',
-    title,
-    desc,
-    questions: questions.length > 0 ? questions : undefined
-  });
+  if (editingNodeId) {
+    const node = practiceNodes.find(n => n.id === editingNodeId);
+    if (node) {
+      node.title = title;
+      node.desc = desc;
+      node.type = type;
+      node.levels = levels;
+      delete node.questions; // clean up old format
+    }
+  } else {
+    const newId = practiceNodes.length > 0 ? Math.max(...practiceNodes.map(n=>n.id)) + 1 : 1;
+    practiceNodes.push({
+      id: newId,
+      unitId: currentUnitId,
+      type: type,
+      status: practiceNodes.filter(n=>n.unitId===currentUnitId).length === 0 ? 'current' : 'locked',
+      title,
+      desc,
+      levels
+    });
+  }
   
   savePracticeData();
   renderPracticePath();
@@ -469,10 +593,15 @@ function saveNewPracticeNode() {
 }
 
 function openNodePopup(node) {
-
   currentNodeId = node.id;
   document.getElementById('popup-title').textContent = node.title;
   document.getElementById('popup-desc').textContent = node.desc;
+  
+  const levelsInfo = document.getElementById('popup-levels-info');
+  if (levelsInfo) {
+    const numLevels = node.levels ? node.levels.length : (node.questions && node.questions.length > 0 ? 1 : 0);
+    levelsInfo.textContent = numLevels > 0 ? `يحتوي على ${numLevels} مستوى` : 'لا توجد أسئلة بعد';
+  }
   
   const actionsContainer = document.getElementById('popup-actions-container');
   if (actionsContainer) {
@@ -493,6 +622,9 @@ function openNodePopup(node) {
       `;
     }
   }
+  
+  const adminControls = document.getElementById('admin-node-controls');
+  if (adminControls) adminControls.style.display = isAdmin ? 'flex' : 'none';
   
   document.getElementById('node-popup').style.display = 'flex';
   lucide.createIcons();
@@ -527,10 +659,20 @@ function startLesson(mode) {
   closeNodePopup();
   
   const node = practiceNodes.find(n => n.id === currentNodeId);
-  if (node && node.questions && node.questions.length > 0) {
-    currentLessonQuestions = node.questions;
-  } else {
-    currentLessonQuestions = defaultQuestions; // defined above
+  currentLessonQuestions = [];
+  
+  if (node) {
+    if (node.levels && node.levels.length > 0) {
+      node.levels.forEach(level => {
+        if (level.questions) currentLessonQuestions.push(...level.questions);
+      });
+    } else if (node.questions && node.questions.length > 0) {
+      currentLessonQuestions = node.questions;
+    }
+  }
+  
+  if (currentLessonQuestions.length === 0) {
+    currentLessonQuestions = defaultQuestions; // fallback
   }
   
   showSection('lesson');
@@ -1425,8 +1567,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   window.toggleTextEntry=toggleTextEntry; window.toggleVerseAnnotation=toggleVerseAnnotation;
   window.showAnnotationModal=showAnnotationModal;
   window.openUnitSelector=openUnitSelector; window.addNewUnit=addNewUnit; window.selectUnit=selectUnit;
-  window.openAdminAddPracticeNode=openAdminAddPracticeNode; window.addQuestionTemplate=addQuestionTemplate;
-  window.saveNewPracticeNode=saveNewPracticeNode;
+  window.openAdminAddPracticeNode=openAdminAddPracticeNode; window.addNodeLevel=addNodeLevel; window.addQuestionToLevel=addQuestionToLevel; window.editCurrentNode=editCurrentNode; window.deleteCurrentNode=deleteCurrentNode;
+  window.savePracticeNode=savePracticeNode;
 
   lucide.createIcons();
 });
