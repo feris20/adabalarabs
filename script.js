@@ -47,7 +47,7 @@ let authToken = sessionStorage.getItem('adminToken') || null;
 let isAdmin   = false;
 
 // 🔥 هذا المتغير يوجه كل طلبات المتحف والأدمن لتمر عبر الوسيط الشامل 🔥
-const BASE_URL = 'http://0.0.0.0:20035';
+const BASE_URL = '/api';
 
 async function apiCall(method, path, body=null, auth=false) {
   const headers = { 'Content-Type': 'application/json' };
