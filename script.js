@@ -274,77 +274,228 @@ document.addEventListener('DOMContentLoaded', checkStreakOnLoad);
 
 let currentNodeId = null;
 
+
+function renderProgressRingSVG(config) {
+  let {
+    totalSegments = 5,
+    filledSegments = 2,
+    activeColor = "#58cc02",
+    inactiveColor = "#e5e7eb",
+  } = config;
+
+  // الحد الأقصى للمستويات هو 5 والحد الأدنى 1
+  totalSegments = Math.max(1, Math.min(totalSegments, 5));
+  filledSegments = Math.max(0, Math.min(filledSegments, 5));
+
+  const size = 96, cx = size / 2, cy = size / 2, r = 43.5, strokeWidth = 5.5;
+
+  if (totalSegments === 1) {
+    const color = filledSegments >= 1 ? activeColor : inactiveColor;
+    return `<svg class="progress-ring" viewBox="0 0 ${size} ${size}">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: 50% 50%;"/>
+    </svg>`;
+  }
+
+  const gapDegrees = totalSegments <= 2 ? 14 : totalSegments <= 3 ? 11 : totalSegments <= 4 ? 9 : 8;
+  const segmentAngle = 360 / totalSegments;
+  const arcAngle = segmentAngle - gapDegrees;
+  let paths = "";
+
+  for (let k = 0; k < totalSegments; k++) {
+    const color = k < filledSegments ? activeColor : inactiveColor;
+    const startAngle = -90 + k * segmentAngle + gapDegrees / 2;
+    const endAngle = startAngle + arcAngle;
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
+    const largeArc = arcAngle > 180 ? 1 : 0;
+    paths += `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round"/>`;
+  }
+
+  return `<svg class="progress-ring" viewBox="0 0 ${size} ${size}">${paths}</svg>`;
+}
+
 function renderPracticePath() {
   const container = document.getElementById('path-container');
   if (!container) return;
   container.innerHTML = '';
   
-  // Show/Hide Admin Add Node button
   const adminBtn = document.getElementById('admin-add-practice-btn');
   if (adminBtn) adminBtn.style.display = isAdmin ? 'block' : 'none';
   
-  // Update unit banner
-  const unit = practiceUnits.find(u => u.id === currentUnitId);
-  if (unit) {
-    document.getElementById('practice-unit-title').textContent = unit.title;
-    document.getElementById('practice-unit-desc').textContent = unit.desc;
-  }
-  
-  const unitNodes = practiceNodes.filter(n => n.unitId === currentUnitId);
-  const svgStr = [];
-  
-  unitNodes.forEach((node, index) => {
-    // SVG Line to next node
-    if (index < unitNodes.length - 1) {
-      const offsetX1 = Math.sin(index * 1.5) * 60;
-      const offsetX2 = Math.sin((index + 1) * 1.5) * 60;
-      const startX = 100 + offsetX1;
-      const startY = 20 + index * 110 + 35; 
-      const endX = 100 + offsetX2;
-      const endY = 20 + (index + 1) * 110 + 35;
-      svgStr.push(`
-        <path d="M ${startX} ${startY} C ${startX} ${startY + 40}, ${endX} ${endY - 40}, ${endX} ${endY}"
-              fill="none" stroke="var(--color-border)" stroke-width="12" stroke-linecap="round" />
-      `);
-    }
+  practiceUnits.forEach((unit, unitIdx) => {
+    // Render Unit Banner
+    const banner = document.createElement('div');
+    banner.className = 'unit-banner';
+    banner.style.marginTop = unitIdx > 0 ? '60px' : '20px';
+    if (unit.color) banner.style.backgroundColor = unit.color;
+    banner.innerHTML = `
+        <div class="unit-banner-content">
+            <h2 class="unit-title">${unit.title}</h2>
+            <p class="unit-desc">${unit.desc}</p>
+        </div>
+        <div class="unit-banner-icon">
+            <i data-lucide="book"></i>
+        </div>
+    `;
+    banner.onclick = openUnitSelector;
+    banner.style.cursor = 'pointer';
+    container.appendChild(banner);
 
-    const el = document.createElement('div');
-    const offsetX = Math.sin(index * 1.5) * 60;
-    el.className = `path-node node-${node.status}`;
+    const nodesWrapper = document.createElement('div');
+    nodesWrapper.style.position = 'relative';
+    nodesWrapper.style.width = '100%';
+    nodesWrapper.style.display = 'flex';
+    nodesWrapper.style.flexDirection = 'column';
+    nodesWrapper.style.alignItems = 'center';
+    nodesWrapper.style.gap = '40px';
+    nodesWrapper.style.padding = '40px 0';
     
-    // Winding path calculation (sine wave)
-    el.style.transform = `translateX(${offsetX}px)`;
+    const unitNodes = practiceNodes.filter(n => n.unitId === unit.id);
+    const svgStr = [];
     
-    let icon = 'star';
-    if (node.type === 'lesson') icon = 'book-open';
-    if (node.type === 'review') icon = 'refresh-cw';
-    if (node.type === 'challenge') icon = 'zap';
-    if (node.status === 'completed') icon = 'check';
+    // فرض تسلسل منطقي (عقدة واحدة حالية فقط وما بعدها مقفل)
+    let hasFoundCurrent = false;
+    unitNodes.forEach((n) => {
+      if (!hasFoundCurrent) {
+        if (n.status !== 'completed') {
+          n.status = 'current';
+          hasFoundCurrent = true;
+        }
+      } else {
+        n.status = 'locked';
+      }
+    });
     
-    el.innerHTML = `<i data-lucide="${icon}"></i>`;
+    unitNodes.forEach((node, index) => {
+      if (index < unitNodes.length - 1) {
+        const offsetX1 = Math.sin(index * 1.5) * 60;
+        const offsetX2 = Math.sin((index + 1) * 1.5) * 60;
+        const startX = 100 + offsetX1;
+        const startY = index * 120 + 80; 
+        const endX = 100 + offsetX2;
+        const endY = (index + 1) * 120 + 80;
+        svgStr.push(`
+          <path d="M ${startX} ${startY} C ${startX} ${startY + 40}, ${endX} ${endY - 40}, ${endX} ${endY}"
+                fill="none" stroke="var(--color-border)" stroke-width="12" stroke-linecap="round" />
+        `);
+      }
+      
+      const el = document.createElement('div');
+      const offsetX = Math.sin(index * 1.5) * 60;
+      el.className = 'tile-node tooltip-anchor';
+      el.style.transform = `translateX(${offsetX}px)`;
+      el.style.zIndex = '2';
+      
+      let totalLevels = node.levels ? node.levels.length : (node.questions && node.questions.length > 0 ? 1 : 0);
+      if (totalLevels === 0) totalLevels = 1;
+      let completedLevels = typeof node.currentLevelIndex !== 'undefined' ? node.currentLevelIndex : 0;
+      if (node.status === 'completed') completedLevels = totalLevels;
+
+      let statusClass = "status-locked";
+      if (node.status === 'current') statusClass = "status-active";
+      else if (node.status === 'completed') statusClass = "status-complete";
+
+      const ringConfig = {
+        totalSegments: totalLevels,
+        filledSegments: completedLevels,
+        activeColor: "#58cc02",
+        inactiveColor: "#e5e7eb",
+      };
+
+      const ringHtml = (statusClass === "status-active") && totalLevels > 0 ? renderProgressRingSVG(ringConfig) : "";
+      const badgeHtml = statusClass === "status-active" ? `<div class="start-badge">ابدأ</div>` : "";
+
+      let icon = node.icon;
+      if (!icon) {
+          icon = 'star';
+          if (node.type === 'lesson') icon = 'book-open';
+          if (node.type === 'review') icon = 'refresh-cw';
+          if (node.type === 'challenge') icon = 'zap';
+          if (node.status === 'completed') icon = 'check';
+      }
+
+      let tooltipThemeClass = statusClass === 'status-active' ? 'theme-active' : (statusClass === 'status-complete' ? 'theme-complete' : 'theme-locked');
+      
+      let totalLevelsStr = totalLevels > 0 ? `الدرس ${completedLevels} من ${totalLevels}` : 'درس';
+      if (node.status === 'completed') totalLevelsStr = 'مكتمل';
+
+      let actionsHtml = '';
+      if (node.status === 'completed') {
+        actionsHtml = `
+          <button type="button" class="tt-action-btn tt-review" onclick="startLesson('review', ${node.id})">
+            <span>مراجعة +5 XP</span> <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
+          </button>
+          <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
+            <span>إعادة +15 XP</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
+          </button>
+        `;
+      } else if (node.status === 'current') {
+        actionsHtml = `
+          <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
+            <span>ابدأ +15 XP</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
+          </button>
+        `;
+      } else {
+        actionsHtml = `
+          <button type="button" class="tt-action-btn locked-btn" disabled style="opacity:0.6; cursor:not-allowed;">
+            <span>مقفول</span> <i data-lucide="lock" style="width:16px;height:16px;"></i>
+          </button>
+        `;
+      }
+
+      let adminHtml = '';
+      if (isAdmin) {
+         adminHtml = `
+            <div style="display: flex; gap: 8px; margin-top: 8px; border-top: 1px solid rgba(120,120,120,0.2); padding-top: 8px;">
+               <button type="button" class="tt-action-btn" style="flex:1; padding: 6px; min-height:36px; border-bottom:2px solid rgba(0,0,0,0.1);" onclick="editNode(${node.id})"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+               <button type="button" class="tt-action-btn tt-admin-delete" style="flex:1; padding: 6px; min-height:36px; border-bottom:2px solid rgba(0,0,0,0.1);" onclick="deleteNode(${node.id})"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+            </div>
+         `;
+      }
+
+      const tooltipHtml = `
+        <div class="tooltip-card hidden ${tooltipThemeClass}" id="tooltip-${node.id}" onclick="event.stopPropagation()">
+          <div class="tooltip-arrow"></div>
+          <div>
+            <div class="tt-title">${node.title}</div>
+            <div class="tt-subtitle">${totalLevelsStr}</div>
+          </div>
+          ${actionsHtml}
+          ${adminHtml}
+        </div>
+      `;
+
+      el.innerHTML = `
+        ${badgeHtml}
+        ${ringHtml}
+        <button type="button" class="tile-btn ${statusClass}" onclick="toggleTooltip(${node.id}, event)">
+          <i data-lucide="${icon}"></i>
+        </button>
+        ${tooltipHtml}
+      `;
+
+      nodesWrapper.appendChild(el);
+    });
     
-    el.onclick = () => openNodePopup(node);
+    const svgWrapper = document.createElement('div');
+    svgWrapper.style.position = 'absolute';
+    svgWrapper.style.top = '0';
+    svgWrapper.style.left = '0';
+    svgWrapper.style.width = '100%';
+    svgWrapper.style.height = '100%';
+    svgWrapper.style.zIndex = '1';
+    svgWrapper.style.display = 'flex';
+    svgWrapper.style.justifyContent = 'center';
+    svgWrapper.style.pointerEvents = 'none';
+    svgWrapper.innerHTML = `<svg width="200" height="100%" style="overflow:visible;">${svgStr.join('')}</svg>`;
     
-    container.appendChild(el);
+    nodesWrapper.insertBefore(svgWrapper, nodesWrapper.firstChild);
+    container.appendChild(nodesWrapper);
   });
   
-  // Insert SVG background
-  const svgWrapper = document.createElement('div');
-  svgWrapper.style.position = 'absolute';
-  svgWrapper.style.top = '0';
-  svgWrapper.style.left = '0';
-  svgWrapper.style.width = '100%';
-  svgWrapper.style.height = '100%';
-  svgWrapper.style.zIndex = '1';
-  svgWrapper.style.display = 'flex';
-  svgWrapper.style.justifyContent = 'center';
-  svgWrapper.style.pointerEvents = 'none';
-  svgWrapper.innerHTML = `<svg width="200" height="100%" style="overflow:visible;">
-    ${svgStr.join('')}
-  </svg>`;
-  container.insertBefore(svgWrapper, container.firstChild);
-  
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
 // === Unit Selector ===
@@ -392,14 +543,16 @@ function selectUnit(id) {
 function addNewUnit() {
   const title = document.getElementById('new-unit-title').value.trim();
   const desc = document.getElementById('new-unit-desc').value.trim();
+  const color = document.getElementById('new-unit-color').value;
   if (!title) return alert('يرجى إدخال عنوان القسم');
   
   const newId = practiceUnits.length > 0 ? Math.max(...practiceUnits.map(u=>u.id)) + 1 : 1;
-  practiceUnits.push({ id: newId, title, desc });
+  practiceUnits.push({ id: newId, title, desc, color });
   savePracticeData();
   
   document.getElementById('new-unit-title').value = '';
   document.getElementById('new-unit-desc').value = '';
+  document.getElementById('new-unit-color').value = '#22c55e';
   
   selectUnit(newId);
 }
@@ -413,6 +566,7 @@ function openAdminAddPracticeNode() {
   document.getElementById('node-modal-title').textContent = 'إضافة عقدة جديدة';
   document.getElementById('new-node-title').value = '';
   document.getElementById('new-node-desc').value = '';
+  document.getElementById('new-node-icon').value = '';
   document.getElementById('new-node-type').value = 'lesson';
   document.getElementById('node-levels-container').innerHTML = '';
   addNodeLevel(); // Add default level
@@ -428,6 +582,7 @@ function editCurrentNode() {
   document.getElementById('node-modal-title').textContent = 'تعديل العقدة';
   document.getElementById('new-node-title').value = node.title || '';
   document.getElementById('new-node-desc').value = node.desc || '';
+  document.getElementById('new-node-icon').value = node.icon || '';
   document.getElementById('new-node-type').value = node.type || 'lesson';
   
   const levelsContainer = document.getElementById('node-levels-container');
@@ -531,6 +686,7 @@ function savePracticeNode() {
   const title = document.getElementById('new-node-title').value.trim();
   const desc = document.getElementById('new-node-desc').value.trim();
   const type = document.getElementById('new-node-type').value;
+  const icon = document.getElementById('new-node-icon').value.trim();
   
   if (!title) return alert('يرجى إدخال عنوان العقدة');
   
@@ -572,6 +728,7 @@ function savePracticeNode() {
       node.desc = desc;
       node.type = type;
       node.levels = levels;
+      node.icon = icon;
       delete node.questions; // clean up old format
     }
   } else {
@@ -588,51 +745,58 @@ function savePracticeNode() {
   }
   
   savePracticeData();
+  closeAllTooltips();
   renderPracticePath();
-  closeModal('add-practice-node-modal');
 }
 
-function openNodePopup(node) {
-  currentNodeId = node.id;
-  document.getElementById('popup-title').textContent = node.title;
-  document.getElementById('popup-desc').textContent = node.desc;
-  
-  const levelsInfo = document.getElementById('popup-levels-info');
-  if (levelsInfo) {
-    const numLevels = node.levels ? node.levels.length : (node.questions && node.questions.length > 0 ? 1 : 0);
-    levelsInfo.textContent = numLevels > 0 ? `يحتوي على ${numLevels} مستوى` : 'لا توجد أسئلة بعد';
-  }
-  
-  const actionsContainer = document.getElementById('popup-actions-container');
-  if (actionsContainer) {
-    if (node.status === 'completed') {
-      actionsContainer.innerHTML = `
-        <button class="btn-review" onclick="startLesson('review')">
-            مراجعة +5 <i data-lucide="refresh-cw"></i>
-        </button>
-        <button class="btn-start" onclick="startLesson('start')">
-            إعادة التحدي +15 <i data-lucide="play"></i>
-        </button>
-      `;
-    } else if (node.status === 'current' || node.status === 'locked') {
-      actionsContainer.innerHTML = `
-        <button class="btn-start" onclick="startLesson('start')">
-            اجتياز المرحلة +15 <i data-lucide="play"></i>
-        </button>
-      `;
+// === Tooltip Logic ===
+window.toggleTooltip = function(nodeId, event) {
+    event.stopPropagation();
+    const tooltip = document.getElementById(`tooltip-${nodeId}`);
+    const nodeEl = tooltip.closest('.tile-node');
+    const isVisible = tooltip.classList.contains('visible');
+    closeAllTooltips();
+    if (!isVisible) {
+        tooltip.classList.remove('hidden');
+        tooltip.classList.add('visible');
+        if (nodeEl) nodeEl.style.zIndex = '50'; // Elevate above other nodes
+        
+        // Scroll into view if needed
+        setTimeout(() => {
+            const rect = tooltip.getBoundingClientRect();
+            if (rect.bottom > window.innerHeight) {
+                tooltip.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }, 50);
     }
-  }
-  
-  const adminControls = document.getElementById('admin-node-controls');
-  if (adminControls) adminControls.style.display = isAdmin ? 'flex' : 'none';
-  
-  document.getElementById('node-popup').style.display = 'flex';
-  lucide.createIcons();
-}
+};
+
+window.closeAllTooltips = function() {
+    document.querySelectorAll('.tooltip-card.visible').forEach(card => {
+        card.classList.remove('visible');
+        card.classList.add('hidden');
+        const nodeEl = card.closest('.tile-node');
+        if (nodeEl) nodeEl.style.zIndex = '2'; // Reset z-index
+    });
+};
+
+document.addEventListener('click', () => {
+    if (typeof closeAllTooltips === 'function') closeAllTooltips();
+});
 
 function closeNodePopup() {
-  document.getElementById('node-popup').style.display = 'none';
+    if (typeof closeAllTooltips === 'function') closeAllTooltips();
 }
+
+window.editNode = function(nodeId) {
+    currentNodeId = nodeId;
+    editCurrentNode();
+};
+
+window.deleteNode = function(nodeId) {
+    currentNodeId = nodeId;
+    deleteCurrentNode();
+};
 
 // =============================================
 // Lesson Logic
@@ -655,19 +819,29 @@ let currentQuestionIndex = 0;
 let userAnswers = []; // For translate type
 let selectedOption = null; // For mcq type
 
-function startLesson(mode) {
-  closeNodePopup();
+function startLesson(mode, nodeId = null) {
+  if (nodeId) currentNodeId = nodeId;
+  if (typeof closeAllTooltips === 'function') closeAllTooltips();
   
   const node = practiceNodes.find(n => n.id === currentNodeId);
   currentLessonQuestions = [];
   
   if (node) {
-    if (node.levels && node.levels.length > 0) {
-      node.levels.forEach(level => {
-        if (level.questions) currentLessonQuestions.push(...level.questions);
-      });
-    } else if (node.questions && node.questions.length > 0) {
-      currentLessonQuestions = node.questions;
+    if (!node.levels) node.levels = [];
+    if (typeof node.currentLevelIndex === 'undefined') node.currentLevelIndex = 0;
+    
+    if (mode === 'review') {
+      let allQs = [];
+      node.levels.forEach(l => { if(l.questions) allQs.push(...l.questions) });
+      if (allQs.length > 0) {
+        currentLessonQuestions = allQs.sort(() => 0.5 - Math.random()).slice(0, 5);
+      }
+    } else {
+      if (node.currentLevelIndex >= node.levels.length) node.currentLevelIndex = 0;
+      let lvl = node.levels[node.currentLevelIndex];
+      if (lvl && lvl.questions) {
+        currentLessonQuestions = lvl.questions;
+      }
     }
   }
   
@@ -826,25 +1000,48 @@ window.nextQuestion = function() {
   if (currentQuestionIndex < currentLessonQuestions.length) {
     loadQuestion();
   } else {
-    // Finish lesson
+    // Finish level
     document.getElementById('lesson-progress').style.width = '100%';
     setTimeout(() => {
-      alert("أكملت الدرس بنجاح!");
-      
-      // Mark current node as completed and unlock next
       const nodeIndex = practiceNodes.findIndex(n => n.id === currentNodeId);
       if (nodeIndex !== -1) {
-        practiceNodes[nodeIndex].status = 'completed';
-        if (nodeIndex + 1 < practiceNodes.length) {
-          if (practiceNodes[nodeIndex + 1].status === 'locked') {
-            practiceNodes[nodeIndex + 1].status = 'current';
-          }
+        const node = practiceNodes[nodeIndex];
+        if (!node.levels) node.levels = node.questions ? [{ id: 1, questions: node.questions }] : [];
+        if (typeof node.currentLevelIndex === 'undefined') node.currentLevelIndex = 0;
+        
+        node.currentLevelIndex++;
+        
+        if (node.currentLevelIndex < node.levels.length) {
+           if (confirm(`تم اكمال المستوى ${node.currentLevelIndex} من الدرس.. هل تود المتابعة؟`)) {
+               savePracticeData();
+               currentLessonQuestions = node.levels[node.currentLevelIndex].questions || [];
+               currentQuestionIndex = 0;
+               document.getElementById('lesson-progress').style.width = '0%';
+               loadQuestion();
+           } else {
+               savePracticeData();
+               renderPracticePath();
+               showSection('practice');
+           }
+        } else {
+           alert("أكملت العقدة بنجاح!");
+           node.status = 'completed';
+           if (nodeIndex + 1 < practiceNodes.length) {
+             if (practiceNodes[nodeIndex + 1].status === 'locked') {
+               practiceNodes[nodeIndex + 1].status = 'current';
+             }
+           }
+           activateStreak(); // increment streak only on full node completion
+           savePracticeData();
+           renderPracticePath();
+           showSection('practice');
         }
+      } else {
+        activateStreak();
+        savePracticeData();
+        renderPracticePath();
+        showSection('practice');
       }
-      activateStreak();
-      savePracticeData();
-      renderPracticePath();
-      showSection('practice');
     }, 500);
   }
 };
