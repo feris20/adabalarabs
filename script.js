@@ -328,7 +328,7 @@ function activateStreak() {
     document.getElementById('streak-celebration-count').textContent = streakData.count;
     setTimeout(() => {
         openModal('streak-celebration-modal');
-        lucide.createIcons(); // refresh fire icon
+        if(window.lucide)lucide.createIcons(); // refresh fire icon
     }, 600);
   }
 }
@@ -560,7 +560,7 @@ function renderPracticePath() {
     container.appendChild(nodesWrapper);
   });
   
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide) if(window.lucide)lucide.createIcons();
 }
 
 // === Unit Selector ===
@@ -583,7 +583,7 @@ function openUnitSelector() {
   if (adminContainer) adminContainer.style.display = isAdmin ? 'block' : 'none';
   
   openModal('unit-selector-modal');
-  lucide.createIcons();
+  if(window.lucide)lucide.createIcons();
 }
 
 function deleteUnit(id) {
@@ -627,6 +627,8 @@ function addNewUnit() {
 let editingNodeId = null;
 
 function openAdminAddPracticeNode() {
+  try {
+
   editingNodeId = null;
   document.getElementById('node-modal-title').textContent = 'إضافة عقدة جديدة';
   document.getElementById('new-node-title').value = '';
@@ -636,7 +638,11 @@ function openAdminAddPracticeNode() {
   document.getElementById('new-node-type').value = 'lesson';
   document.getElementById('node-levels-container').innerHTML = '';
   addNodeLevel(); // Add default level
-  openModal('add-practice-node-modal');
+      openModal('add-practice-node-modal');
+  } catch (err) {
+    alert('Error opening modal: ' + err.message);
+    console.error(err);
+  }
 }
 
 function editCurrentNode() {
@@ -713,7 +719,7 @@ function createLevelElement(index) {
 function addNodeLevel() {
   const container = document.getElementById('node-levels-container');
   container.appendChild(createLevelElement(container.children.length));
-  setTimeout(() => lucide.createIcons(), 10);
+  setTimeout(() => { if(window.lucide)lucide.createIcons(); }, 10);
 }
 
 function addQuestionToLevel(btn, type) {
@@ -816,7 +822,7 @@ function createQuestionElement(qData) {
   
   wrapper.innerHTML = html;
   setTimeout(() => {
-    if (window.lucide) lucide.createIcons();
+    if (window.lucide) if(window.lucide)lucide.createIcons();
   }, 10);
   return wrapper;
 }
@@ -1179,7 +1185,7 @@ function loadQuestion() {
   }
   
   area.innerHTML = html;
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide) if(window.lucide)lucide.createIcons();
 }
 
 // 1. Translate (Reorder)
@@ -1473,7 +1479,7 @@ window.checkAnswer = function() {
       if (h > 0) hc.textContent = h - 1;
     }
   }
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide) if(window.lucide)lucide.createIcons();
 };
 
 window.nextQuestion = function() {
@@ -1566,7 +1572,7 @@ function showNodeAchievements(node) {
   renderPracticePath();
   
   openModal('node-achievement-modal');
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide) if(window.lucide)lucide.createIcons();
 }
 
 window.finishNodeAchievement = function() {
@@ -1723,7 +1729,7 @@ async function updateAnalysisMobile(idx, text, inputElement) {
     const data=await analyzeVerses(text);
     if (idx===activeIndex&&!manualClosed&&targetRow.isConnected) {
       inlineContent.innerHTML=createAnalysisPanel(data);
-      lucide.createIcons();
+      if(window.lucide)lucide.createIcons();
       window.currentAnalysis={bahr:data.meter,kitaba:data.phonetic,scansion:data.symbols};
     }
   } catch(e){ console.warn('mobile analysis:',e); }
@@ -1738,7 +1744,7 @@ async function updateAnalysisDesktop(idx, text, inputElement) {
     const data=await analyzeVerses(text);
     if (idx===activeIndex&&!manualClosed&&analysisBox.style.display!=='none') {
       analysisContent.innerHTML=createAnalysisPanel(data);
-      lucide.createIcons();
+      if(window.lucide)lucide.createIcons();
       window.currentAnalysis={bahr:data.meter,kitaba:data.phonetic,scansion:data.symbols};
     }
   } catch(e){ console.warn('desktop analysis:',e); }
@@ -1764,7 +1770,7 @@ function positionBox(inputElement) {
 window.closeInlineAnalysis=()=>{clearTimeout(typingTimer);manualClosed=true;if(inlineBox)inlineBox.classList.remove('open');};
 window.closeAnalysis=()=>{clearTimeout(typingTimer);manualClosed=true;if(analysisBox)analysisBox.style.display='none';if(inlineBox)inlineBox.classList.remove('open');};
 window.copyAnalysis=()=>{if(!window.currentAnalysis)return;const{bahr,kitaba,scansion}=window.currentAnalysis;navigator.clipboard.writeText(`البحر: ${bahr}\nالكتابة: ${kitaba}\nالترميز: ${scansion}`);const btn=document.getElementById('copy-btn-text');if(btn){btn.textContent='تم!';setTimeout(()=>btn.textContent='نسخ',2000);}};
-window.copyAllVerses=(btn)=>{const l=[];for(let i=0;i<verses.length;i+=2){const s=verses[i]||'',a=verses[i+1]||'';if(s||a)l.push(`${s} ... ${a}`);}if(!l.length)return;navigator.clipboard.writeText(l.join('\n'));if(btn){const o=btn.innerHTML;btn.innerHTML='<i data-lucide="check"></i> تم النسخ';lucide.createIcons();setTimeout(()=>{btn.innerHTML=o;lucide.createIcons();},2000);}};
+window.copyAllVerses=(btn)=>{const l=[];for(let i=0;i<verses.length;i+=2){const s=verses[i]||'',a=verses[i+1]||'';if(s||a)l.push(`${s} ... ${a}`);}if(!l.length)return;navigator.clipboard.writeText(l.join('\n'));if(btn){const o=btn.innerHTML;btn.innerHTML='<i data-lucide="check"></i> تم النسخ';if(window.lucide)lucide.createIcons();setTimeout(()=>{btn.innerHTML=o;if(window.lucide)lucide.createIcons();},2000);}};
 
 // =============================================
 // رسم حقول الأبيات
@@ -1798,7 +1804,7 @@ function renderVerses() {
       }
     });
   });
-  lucide.createIcons();
+  if(window.lucide)lucide.createIcons();
 }
 
 function fillSample(){verses=[...SAMPLE_VERSES];activeIndex=0;userMovedBox=false;saveVerses();renderVerses();window.closeAnalysis();}
@@ -1847,7 +1853,7 @@ let annotationCtx  = null;
 let museumModalVerses = [];
 
 // ----- Modals -----
-function openModal(id){const m=document.getElementById(id);if(m){m.style.display='flex';lucide.createIcons();}}
+function openModal(id){const m=document.getElementById(id);if(m){m.style.display='flex';if(window.lucide)lucide.createIcons();}}
 function closeModal(id){const m=document.getElementById(id);if(m)m.style.display='none';}
 function handleModalBackdrop(e,id){if(e.target===e.currentTarget)closeModal(id);}
 
@@ -1933,7 +1939,7 @@ function renderMuseumLanding() {
     adminCard.addEventListener('click',()=>openModal('admin-modal'));
   }
   grid.appendChild(adminCard);
-  lucide.createIcons();
+  if(window.lucide)lucide.createIcons();
 }
 
 // ----- صفحة الشاعر -----
@@ -1956,7 +1962,7 @@ async function showMuseumPoet(poetId) {
 
   // اعرض مؤشر تحميل
   document.getElementById('poet-content-area').innerHTML='<div class="empty-state"><p style="opacity:0.5">جاري التحميل...</p></div>';
-  lucide.createIcons();
+  if(window.lucide)lucide.createIcons();
 
   await loadPoetData(poetId);
   renderPoetContent(poetId);
@@ -1969,7 +1975,7 @@ function renderPoetContent(poetId) {
 
   if(entries.length===0){
     container.innerHTML=`<div class="empty-state"><i data-lucide="scroll"></i><p>لم يُضَف محتوى بعد لهذه المعلقة</p></div>`;
-    lucide.createIcons();return;
+    if(window.lucide)lucide.createIcons();return;
   }
 
   entries.forEach(entry=>{
@@ -1980,7 +1986,7 @@ function renderPoetContent(poetId) {
     container.appendChild(el);
   });
 
-  lucide.createIcons();
+  if(window.lucide)lucide.createIcons();
   setupAnnotationEvents(poetId);
 }
 
@@ -2295,5 +2301,5 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   window.openAdminAddPracticeNode=openAdminAddPracticeNode; window.addNodeLevel=addNodeLevel; window.addQuestionToLevel=addQuestionToLevel; window.editCurrentNode=editCurrentNode; window.deleteCurrentNode=deleteCurrentNode;
   window.savePracticeNode=savePracticeNode;
 
-  lucide.createIcons();
+  if(window.lucide)lucide.createIcons();
 });
