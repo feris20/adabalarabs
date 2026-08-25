@@ -132,7 +132,7 @@
                     </div>
 
                     
-                    <div id="admin-add-practice-btn" class="admin-add-area" style="display:none; position: absolute; bottom: 20px; left: 20px;">
+                    <div id="admin-add-practice-btn" class="admin-add-area" style="display:none; position: fixed; z-index: 2100; bottom: 32px; left: 32px;">
                         <button class="admin-add-btn" onclick="openAdminAddPracticeNode()">
                             <i data-lucide="plus"></i>
                         </button>
@@ -147,6 +147,10 @@
                 <button class="close-lesson" onclick="showSection('practice')"><i data-lucide="x"></i></button>
                 <div class="lesson-progress-container">
                     <div class="lesson-progress-bar" id="lesson-progress"></div>
+                </div>
+                <div id="mistakes-review-badge" class="mistakes-review-badge" style="display:none;">
+                    <i data-lucide="alert-triangle"></i>
+                    <span>اختبارات أخطأت بها</span>
                 </div>
                 <div class="lesson-hearts">
                     <i data-lucide="heart"></i> <span id="lesson-heart-count">5</span>
@@ -441,7 +445,10 @@
                 <input type="text" id="new-node-desc" class="modal-input" placeholder="وصف بسيط..." style="margin-bottom: 10px;">
                 
                 <label>أيقونة (Lucide Icon):</label>
-                <input type="text" id="new-node-icon" class="modal-input" placeholder="مثال: star, book-open, zap" style="margin-bottom: 20px;">
+                <input type="text" id="new-node-icon" class="modal-input" placeholder="مثال: star, book-open, zap, bookmark, Award" style="margin-bottom: 10px;">
+                
+                <label>نص زر الإجراء في النافذة المنبثقة (Tooltip Action Text):</label>
+                <input type="text" id="new-node-action-text" class="modal-input" placeholder="افتراضي: ابدأ +15 XP" style="margin-bottom: 20px;">
                 
                 <div style="border-top: 1px solid var(--color-border); padding-top: 15px; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -458,7 +465,59 @@
         </div>
     </div>
 
-    <div id="streak-celebration-modal" class="modal-overlay" style="display:none; z-index: 3000;" onclick="handleModalBackdrop(event,'streak-celebration-modal')">
+    <!-- نافذة إنجازات العقدة -->
+    <div id="node-achievement-modal" class="modal-overlay" style="display:none; z-index: 3100;" onclick="handleModalBackdrop(event,'node-achievement-modal')">
+        <div class="modal-card achievement-card-modal">
+            <div class="achievement-header">
+                <div class="trophy-icon-wrapper">
+                    <i data-lucide="award" class="trophy-icon"></i>
+                </div>
+                <h2 class="achievement-title">إنجاز رائع!</h2>
+                <p class="achievement-sub" id="achievement-node-title">أكملت العقدة بنجاح وتألقت في أدب العرب</p>
+            </div>
+            
+            <div class="achievement-stats-grid">
+                <div class="achieve-stat-card">
+                    <div class="achieve-icon time-icon"><i data-lucide="clock"></i></div>
+                    <div class="achieve-stat-info">
+                        <span class="achieve-stat-val" id="achieve-time-val">00:00</span>
+                        <span class="achieve-stat-label">الوقت المستغرق</span>
+                    </div>
+                </div>
+                
+                <div class="achieve-stat-card">
+                    <div class="achieve-icon xp-icon"><i data-lucide="zap"></i></div>
+                    <div class="achieve-stat-info">
+                        <span class="achieve-stat-val" id="achieve-xp-val">+30 XP</span>
+                        <span class="achieve-stat-label">نقاط الخبرة</span>
+                    </div>
+                </div>
+                
+                <div class="achieve-stat-card">
+                    <div class="achieve-icon accuracy-icon"><i data-lucide="target"></i></div>
+                    <div class="achieve-stat-info">
+                        <span class="achieve-stat-val" id="achieve-accuracy-val">100%</span>
+                        <span class="achieve-stat-label">نسبة الدقة</span>
+                    </div>
+                </div>
+
+                <div class="achieve-stat-card">
+                    <div class="achieve-icon levels-icon"><i data-lucide="check-circle-2"></i></div>
+                    <div class="achieve-stat-info">
+                        <span class="achieve-stat-val" id="achieve-levels-val">5 / 5</span>
+                        <span class="achieve-stat-label">المستويات المنجزة</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary w-full achievement-continue-btn" onclick="finishNodeAchievement()">
+                <span>متابعة إلى المسار</span>
+                <i data-lucide="arrow-left"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="streak-celebration-modal" class="modal-overlay" style="display:none; z-index: 3200;" onclick="handleModalBackdrop(event,'streak-celebration-modal')">
         <div class="modal-card" style="text-align: center; background: linear-gradient(135deg, #ff9600 0%, #ff5b00 100%); color: white; border: none;">
             <div class="modal-body" style="padding: 40px 20px;">
                 <i data-lucide="flame" style="width: 80px; height: 80px; margin: 0 auto 20px; animation: bounce 1s infinite;"></i>
