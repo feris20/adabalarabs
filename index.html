@@ -127,21 +127,10 @@
             
             <div class="practice-scroll-area">
                 <div class="container relative-container" style="position: relative;">
-                    <div class="unit-banner" onclick="openUnitSelector()" style="cursor: pointer;">
-                        <div class="unit-banner-content">
-                            <h2 class="unit-title" id="practice-unit-title">القسم 1: مقدمة في البلاغة</h2>
-                            <p class="unit-desc" id="practice-unit-desc">فهم الأقسام الرئيسية لعلم البلاغة</p>
-                        </div>
-                        <div class="unit-banner-icon">
-                            <i data-lucide="book"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="current-lesson-label" id="current-lesson-label">مسار التعلم</div>
-                    
-                    <div class="path-container" id="path-container">
+                    <div class="path-container" id="path-container" style="padding-top: 0;">
                         <!-- Nodes injected by JS -->
                     </div>
+
                     
                     <div id="admin-add-practice-btn" class="admin-add-area" style="display:none; position: absolute; bottom: 20px; left: 20px;">
                         <button class="admin-add-btn" onclick="openAdminAddPracticeNode()">
@@ -151,23 +140,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- Node Popup Modal -->
-        <div id="node-popup" class="node-popup-overlay" style="display:none;">
-            <div class="node-popup-card">
-                <button class="close-popup" onclick="closeNodePopup()"><i data-lucide="x"></i></button>
-                <h3 id="popup-title">عنوان الدرس</h3>
-                <p id="popup-desc">وصف بسيط للدرس المختار.</p>
-                <div class="node-levels-info" id="popup-levels-info" style="margin-top: 10px; font-size: 0.9rem; color: var(--color-muted); font-weight: bold; text-align: center;"></div>
-                <div class="popup-actions" id="popup-actions-container">
-                    <!-- Actions injected by JS -->
-                </div>
-                <div id="admin-node-controls" style="display: none; margin-top: 15px; border-top: 1px solid var(--color-border); padding-top: 15px; flex-direction: row; gap: 10px;">
-                    <button class="btn-secondary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px;" onclick="editCurrentNode()"><i data-lucide="pencil"></i> تعديل</button>
-                    <button class="btn-secondary danger" style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; color:#e11d48; border-color:#e11d48;" onclick="deleteCurrentNode()"><i data-lucide="trash-2"></i> حذف</button>
-                </div>
-            </div>
-        </div>
 
         <!-- ===== شاشة الدرس (Lesson View) ===== -->
         <section id="lesson-section" style="display:none;" class="full-screen-section lesson-mode">
@@ -440,6 +412,8 @@
                     <h4 style="margin-bottom: 10px;">إضافة قسم جديد</h4>
                     <input type="text" id="new-unit-title" class="modal-input" placeholder="عنوان القسم (مثال: القسم 2: علم المعاني)" style="margin-bottom: 10px;">
                     <input type="text" id="new-unit-desc" class="modal-input" placeholder="وصف القسم" style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom: 5px;">لون القسم:</label>
+                    <input type="color" id="new-unit-color" class="modal-input" value="#22c55e" style="margin-bottom: 10px; height: 40px; padding: 0;">
                     <button class="btn-primary w-full" onclick="addNewUnit()">إضافة القسم</button>
                 </div>
             </div>
@@ -464,7 +438,10 @@
                 <input type="text" id="new-node-title" class="modal-input" placeholder="مثال: الاستعارة" style="margin-bottom: 10px;">
                 
                 <label>الوصف:</label>
-                <input type="text" id="new-node-desc" class="modal-input" placeholder="وصف بسيط..." style="margin-bottom: 20px;">
+                <input type="text" id="new-node-desc" class="modal-input" placeholder="وصف بسيط..." style="margin-bottom: 10px;">
+                
+                <label>أيقونة (Lucide Icon):</label>
+                <input type="text" id="new-node-icon" class="modal-input" placeholder="مثال: star, book-open, zap" style="margin-bottom: 20px;">
                 
                 <div style="border-top: 1px solid var(--color-border); padding-top: 15px; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
