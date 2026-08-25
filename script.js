@@ -178,22 +178,86 @@ window.addEventListener('resize', updateArudHeight);
 // =============================================
 let streakData = JSON.parse(localStorage.getItem('streakData')) || { count: 0, lastActiveDate: null };
 let practiceUnits = JSON.parse(localStorage.getItem('practiceUnits')) || [
-  { id: 1, title: 'القسم 1: مقدمة في البلاغة', desc: 'فهم الأقسام الرئيسية لعلم البلاغة' }
+  { id: 1, title: 'القسم 1: مقدمة في البلاغة', desc: 'فهم الأقسام الرئيسية لعلم البلاغة', color: '#22c55e' }
 ];
 let currentUnitId = practiceUnits[0].id;
 
 const defaultQuestions = [
-  { type: 'translate', text: 'هذا الرجل أسدٌ في شجاعته', words: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته', 'شجاع', 'كالأسد'], correct: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته'] },
-  { type: 'mcq', text: 'ما نوع التشبيه في: "العلم كالنور"؟', options: ['تشبيه بليغ', 'تشبيه مجمل', 'تشبيه مفصل', 'استعارة'], correct: 1 }
+  {
+    type: 'info_card',
+    title: 'أركان التشبيه الأربعة',
+    text: 'يقوم التشبيه في البلاغة العربية على أربعة أركان أساسية:\n١. المشبه: وهو الشيء المراد وصفه.\n٢. المشبه به: الشيء الذي يُشبه به.\n٣. أداة التشبيه: مثل (الكاف، كأن، يشبه).\n٤. وجه الشبه: الصفة المشتركة بينهما.',
+    audioUrl: '',
+    note: 'استمع للتوضيح الصوتي أو اقرأ البطاقة ثم اضغط "مفهوم" للمرور.'
+  },
+  {
+    type: 'match',
+    title: 'صل بين كل مفهوم بلاغي وتعريفه الصحيح:',
+    pairs: [
+      { left: 'التشبيه', right: 'عقد مماثلة بين شيئين في صفة' },
+      { left: 'الاستعارة', right: 'تشبيه حُذف أحد طرفيه' },
+      { left: 'الكناية', right: 'لفظ أُطلق وأُريد به لازم معناه' }
+    ]
+  },
+  {
+    type: 'fill_blank_text',
+    title: 'أكمل الفراغ بالكلمة المناسبة كتابةً:',
+    sentence: 'الخيلُ والليلُ والبيداءُ تعرفُني ... والسيفُ والرمحُ والقرطاسُ و[___]',
+    correct: ['القلم', 'والقلم', 'القلمُ']
+  },
+  {
+    type: 'fill_blank_choice',
+    title: 'اختر الكلمة المناسبة لملء الفراغ:',
+    sentence: 'التشبيه البليغ هو ما حُذف منه أداة التشبيه و[___].',
+    options: ['وجه الشبه', 'المشبه به', 'المشبه', 'المستعار'],
+    correct: 'وجه الشبه'
+  },
+  {
+    type: 'mcq',
+    text: 'ما نوع التشبيه في: "العلم كالنور في الهداية"؟',
+    options: ['تشبيه مفصل', 'تشبيه مجمل', 'تشبيه بليغ', 'استعارة تصريحية'],
+    correct: 0
+  },
+  {
+    type: 'translate',
+    text: 'العلم يرفع بيتاً لا عماد له',
+    words: ['العلم', 'يرفع', 'بيتاً', 'لا', 'عماد', 'له', 'والجهل', 'يهدم'],
+    correct: ['العلم', 'يرفع', 'بيتاً', 'لا', 'عماد', 'له']
+  }
 ];
 
 let practiceNodes = JSON.parse(localStorage.getItem('practiceNodes')) || [
-  { id: 1, unitId: 1, type: 'lesson', status: 'completed', title: 'مقدمة', desc: 'أساسيات البلاغة', questions: [] },
-  { id: 2, unitId: 1, type: 'lesson', status: 'completed', title: 'التشبيه', desc: 'أركان التشبيه وأنواعه', questions: [] },
-  { id: 3, unitId: 1, type: 'review', status: 'current', title: 'مراجعة', desc: 'مراجعة ما سبق', questions: [] },
-  { id: 4, unitId: 1, type: 'challenge', status: 'locked', title: 'تحدي', desc: 'اختبار قصير', questions: [] },
-  { id: 5, unitId: 1, type: 'lesson', status: 'locked', title: 'الاستعارة', desc: 'الاستعارة المكنية والتصريحية', questions: [] },
-  { id: 6, unitId: 1, type: 'lesson', status: 'locked', title: 'الكناية', desc: 'أنواع الكناية', questions: [] },
+  {
+    id: 1,
+    unitId: 1,
+    type: 'lesson',
+    status: 'completed',
+    title: 'مقدمة البلاغة',
+    desc: 'أساسيات البلاغة والتذوق',
+    actionText: 'ابدأ +15 XP',
+    levels: [
+      { id: 1, title: 'المستوى 1', questions: defaultQuestions.slice(0, 3) },
+      { id: 2, title: 'المستوى 2', questions: defaultQuestions.slice(3) }
+    ]
+  },
+  {
+    id: 2,
+    unitId: 1,
+    type: 'lesson',
+    status: 'current',
+    title: 'أركان التشبيه',
+    desc: 'المشبه والمشبه به وأداة التشبيه',
+    actionText: 'ابدأ التحدي +20 XP',
+    currentLevelIndex: 0,
+    levels: [
+      { id: 1, title: 'المستوى 1', questions: [defaultQuestions[0], defaultQuestions[1], defaultQuestions[4]] },
+      { id: 2, title: 'المستوى 2', questions: [defaultQuestions[2], defaultQuestions[3], defaultQuestions[5]] }
+    ]
+  },
+  { id: 3, unitId: 1, type: 'review', status: 'locked', title: 'مراجعة التشبيه', desc: 'تثبيت المفاهيم السابقة', actionText: 'مراجعة +10 XP', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] },
+  { id: 4, unitId: 1, type: 'challenge', status: 'locked', title: 'تحدي الفرسان', desc: 'اختبار السرعة والدقة', actionText: 'خوض التحدي', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] },
+  { id: 5, unitId: 1, type: 'lesson', status: 'locked', title: 'الاستعارة', desc: 'الاستعارة المكنية والتصريحية', actionText: 'ابدأ +15 XP', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] },
+  { id: 6, unitId: 1, type: 'lesson', status: 'locked', title: 'الكناية', desc: 'أنواع الكناية وأسرارها', actionText: 'ابدأ +15 XP', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] }
 ];
 
 function savePracticeData() {
@@ -421,6 +485,7 @@ function renderPracticePath() {
       let totalLevelsStr = totalLevels > 0 ? `الدرس ${completedLevels} من ${totalLevels}` : 'درس';
       if (node.status === 'completed') totalLevelsStr = 'مكتمل';
 
+      let startBtnText = node.actionText || 'ابدأ +15 XP';
       let actionsHtml = '';
       if (node.status === 'completed') {
         actionsHtml = `
@@ -428,13 +493,13 @@ function renderPracticePath() {
             <span>مراجعة +5 XP</span> <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
           </button>
           <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
-            <span>إعادة +15 XP</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
+            <span>${node.actionText || 'إعادة +15 XP'}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
           </button>
         `;
       } else if (node.status === 'current') {
         actionsHtml = `
           <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
-            <span>ابدأ +15 XP</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
+            <span>${startBtnText}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
           </button>
         `;
       } else {
@@ -567,6 +632,7 @@ function openAdminAddPracticeNode() {
   document.getElementById('new-node-title').value = '';
   document.getElementById('new-node-desc').value = '';
   document.getElementById('new-node-icon').value = '';
+  document.getElementById('new-node-action-text').value = '';
   document.getElementById('new-node-type').value = 'lesson';
   document.getElementById('node-levels-container').innerHTML = '';
   addNodeLevel(); // Add default level
@@ -583,6 +649,7 @@ function editCurrentNode() {
   document.getElementById('new-node-title').value = node.title || '';
   document.getElementById('new-node-desc').value = node.desc || '';
   document.getElementById('new-node-icon').value = node.icon || '';
+  document.getElementById('new-node-action-text').value = node.actionText || '';
   document.getElementById('new-node-type').value = node.type || 'lesson';
   
   const levelsContainer = document.getElementById('node-levels-container');
@@ -601,7 +668,6 @@ function editCurrentNode() {
       }
     });
   } else if (node.questions && node.questions.length > 0) {
-    // Legacy support for single level questions
     const levelEl = createLevelElement(0);
     levelsContainer.appendChild(levelEl);
     const qContainer = levelEl.querySelector('.level-questions-container');
@@ -626,15 +692,19 @@ function deleteCurrentNode() {
 function createLevelElement(index) {
   const wrapper = document.createElement('div');
   wrapper.className = 'admin-level-wrapper';
-  wrapper.style.cssText = 'border: 2px solid var(--color-border); padding: 15px; border-radius: 12px; position: relative; background: var(--color-bg);';
+  wrapper.style.cssText = 'border: 2px solid var(--color-border); padding: 15px; border-radius: 14px; position: relative; background: var(--color-bg);';
   
   wrapper.innerHTML = `
     <button class="btn-secondary danger" style="position:absolute; top:10px; left:10px; padding: 5px 10px;" onclick="this.parentElement.remove()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
-    <h5 style="margin-bottom: 10px; color: var(--color-accent);">مستوى جديد</h5>
-    <div class="level-questions-container" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 10px;"></div>
-    <div style="display: flex; gap: 10px;">
-        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'translate')" style="flex:1;">+ سؤال ترتيب</button>
-        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'mcq')" style="flex:1;">+ سؤال خيارات</button>
+    <h5 style="margin-bottom: 12px; color: var(--color-accent); font-weight: 800;">المستوى ${index + 1}</h5>
+    <div class="level-questions-container" style="display:flex; flex-direction:column; gap:12px; margin-bottom: 14px;"></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;">
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'translate')">+ ترتيب كلمات</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'mcq')">+ خيارات</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'match')">+ توصيل</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'info_card')">+ بطاقة معلومات</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'fill_blank_text')">+ فراغ (كتابة)</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'fill_blank_choice')">+ فراغ (اختيارات)</button>
     </div>
   `;
   return wrapper;
@@ -647,31 +717,100 @@ function addNodeLevel() {
 }
 
 function addQuestionToLevel(btn, type) {
-  const container = btn.parentElement.previousElementSibling;
+  const container = btn.closest('.admin-level-wrapper').querySelector('.level-questions-container');
   container.appendChild(createQuestionElement({ type }));
 }
 
 function createQuestionElement(qData) {
   const wrapper = document.createElement('div');
   wrapper.className = 'admin-question-wrapper';
-  wrapper.style.cssText = 'border: 1px dashed var(--color-border); padding: 10px; border-radius: 8px; position: relative; background: var(--color-surface);';
+  wrapper.style.cssText = 'border: 1px solid var(--color-border); padding: 15px; border-radius: 10px; position: relative; background: var(--color-surface); margin-bottom: 12px;';
   wrapper.dataset.type = qData.type;
   
-  let html = `<button class="btn-secondary danger" style="position:absolute; top:10px; left:10px; padding: 5px 10px;" onclick="this.parentElement.remove()"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>`;
+  let html = `<button class="btn-secondary danger" style="position:absolute; top:12px; left:12px; padding: 4px 8px;" onclick="this.parentElement.remove()" title="حذف هذا السؤال"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>`;
   
   if (qData.type === 'translate') {
     html += `
-      <strong>سؤال ترتيب:</strong>
-      <input type="text" class="modal-input q-text" placeholder="النص الأصلي" value="${qData.text || ''}" style="margin-top:5px; margin-bottom:5px;">
-      <input type="text" class="modal-input q-words" placeholder="الكلمات المتاحة (افصل بـ +)" value="${(qData.words || []).join('+')}" style="margin-bottom:5px;">
-      <input type="text" class="modal-input q-correct" placeholder="الإجابة الصحيحة بالترتيب (افصل بـ +)" value="${(qData.correct || []).join('+')}" style="margin-bottom:5px;">
+      <div style="font-weight:800; margin-bottom:10px; color:#0284c7; font-size: 1.1rem;"><i data-lucide="list-ordered" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>سؤال ترتيب كلمات</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الجملة المعروضة للمستخدم:</label>
+      <input type="text" class="modal-input q-text" placeholder="مثال: هذا الرجل أسد في شجاعته" value="${qData.text || ''}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">بنك الكلمات المتاحة (افصل بـ +):</label>
+      <input type="text" class="modal-input q-words" placeholder="مثال: هذا+الرجل+أسد+في+شجاعته+كالأسد" value="${(qData.words || []).join('+')}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الترتيب الصحيح (افصل بـ +):</label>
+      <input type="text" class="modal-input q-correct" placeholder="مثال: هذا+الرجل+أسد+في+شجاعته" value="${(qData.correct || []).join('+')}">
     `;
   } else if (qData.type === 'mcq') {
     html += `
-      <strong>سؤال خيارات:</strong>
-      <input type="text" class="modal-input q-text" placeholder="نص السؤال" value="${qData.text || ''}" style="margin-top:5px; margin-bottom:5px;">
-      <input type="text" class="modal-input q-options" placeholder="الخيارات المتاحة (افصل بـ +)" value="${(qData.options || []).join('+')}" style="margin-bottom:5px;">
-      <input type="number" class="modal-input q-correct" placeholder="رقم الخيار الصحيح (1-4)" min="1" value="${qData.correct !== undefined ? qData.correct + 1 : ''}" style="margin-bottom:5px;">
+      <div style="font-weight:800; margin-bottom:10px; color:#0284c7; font-size: 1.1rem;"><i data-lucide="help-circle" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>سؤال خيارات متعددة</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">نص السؤال:</label>
+      <input type="text" class="modal-input q-text" placeholder="اكتب السؤال هنا..." value="${qData.text || ''}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الخيارات المتاحة (افصل بـ +):</label>
+      <input type="text" class="modal-input q-options" placeholder="خيار1+خيار2+خيار3+خيار4" value="${(qData.options || []).join('+')}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">تحديد الإجابة الصحيحة:</label>
+      <select class="modal-input q-correct" style="margin-bottom:0; padding: 10px;">
+        <option value="1" ${qData.correct === 0 ? 'selected' : ''}>الخيار الأول (1)</option>
+        <option value="2" ${qData.correct === 1 ? 'selected' : ''}>الخيار الثاني (2)</option>
+        <option value="3" ${qData.correct === 2 ? 'selected' : ''}>الخيار الثالث (3)</option>
+        <option value="4" ${qData.correct === 3 ? 'selected' : ''}>الخيار الرابع (4)</option>
+      </select>
+    `;
+  } else if (qData.type === 'match') {
+    let pairsStr = (qData.pairs || []).map(p => `${p.left}:${p.right}`).join(' + ');
+    html += `
+      <div style="font-weight:800; margin-bottom:10px; color:#16a34a; font-size: 1.1rem;"><i data-lucide="git-merge" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>سؤال توصيل</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">تعليمات السؤال:</label>
+      <input type="text" class="modal-input q-title" placeholder="صل بين كل مفهوم وتعريفه:" value="${qData.title || 'صل بين كل مفهوم وتعريفه:'}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">أزواج التوصيل (الصيغة: كلمة1:تعريف1 + كلمة2:تعريف2):</label>
+      <textarea class="modal-textarea q-pairs" rows="3" placeholder="مثال: التشبيه:عقد مماثلة + الاستعارة:تشبيه حذف أحد طرفيه">${pairsStr}</textarea>
+    `;
+  } else if (qData.type === 'info_card') {
+    html += `
+      <div style="font-weight:800; margin-bottom:10px; color:#9333ea; font-size: 1.1rem;"><i data-lucide="info" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>بطاقة معلومات</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">عنوان البطاقة:</label>
+      <input type="text" class="modal-input q-title" placeholder="مثال: أركان التشبيه" value="${qData.title || ''}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">نص الشرح (يمكنك استخدام أسطر جديدة):</label>
+      <textarea class="modal-textarea q-text" rows="3" placeholder="اكتب الشرح والمعلومات هنا..." style="margin-bottom:10px;">${qData.text || ''}</textarea>
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">إعدادات الصوت (اختياري):</label>
+      <div style="font-size: 0.75rem; color: var(--color-muted); margin-bottom: 8px;">
+        * يمكنك لصق رابط مباشر لملف MP3. <br>
+        * لحذف الصوت أو عدم استخدامه، اترك هذا الحقل فارغاً (سيتم الاعتماد على النطق الآلي إذا لزم الأمر).
+      </div>
+      <input type="text" class="modal-input q-audio" placeholder="https://example.com/audio.mp3" value="${qData.audioUrl || ''}">
+    `;
+  } else if (qData.type === 'fill_blank_text') {
+    let corrStr = Array.isArray(qData.correct) ? qData.correct.join('+') : (qData.correct || '');
+    html += `
+      <div style="font-weight:800; margin-bottom:10px; color:#ca8a04; font-size: 1.1rem;"><i data-lucide="edit-3" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>إكمال الفراغ (كتابة)</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">عنوان السؤال:</label>
+      <input type="text" class="modal-input q-title" placeholder="أكمل الفراغ بالكلمة المناسبة كتابةً:" value="${qData.title || 'أكمل الفراغ بالكلمة المناسبة كتابةً:'}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الجملة (استخدم [___] لمكان الفراغ):</label>
+      <input type="text" class="modal-input q-sentence" placeholder="السيف والرمح والقرطاس و[___]" value="${qData.sentence || ''}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الكلمة/الكلمات المقبولة (افصل بـ +):</label>
+      <input type="text" class="modal-input q-correct" placeholder="مثال: القلم+والقلم" value="${corrStr}">
+    `;
+  } else if (qData.type === 'fill_blank_choice') {
+    html += `
+      <div style="font-weight:800; margin-bottom:10px; color:#ca8a04; font-size: 1.1rem;"><i data-lucide="mouse-pointer-click" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>إكمال الفراغ (اختيارات)</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">عنوان السؤال:</label>
+      <input type="text" class="modal-input q-title" placeholder="اختر الكلمة المناسبة لملء الفراغ:" value="${qData.title || 'اختر الكلمة المناسبة لملء الفراغ:'}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الجملة (استخدم [___] لمكان الفراغ):</label>
+      <input type="text" class="modal-input q-sentence" placeholder="التشبيه البليغ حُذف منه [___]" value="${qData.sentence || ''}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">بنك الخيارات (افصل بـ +):</label>
+      <input type="text" class="modal-input q-options" placeholder="وجه الشبه+أداة التشبيه+المشبه" value="${(qData.options || []).join('+')}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الخيار الصحيح (يجب أن يطابق أحد الخيارات):</label>
+      <input type="text" class="modal-input q-correct" placeholder="وجه الشبه" value="${qData.correct || ''}">
     `;
   }
   
@@ -687,6 +826,7 @@ function savePracticeNode() {
   const desc = document.getElementById('new-node-desc').value.trim();
   const type = document.getElementById('new-node-type').value;
   const icon = document.getElementById('new-node-icon').value.trim();
+  const actionText = document.getElementById('new-node-action-text').value.trim();
   
   if (!title) return alert('يرجى إدخال عنوان العقدة');
   
@@ -698,17 +838,42 @@ function savePracticeNode() {
     const qWrappers = lw.querySelectorAll('.admin-question-wrapper');
     qWrappers.forEach(w => {
       const qType = w.dataset.type;
-      const text = w.querySelector('.q-text').value.trim();
-      if (!text) return;
       
       if (qType === 'translate') {
-        const words = w.querySelector('.q-words').value.split('+').map(s=>s.trim()).filter(s=>s);
-        const correct = w.querySelector('.q-correct').value.split('+').map(s=>s.trim()).filter(s=>s);
-        questions.push({ type: 'translate', text, words, correct });
+        const text = (w.querySelector('.q-text')?.value || '').trim();
+        const words = (w.querySelector('.q-words')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
+        const correct = (w.querySelector('.q-correct')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
+        if (text) questions.push({ type: 'translate', text, words, correct });
       } else if (qType === 'mcq') {
-        const options = w.querySelector('.q-options').value.split('+').map(s=>s.trim()).filter(s=>s);
-        const correct = parseInt(w.querySelector('.q-correct').value) - 1;
-        questions.push({ type: 'mcq', text, options, correct });
+        const text = (w.querySelector('.q-text')?.value || '').trim();
+        const options = (w.querySelector('.q-options')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
+        const correct = Math.max(0, (parseInt(w.querySelector('.q-correct')?.value) || 1) - 1);
+        if (text) questions.push({ type: 'mcq', text, options, correct });
+      } else if (qType === 'match') {
+        const titleQ = (w.querySelector('.q-title')?.value || '').trim();
+        const rawPairs = (w.querySelector('.q-pairs')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
+        const pairs = [];
+        rawPairs.forEach(rp => {
+          const parts = rp.split(':').map(s=>s.trim());
+          if (parts.length >= 2) pairs.push({ left: parts[0], right: parts.slice(1).join(':') });
+        });
+        if (pairs.length > 0) questions.push({ type: 'match', title: titleQ || 'صل بين الكلمات ومفاهيمها:', pairs });
+      } else if (qType === 'info_card') {
+        const titleQ = (w.querySelector('.q-title')?.value || '').trim();
+        const text = (w.querySelector('.q-text')?.value || '').trim();
+        const audioUrl = (w.querySelector('.q-audio')?.value || '').trim();
+        if (text || titleQ) questions.push({ type: 'info_card', title: titleQ || 'معلومة', text, audioUrl, note: 'اقرأ البطاقة أو استمع للشرح ثم اضغط مفهوم' });
+      } else if (qType === 'fill_blank_text') {
+        const titleQ = (w.querySelector('.q-title')?.value || '').trim();
+        const sentence = (w.querySelector('.q-sentence')?.value || '').trim();
+        const correct = (w.querySelector('.q-correct')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
+        if (sentence) questions.push({ type: 'fill_blank_text', title: titleQ || 'أكمل الفراغ بالكتابة:', sentence, correct });
+      } else if (qType === 'fill_blank_choice') {
+        const titleQ = (w.querySelector('.q-title')?.value || '').trim();
+        const sentence = (w.querySelector('.q-sentence')?.value || '').trim();
+        const options = (w.querySelector('.q-options')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
+        const correct = (w.querySelector('.q-correct')?.value || '').trim();
+        if (sentence) questions.push({ type: 'fill_blank_choice', title: titleQ || 'اختر الكلمة المناسبة:', sentence, options, correct });
       }
     });
     
@@ -729,7 +894,8 @@ function savePracticeNode() {
       node.type = type;
       node.levels = levels;
       node.icon = icon;
-      delete node.questions; // clean up old format
+      node.actionText = actionText;
+      delete node.questions;
     }
   } else {
     const newId = practiceNodes.length > 0 ? Math.max(...practiceNodes.map(n=>n.id)) + 1 : 1;
@@ -740,12 +906,15 @@ function savePracticeNode() {
       status: practiceNodes.filter(n=>n.unitId===currentUnitId).length === 0 ? 'current' : 'locked',
       title,
       desc,
+      icon,
+      actionText,
       levels
     });
   }
   
   savePracticeData();
   closeAllTooltips();
+  closeModal('add-practice-node-modal');
   renderPracticePath();
 }
 
@@ -759,9 +928,8 @@ window.toggleTooltip = function(nodeId, event) {
     if (!isVisible) {
         tooltip.classList.remove('hidden');
         tooltip.classList.add('visible');
-        if (nodeEl) nodeEl.style.zIndex = '50'; // Elevate above other nodes
+        if (nodeEl) nodeEl.style.zIndex = '50';
         
-        // Scroll into view if needed
         setTimeout(() => {
             const rect = tooltip.getBoundingClientRect();
             if (rect.bottom > window.innerHeight) {
@@ -776,7 +944,7 @@ window.closeAllTooltips = function() {
         card.classList.remove('visible');
         card.classList.add('hidden');
         const nodeEl = card.closest('.tile-node');
-        if (nodeEl) nodeEl.style.zIndex = '2'; // Reset z-index
+        if (nodeEl) nodeEl.style.zIndex = '2';
     });
 };
 
@@ -799,25 +967,43 @@ window.deleteNode = function(nodeId) {
 };
 
 // =============================================
-// Lesson Logic
+// Comprehensive Interactive Lesson Logic
 // =============================================
-let currentLessonQuestions = [
-  {
-    type: 'translate',
-    text: 'هذا الرجل أسدٌ في شجاعته',
-    words: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته', 'شجاع', 'كالأسد'],
-    correct: ['هذا', 'الرجل', 'أسدٌ', 'في', 'شجاعته']
-  },
-  {
-    type: 'mcq',
-    text: 'ما نوع التشبيه في: "العلم كالنور"؟',
-    options: ['تشبيه بليغ', 'تشبيه مجمل', 'تشبيه مفصل', 'استعارة'],
-    correct: 1 // index of correct option
-  }
-];
+let currentLessonQuestions = [];
 let currentQuestionIndex = 0;
-let userAnswers = []; // For translate type
-let selectedOption = null; // For mcq type
+let nodeStartTime = 0;
+let nodeSessionMistakes = [];
+let isMistakesReviewMode = false;
+let totalQuestionsAttempted = 0;
+let totalQuestionsCorrectFirstTry = 0;
+let activeNodeLevelCount = 1;
+
+// Question interaction states
+let userAnswers = []; // For translate
+let selectedOption = null; // For mcq
+let selectedMatchColA = null; // For match
+let selectedMatchColB = null;
+let matchedPairIndices = [];
+let shuffledMatchLeft = [];
+let shuffledMatchRight = [];
+let fillBlankInputText = ''; // For fill_blank_text
+let fillBlankSelectedChoice = null; // For fill_blank_choice
+let cardAudioPlaying = false;
+let currentCardAudio = null;
+
+// Helper to normalize Arabic text for forgiving comparison
+function normalizeArabic(text) {
+  if (!text) return '';
+  return text
+    .replace(/[\u064B-\u065F\u0670]/g, '') // remove tashkeel (diacritics)
+    .replace(/\u0640/g, '') // remove tatweel
+    .replace(/[إأآٱ]/g, 'ا') // normalize alefs
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
 
 function startLesson(mode, nodeId = null) {
   if (nodeId) currentNodeId = nodeId;
@@ -825,28 +1011,39 @@ function startLesson(mode, nodeId = null) {
   
   const node = practiceNodes.find(n => n.id === currentNodeId);
   currentLessonQuestions = [];
+  nodeStartTime = Date.now();
+  nodeSessionMistakes = [];
+  isMistakesReviewMode = false;
+  totalQuestionsAttempted = 0;
+  totalQuestionsCorrectFirstTry = 0;
+  
+  const badge = document.getElementById('mistakes-review-badge');
+  if (badge) badge.style.display = 'none';
   
   if (node) {
-    if (!node.levels) node.levels = [];
+    if (!node.levels || node.levels.length === 0) {
+      node.levels = [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }];
+    }
+    activeNodeLevelCount = node.levels.length;
     if (typeof node.currentLevelIndex === 'undefined') node.currentLevelIndex = 0;
     
     if (mode === 'review') {
       let allQs = [];
-      node.levels.forEach(l => { if(l.questions) allQs.push(...l.questions) });
+      node.levels.forEach(l => { if(l.questions) allQs.push(...l.questions); });
       if (allQs.length > 0) {
-        currentLessonQuestions = allQs.sort(() => 0.5 - Math.random()).slice(0, 5);
+        currentLessonQuestions = allQs.sort(() => 0.5 - Math.random()).slice(0, 6);
       }
     } else {
       if (node.currentLevelIndex >= node.levels.length) node.currentLevelIndex = 0;
       let lvl = node.levels[node.currentLevelIndex];
-      if (lvl && lvl.questions) {
+      if (lvl && lvl.questions && lvl.questions.length > 0) {
         currentLessonQuestions = lvl.questions;
       }
     }
   }
   
-  if (currentLessonQuestions.length === 0) {
-    currentLessonQuestions = defaultQuestions; // fallback
+  if (!currentLessonQuestions || currentLessonQuestions.length === 0) {
+    currentLessonQuestions = defaultQuestions;
   }
   
   showSection('lesson');
@@ -855,13 +1052,36 @@ function startLesson(mode, nodeId = null) {
 }
 
 function loadQuestion() {
+  if (currentQuestionIndex >= currentLessonQuestions.length) {
+    handleLevelCompletion();
+    return;
+  }
+  
   const q = currentLessonQuestions[currentQuestionIndex];
   const area = document.getElementById('lesson-content-area');
   
-  // Reset state
+  // Reset all state
   userAnswers = [];
   selectedOption = null;
-  document.getElementById('btn-check-answer').className = 'btn-check';
+  selectedMatchColA = null;
+  selectedMatchColB = null;
+  matchedPairIndices = [];
+  fillBlankInputText = '';
+  fillBlankSelectedChoice = null;
+  cardAudioPlaying = false;
+  if (currentCardAudio) {
+    try { currentCardAudio.pause(); } catch(e){}
+    currentCardAudio = null;
+  }
+  if (window.speechSynthesis) {
+    try { window.speechSynthesis.cancel(); } catch(e){}
+  }
+  
+  const btnCheck = document.getElementById('btn-check-answer');
+  btnCheck.className = 'btn-check';
+  btnCheck.textContent = 'تحقق';
+  btnCheck.style.display = 'block';
+  
   document.getElementById('lesson-feedback-bar').className = 'lesson-feedback-bar';
   
   // Update progress
@@ -869,26 +1089,100 @@ function loadQuestion() {
   document.getElementById('lesson-progress').style.width = `${progress}%`;
   
   let html = '';
+  
   if (q.type === 'translate') {
     html = `
-      <h2 class="question-title">رتب الكلمات لتكوين الجملة</h2>
+      <h2 class="question-title">${q.title || 'رتب الكلمات لتكوين الجملة'}</h2>
       <div class="speech-bubble">${q.text}</div>
       <div class="answer-area" id="answer-area"></div>
       <div class="word-bank" id="word-bank">
-        ${q.words.map((w, i) => `<button class="word-btn" onclick="selectWord('${w}', this)">${w}</button>`).join('')}
+        ${(q.words || []).map((w) => `<button class="word-btn" onclick="selectWord('${w.replace(/'/g, "\\'")}', this)">${w}</button>`).join('')}
       </div>
     `;
   } else if (q.type === 'mcq') {
     html = `
       <h2 class="question-title">${q.text}</h2>
       <div class="mcq-options">
-        ${q.options.map((opt, i) => `<button class="mcq-btn" onclick="selectOption(${i}, this)">${opt}</button>`).join('')}
+        ${(q.options || []).map((opt, i) => `<button class="mcq-btn" onclick="selectOption(${i}, this)">${opt}</button>`).join('')}
+      </div>
+    `;
+  } else if (q.type === 'match') {
+    // Prepare pairs
+    const pairs = q.pairs || [];
+    shuffledMatchLeft = pairs.map((p, idx) => ({ id: idx, text: p.left })).sort(() => 0.5 - Math.random());
+    shuffledMatchRight = pairs.map((p, idx) => ({ id: idx, text: p.right })).sort(() => 0.5 - Math.random());
+    
+    html = `
+      <h2 class="question-title">${q.title || 'صل بين الكلمات وما يناسبها'}</h2>
+      <div class="match-container" id="match-container">
+        <div class="match-col" id="match-col-a">
+          ${shuffledMatchLeft.map((item) => `
+            <div class="match-card" data-col="left" data-id="${item.id}" onclick="selectMatchCard('left', ${item.id}, this)">
+              ${item.text}
+            </div>
+          `).join('')}
+        </div>
+        <div class="match-col" id="match-col-b">
+          ${shuffledMatchRight.map((item) => `
+            <div class="match-card" data-col="right" data-id="${item.id}" onclick="selectMatchCard('right', ${item.id}, this)">
+              ${item.text}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (q.type === 'info_card') {
+    btnCheck.textContent = 'مفهوم';
+    btnCheck.className = 'btn-check active';
+    
+    const formattedText = (q.text || '').replace(/\n/g, '<br>');
+    html = `
+      <div class="info-card-box">
+        <div class="info-card-badge"><i data-lucide="book-open"></i> بطاقة معرفية</div>
+        <h2 class="info-card-title">${q.title || 'شرح وتوضيح'}</h2>
+        <div class="info-card-body">${formattedText}</div>
+        <div class="info-card-audio-bar">
+          <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-muted);">${q.note || 'استمع للشرح أو اقرأ البطاقة'}</span>
+          <button type="button" class="audio-play-btn" id="card-audio-btn" onclick="toggleCardAudio()">
+            <i data-lucide="volume-2" id="card-audio-icon"></i>
+            <span id="card-audio-label">استمع</span>
+          </button>
+        </div>
+      </div>
+    `;
+  } else if (q.type === 'fill_blank_text') {
+    const formattedSentence = (q.sentence || '').replace(/\[___\]/g, '<span class="blank-highlight" id="blank-highlight-preview">____</span>');
+    html = `
+      <h2 class="question-title">${q.title || 'أكمل الفراغ بالكلمة المناسبة كتابةً'}</h2>
+      <div class="fill-blank-container">
+        <div class="fill-blank-sentence-card">${formattedSentence}</div>
+        <div class="fill-input-wrapper">
+          <input type="text" class="fill-blank-input" id="fill-blank-input" placeholder="اكتب الكلمة هنا..." oninput="handleFillBlankInput(this.value)" autocomplete="off" autofocus>
+        </div>
+      </div>
+    `;
+  } else if (q.type === 'fill_blank_choice') {
+    const formattedSentence = (q.sentence || '').replace(/\[___\]/g, '<span class="blank-slot-choice" id="blank-slot-choice" onclick="clearBlankChoice()">[ اضغط لاختيار ]</span>');
+    html = `
+      <h2 class="question-title">${q.title || 'اختر الكلمة المناسبة لملء الفراغ'}</h2>
+      <div class="fill-blank-container">
+        <div class="fill-blank-sentence-card">${formattedSentence}</div>
+        <div class="choice-bank" id="choice-bank">
+          ${(q.options || []).map((opt) => `
+            <button type="button" class="choice-chip-btn" onclick="selectBlankChoice('${opt.replace(/'/g, "\\'")}', this)">
+              ${opt}
+            </button>
+          `).join('')}
+        </div>
       </div>
     `;
   }
+  
   area.innerHTML = html;
+  if (window.lucide) lucide.createIcons();
 }
 
+// 1. Translate (Reorder)
 window.selectWord = function(word, btnEl) {
   userAnswers.push(word);
   btnEl.classList.add('selected');
@@ -899,7 +1193,6 @@ window.selectWord = function(word, btnEl) {
 window.removeWord = function(index) {
   const word = userAnswers.splice(index, 1)[0];
   renderAnswerArea();
-  // Unselect in word bank
   const btns = document.querySelectorAll('.word-btn');
   btns.forEach(btn => {
     if (btn.textContent === word && btn.classList.contains('selected')) {
@@ -937,6 +1230,7 @@ function renderAnswerArea() {
   }
 }
 
+// 2. MCQ
 window.selectOption = function(index, btnEl) {
   selectedOption = index;
   const btns = document.querySelectorAll('.mcq-btn');
@@ -945,14 +1239,173 @@ window.selectOption = function(index, btnEl) {
   checkIfReady();
 };
 
+// 3. Match Pairs
+window.selectMatchCard = function(col, id, cardEl) {
+  if (cardEl.classList.contains('matched')) return;
+  
+  if (col === 'left') {
+    document.querySelectorAll('#match-col-a .match-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    selectedMatchColA = { id, el: cardEl };
+  } else {
+    document.querySelectorAll('#match-col-b .match-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    selectedMatchColB = { id, el: cardEl };
+  }
+  
+  // If both selected, verify pair
+  if (selectedMatchColA && selectedMatchColB) {
+    const isPair = selectedMatchColA.id === selectedMatchColB.id;
+    const elA = selectedMatchColA.el;
+    const elB = selectedMatchColB.el;
+    
+    if (isPair) {
+      elA.classList.remove('selected');
+      elB.classList.remove('selected');
+      elA.classList.add('matched');
+      elB.classList.add('matched');
+      matchedPairIndices.push(selectedMatchColA.id);
+      selectedMatchColA = null;
+      selectedMatchColB = null;
+      
+      const q = currentLessonQuestions[currentQuestionIndex];
+      if (matchedPairIndices.length === (q.pairs || []).length) {
+        document.getElementById('btn-check-answer').classList.add('active');
+        // Auto trigger victory feedback after brief pause
+        setTimeout(() => {
+          checkAnswer();
+        }, 300);
+      }
+    } else {
+      elA.classList.add('shake-error');
+      elB.classList.add('shake-error');
+      setTimeout(() => {
+        elA.classList.remove('selected', 'shake-error');
+        elB.classList.remove('selected', 'shake-error');
+        selectedMatchColA = null;
+        selectedMatchColB = null;
+      }, 500);
+    }
+  }
+};
+
+// 4. Info Card Audio
+window.toggleCardAudio = function() {
+  const q = currentLessonQuestions[currentQuestionIndex];
+  const btn = document.getElementById('card-audio-btn');
+  const label = document.getElementById('card-audio-label');
+  
+  if (cardAudioPlaying) {
+    if (currentCardAudio) {
+      currentCardAudio.pause();
+      currentCardAudio = null;
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    cardAudioPlaying = false;
+    if (btn) btn.classList.remove('playing');
+    if (label) label.textContent = 'استمع';
+    return;
+  }
+  
+  cardAudioPlaying = true;
+  if (btn) btn.classList.add('playing');
+  if (label) label.textContent = 'إيقاف';
+  
+  if (q.audioUrl && q.audioUrl.trim().length > 5) {
+    currentCardAudio = new Audio(q.audioUrl);
+    currentCardAudio.onended = () => {
+      cardAudioPlaying = false;
+      if (btn) btn.classList.remove('playing');
+      if (label) label.textContent = 'استمع';
+    };
+    currentCardAudio.play().catch(() => {
+      speakCardText(q.title + '. ' + q.text);
+    });
+  } else {
+    speakCardText((q.title ? q.title + '. ' : '') + (q.text || ''));
+  }
+};
+
+function speakCardText(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ar-SA';
+  utterance.rate = 0.9;
+  utterance.onend = () => {
+    cardAudioPlaying = false;
+    const btn = document.getElementById('card-audio-btn');
+    const label = document.getElementById('card-audio-label');
+    if (btn) btn.classList.remove('playing');
+    if (label) label.textContent = 'استمع';
+  };
+  utterance.onerror = () => {
+    cardAudioPlaying = false;
+    const btn = document.getElementById('card-audio-btn');
+    const label = document.getElementById('card-audio-label');
+    if (btn) btn.classList.remove('playing');
+    if (label) label.textContent = 'استمع';
+  };
+  window.speechSynthesis.speak(utterance);
+}
+
+// 5. Fill Blank Text
+window.handleFillBlankInput = function(val) {
+  fillBlankInputText = val;
+  const preview = document.getElementById('blank-highlight-preview');
+  if (preview) {
+    preview.textContent = val.trim() ? val : '____';
+  }
+  checkIfReady();
+};
+
+// 6. Fill Blank Choice
+window.selectBlankChoice = function(word, chipEl) {
+  fillBlankSelectedChoice = word;
+  const slot = document.getElementById('blank-slot-choice');
+  if (slot) {
+    slot.textContent = word;
+    slot.classList.add('filled');
+  }
+  document.querySelectorAll('.choice-chip-btn').forEach(c => c.classList.remove('used'));
+  chipEl.classList.add('used');
+  checkIfReady();
+};
+
+window.clearBlankChoice = function() {
+  fillBlankSelectedChoice = null;
+  const slot = document.getElementById('blank-slot-choice');
+  if (slot) {
+    slot.textContent = '[ اضغط لاختيار ]';
+    slot.classList.remove('filled');
+  }
+  document.querySelectorAll('.choice-chip-btn').forEach(c => c.classList.remove('used'));
+  checkIfReady();
+};
+
 function checkIfReady() {
   const q = currentLessonQuestions[currentQuestionIndex];
   const btn = document.getElementById('btn-check-answer');
+  if (!q || !btn) return;
+  
   if (q.type === 'translate') {
     if (userAnswers.length > 0) btn.classList.add('active');
     else btn.classList.remove('active');
   } else if (q.type === 'mcq') {
     if (selectedOption !== null) btn.classList.add('active');
+    else btn.classList.remove('active');
+  } else if (q.type === 'match') {
+    if (matchedPairIndices.length === (q.pairs || []).length) btn.classList.add('active');
+    else btn.classList.remove('active');
+  } else if (q.type === 'info_card') {
+    btn.classList.add('active');
+  } else if (q.type === 'fill_blank_text') {
+    if (fillBlankInputText.trim().length > 0) btn.classList.add('active');
+    else btn.classList.remove('active');
+  } else if (q.type === 'fill_blank_choice') {
+    if (fillBlankSelectedChoice !== null) btn.classList.add('active');
     else btn.classList.remove('active');
   }
 }
@@ -962,12 +1415,28 @@ window.checkAnswer = function() {
   if (!btn.classList.contains('active')) return;
   
   const q = currentLessonQuestions[currentQuestionIndex];
+  
+  // Info card always succeeds without testing
+  if (q.type === 'info_card') {
+    nextQuestion();
+    return;
+  }
+  
+  totalQuestionsAttempted++;
   let isCorrect = false;
   
   if (q.type === 'translate') {
     isCorrect = JSON.stringify(userAnswers) === JSON.stringify(q.correct);
   } else if (q.type === 'mcq') {
     isCorrect = selectedOption === q.correct;
+  } else if (q.type === 'match') {
+    isCorrect = matchedPairIndices.length === (q.pairs || []).length;
+  } else if (q.type === 'fill_blank_text') {
+    const userNorm = normalizeArabic(fillBlankInputText);
+    const accepted = Array.isArray(q.correct) ? q.correct : [q.correct];
+    isCorrect = accepted.some(ans => normalizeArabic(ans) === userNorm);
+  } else if (q.type === 'fill_blank_choice') {
+    isCorrect = normalizeArabic(fillBlankSelectedChoice) === normalizeArabic(q.correct);
   }
   
   const feedback = document.getElementById('lesson-feedback-bar');
@@ -976,23 +1445,35 @@ window.checkAnswer = function() {
   const desc = document.getElementById('feedback-desc');
   
   if (isCorrect) {
+    totalQuestionsCorrectFirstTry++;
     feedback.className = 'lesson-feedback-bar show success';
     icon.innerHTML = '<i data-lucide="check"></i>';
-    title.textContent = 'رائع!';
-    desc.textContent = 'إجابة صحيحة';
+    title.textContent = 'رائع جداً!';
+    desc.textContent = 'إجابة صحيحة وممتازة';
   } else {
+    // Record mistake for end-of-node review
+    if (!nodeSessionMistakes.some(m => m === q)) {
+      nodeSessionMistakes.push(q);
+    }
+    
     feedback.className = 'lesson-feedback-bar show error';
     icon.innerHTML = '<i data-lucide="x"></i>';
     title.textContent = 'إجابة خاطئة';
-    if (q.type === 'translate') desc.textContent = `الصحيح هو: ${q.correct.join(' ')}`;
-    if (q.type === 'mcq') desc.textContent = `الصحيح هو: ${q.options[q.correct]}`;
     
-    // Reduce hearts
+    if (q.type === 'translate') desc.textContent = `الصحيح: ${q.correct.join(' ')}`;
+    else if (q.type === 'mcq') desc.textContent = `الصحيح: ${q.options[q.correct]}`;
+    else if (q.type === 'fill_blank_text') desc.textContent = `الصحيح: ${Array.isArray(q.correct) ? q.correct[0] : q.correct}`;
+    else if (q.type === 'fill_blank_choice') desc.textContent = `الصحيح: ${q.correct}`;
+    else desc.textContent = 'حاول التركيز مرة أخرى';
+    
+    // Reduce heart count
     const hc = document.getElementById('lesson-heart-count');
-    let h = parseInt(hc.textContent);
-    if(h > 0) hc.textContent = h - 1;
+    if (hc) {
+      let h = parseInt(hc.textContent);
+      if (h > 0) hc.textContent = h - 1;
+    }
   }
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 };
 
 window.nextQuestion = function() {
@@ -1000,50 +1481,97 @@ window.nextQuestion = function() {
   if (currentQuestionIndex < currentLessonQuestions.length) {
     loadQuestion();
   } else {
-    // Finish level
-    document.getElementById('lesson-progress').style.width = '100%';
-    setTimeout(() => {
-      const nodeIndex = practiceNodes.findIndex(n => n.id === currentNodeId);
-      if (nodeIndex !== -1) {
-        const node = practiceNodes[nodeIndex];
-        if (!node.levels) node.levels = node.questions ? [{ id: 1, questions: node.questions }] : [];
-        if (typeof node.currentLevelIndex === 'undefined') node.currentLevelIndex = 0;
-        
-        node.currentLevelIndex++;
-        
-        if (node.currentLevelIndex < node.levels.length) {
-           if (confirm(`تم اكمال المستوى ${node.currentLevelIndex} من الدرس.. هل تود المتابعة؟`)) {
-               savePracticeData();
-               currentLessonQuestions = node.levels[node.currentLevelIndex].questions || [];
-               currentQuestionIndex = 0;
-               document.getElementById('lesson-progress').style.width = '0%';
-               loadQuestion();
-           } else {
-               savePracticeData();
-               renderPracticePath();
-               showSection('practice');
-           }
-        } else {
-           alert("أكملت العقدة بنجاح!");
-           node.status = 'completed';
-           if (nodeIndex + 1 < practiceNodes.length) {
-             if (practiceNodes[nodeIndex + 1].status === 'locked') {
-               practiceNodes[nodeIndex + 1].status = 'current';
-             }
-           }
-           activateStreak(); // increment streak only on full node completion
-           savePracticeData();
-           renderPracticePath();
-           showSection('practice');
-        }
-      } else {
-        activateStreak();
-        savePracticeData();
-        renderPracticePath();
-        showSection('practice');
-      }
-    }, 500);
+    handleLevelCompletion();
   }
+};
+
+function handleLevelCompletion() {
+  document.getElementById('lesson-progress').style.width = '100%';
+  
+  setTimeout(() => {
+    const nodeIndex = practiceNodes.findIndex(n => n.id === currentNodeId);
+    if (nodeIndex === -1) {
+      showSection('practice');
+      return;
+    }
+    
+    const node = practiceNodes[nodeIndex];
+    if (!node.levels || node.levels.length === 0) {
+      node.levels = [{ id: 1, questions: defaultQuestions }];
+    }
+    if (typeof node.currentLevelIndex === 'undefined') node.currentLevelIndex = 0;
+    
+    // If currently in Mistakes Review mode
+    if (isMistakesReviewMode) {
+      // Completed reviewing mistakes!
+      isMistakesReviewMode = false;
+      showNodeAchievements(node);
+      return;
+    }
+    
+    node.currentLevelIndex++;
+    
+    if (node.currentLevelIndex < node.levels.length) {
+      // Prompt or continue next level
+      savePracticeData();
+      currentLessonQuestions = node.levels[node.currentLevelIndex].questions || defaultQuestions;
+      currentQuestionIndex = 0;
+      document.getElementById('lesson-progress').style.width = '0%';
+      loadQuestion();
+    } else {
+      // Completed all levels of this node!
+      // Check if there are mistakes to review first
+      if (nodeSessionMistakes.length > 0) {
+        isMistakesReviewMode = true;
+        const badge = document.getElementById('mistakes-review-badge');
+        if (badge) badge.style.display = 'inline-flex';
+        
+        currentLessonQuestions = [...nodeSessionMistakes];
+        nodeSessionMistakes = [];
+        currentQuestionIndex = 0;
+        document.getElementById('lesson-progress').style.width = '0%';
+        loadQuestion();
+      } else {
+        showNodeAchievements(node);
+      }
+    }
+  }, 400);
+}
+
+function showNodeAchievements(node) {
+  const durationSec = Math.max(1, Math.floor((Date.now() - nodeStartTime) / 1000));
+  const mins = Math.floor(durationSec / 60);
+  const secs = durationSec % 60;
+  const timeFormatted = mins > 0 ? `${mins} دقيقة و ${secs} ثانية` : `${secs} ثوانٍ`;
+  
+  const xpEarned = Math.max(15, (node.levels?.length || 1) * 15);
+  const accuracyPct = Math.min(100, Math.round((totalQuestionsCorrectFirstTry / Math.max(1, totalQuestionsAttempted)) * 100));
+  
+  document.getElementById('achieve-time-val').textContent = timeFormatted;
+  document.getElementById('achieve-xp-val').textContent = `+${xpEarned} XP`;
+  document.getElementById('achieve-accuracy-val').textContent = `${accuracyPct}%`;
+  document.getElementById('achieve-levels-val').textContent = `${node.levels?.length || 1} / ${node.levels?.length || 1}`;
+  document.getElementById('achievement-node-title').textContent = `أكملت عقدة "${node.title}" بنجاح وتألقت في أدب العرب!`;
+  
+  node.status = 'completed';
+  const nodeIndex = practiceNodes.findIndex(n => n.id === node.id);
+  if (nodeIndex !== -1 && nodeIndex + 1 < practiceNodes.length) {
+    if (practiceNodes[nodeIndex + 1].status === 'locked') {
+      practiceNodes[nodeIndex + 1].status = 'current';
+    }
+  }
+  
+  activateStreak();
+  savePracticeData();
+  renderPracticePath();
+  
+  openModal('node-achievement-modal');
+  if (window.lucide) lucide.createIcons();
+}
+
+window.finishNodeAchievement = function() {
+  closeModal('node-achievement-modal');
+  showSection('practice');
 };
 
 // Update showSection to handle practice path rendering
