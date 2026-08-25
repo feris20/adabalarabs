@@ -590,6 +590,8 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 4px 0 #46a302;
+  width: 100%;
+  max-width: 700px;
 }
 
 .unit-title {
@@ -626,7 +628,7 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
   flex-direction: column;
   align-items: center;
   gap: 40px;
-  padding: 20px 0 60px;
+  padding: 20px 24px 60px;
   position: relative;
 }
 
@@ -654,14 +656,12 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
   background-color: var(--color-surface);
   color: #1cb0f6;
   box-shadow: 0 6px 0 var(--color-border);
-  border: 4px solid #1cb0f6;
   animation: bounce 2s infinite;
 }
 .node-locked {
   background-color: var(--color-bg);
   color: var(--color-muted);
   box-shadow: 0 6px 0 var(--color-border);
-  border: 4px solid var(--color-border);
   cursor: pointer;
 }
 
@@ -989,3 +989,185 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
 }
 .success .btn-feedback { background-color: #58cc02; color: white; box-shadow: 0 4px 0 #46a302; }
 .error .btn-feedback { background-color: #ff4b4b; color: white; box-shadow: 0 4px 0 #ea2b2b; }
+/* ============================================================
+    CSS الخاص بالزر فقط
+    ============================================================ */
+.tile-node {
+position: relative;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 80px;
+height: 80px;
+}
+
+.tile-btn {
+position: relative;
+width: 80px;
+height: 80px;
+border-radius: 9999px;
+border: none;
+border-bottom: 8px solid;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+transition: transform 0.2s;
+padding: 0;
+}
+.tile-btn:hover { transform: scale(1.05); }
+.tile-btn:active { transform: scale(0.95); }
+
+/* حالات الزر */
+.tile-btn.status-active   { background:#58cc02; border-color:#46a302; }
+.tile-btn.status-complete { background:#facc15; border-color:#eab308; }
+.tile-btn.status-locked   { background: var(--color-surface, #e5e5e5); border-color: var(--color-border, #b7b7b7); cursor:pointer; }
+
+.tile-btn svg { width: 32px; height: 32px; color:#fff; pointer-events:none; }
+.tile-btn.status-locked svg { color: var(--color-muted, #9ca3af); width:32px; height:32px; }
+
+/* حلقة التقدم المقسمة (SVG) توضع فوق الزر بنفس المركز */
+.progress-ring {
+position: absolute;
+width: 96px;
+height: 96px;
+left: 50%;
+top: 50%;
+transform: translate(-50%, -50%);
+pointer-events: none;
+z-index: 5;
+}
+
+/* شارة "ابدأ" المتحركة */
+@keyframes bounceBadge {
+0%, 100% { transform: translate(-50%, -15%); }
+50% { transform: translate(-50%, 0); }
+}
+.start-badge {
+position: absolute;
+top: -44px;
+left: 50%;
+transform: translate(-50%, 0);
+width: max-content;
+background: var(--color-bg, #fff);
+border: 2px solid var(--color-border, #e5e7eb);
+border-radius: 12px;
+padding: 4px 14px;
+font-size: 11px;
+font-weight: 900;
+text-transform: uppercase;
+color: #58cc02;
+letter-spacing: 0.05em;
+animation: bounceBadge 1.2s infinite;
+pointer-events: none;
+z-index: 10;
+}
+.start-badge::after {
+content: "";
+position: absolute;
+bottom: -6.5px;
+left: calc(50% - 5px);
+width: 10px;
+height: 10px;
+background: var(--color-bg, #fff);
+border-bottom: 2px solid var(--color-border, #e5e7eb);
+border-right: 2px solid var(--color-border, #e5e7eb);
+transform: rotate(45deg);
+}
+
+/* ============================================================
+   النافذة المنبثقة (Tooltip Card)
+   ============================================================ */
+.tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip-card {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 50%;
+  width: 260px;
+  transform: translateX(-50%);
+  z-index: 60;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  text-align: center;
+  direction: rtl;
+}
+
+.tooltip-card.hidden { display: none; }
+.tooltip-card.visible {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: tooltipPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: top center;
+}
+
+@keyframes tooltipPop {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(0.7); }
+  60%  { opacity: 1; transform: translateX(-50%) translateY(3px) scale(1.04); }
+  85%  { transform: translateX(-50%) translateY(-1px) scale(0.98); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+.tooltip-arrow {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 16px;
+  height: 16px;
+}
+
+/* سمات النافذة المنبثقة */
+.tooltip-card.theme-active { background: #58cc02; }
+.tooltip-card.theme-active .tooltip-arrow { background: #58cc02; }
+.tooltip-card.theme-active .tt-title,
+.tooltip-card.theme-active .tt-subtitle { color: #fff; }
+
+.tooltip-card.theme-complete { background: #facc15; }
+.tooltip-card.theme-complete .tooltip-arrow { background: #facc15; }
+.tooltip-card.theme-complete .tt-title,
+.tooltip-card.theme-complete .tt-subtitle { color: #fff; }
+
+.tooltip-card.theme-locked { background: var(--color-surface); border: 2px solid var(--color-border); }
+.tooltip-card.theme-locked .tooltip-arrow { background: var(--color-surface); border-top: 2px solid var(--color-border); border-left: 2px solid var(--color-border); }
+.tooltip-card.theme-locked .tt-title,
+.tooltip-card.theme-locked .tt-subtitle { color: var(--color-muted); }
+
+.tt-title { font-weight: 900; font-size: 1.1rem; font-family: var(--font-sans); }
+.tt-subtitle { font-size: 0.85rem; opacity: 0.9; font-weight: 600; margin-top: 2px; font-family: var(--font-sans); }
+
+.tt-action-btn {
+  width: 100%;
+  border-radius: 12px;
+  border: none;
+  border-bottom: 4px solid rgba(0,0,0,0.1);
+  background: #fff;
+  padding: 12px 16px;
+  font-weight: 900;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #22c55e;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  transition: all 0.15s;
+}
+.tt-action-btn:active { border-bottom: 0; transform: translateY(4px); }
+.tt-action-btn.tt-review { color: #1cb0f6; }
+.theme-complete .tt-action-btn { color: #eab308; }
+.theme-locked .tt-action-btn { color: var(--color-muted); border-bottom: none; background: transparent; cursor: default; }
+.theme-locked .tt-action-btn:active { transform: none; }
+.tt-action-btn.tt-admin-delete { color: #e11d48; }
+
+.dark .tooltip-card.theme-locked { background: var(--color-surface); border-color: var(--color-border); }
+.dark .tooltip-card.theme-locked .tooltip-arrow { background: var(--color-surface); border-color: var(--color-border); }
+
