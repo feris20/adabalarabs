@@ -519,42 +519,121 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 12px 20px;
   background-color: var(--color-bg);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   z-index: 10;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .back-btn {
-  background: none;
-  border: none;
-  color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: var(--transition-smooth);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.back-btn:hover { background-color: var(--color-surface); }
+.back-btn:hover {
+  background-color: var(--color-bg);
+  border-color: #9ca3af;
+  transform: translateX(2px);
+}
+.back-btn:active {
+  transform: scale(0.95);
+}
 
 .practice-stats {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
-.stat-item {
-  display: flex;
+.stat-pill {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 700;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  font-weight: 800;
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.92rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  transition: all 0.2s ease;
+  user-select: none;
+  text-decoration: none;
 }
-.flag-item { color: #1cb0f6; }
-.streak-item { color: var(--color-muted); transition: all 0.3s; }
-.streak-item.streak-active { color: #ff9600; filter: drop-shadow(0 0 5px #ff9600); }
-.streak-item.streak-lost { animation: extinguish 1.5s forwards; }
-.streak-item.streak-renewed { animation: flareUp 1.5s forwards; }
+
+.stat-pill i {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.2;
+}
+
+.flag-pill {
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.25);
+  cursor: pointer;
+}
+.flag-pill:hover {
+  background: rgba(2, 132, 199, 0.16);
+  border-color: #0284c7;
+  transform: translateY(-1px);
+}
+
+.streak-pill {
+  color: var(--color-muted);
+}
+.streak-pill.streak-active {
+  color: #ea580c;
+  background: rgba(234, 88, 12, 0.08);
+  border-color: rgba(234, 88, 12, 0.3);
+  filter: drop-shadow(0 1px 4px rgba(234, 88, 12, 0.2));
+}
+.streak-pill.streak-lost { animation: extinguish 1.5s forwards; }
+.streak-pill.streak-renewed { animation: flareUp 1.5s forwards; }
+
+.gem-pill {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+.heart-pill {
+  color: #e11d48;
+  background: rgba(225, 29, 72, 0.08);
+  border-color: rgba(225, 29, 72, 0.25);
+}
+
+.dark .stat-pill {
+  background: rgba(255, 255, 255, 0.04);
+}
+.dark .flag-pill {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+.dark .gem-pill {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+}
+.dark .heart-pill {
+  background: rgba(251, 113, 133, 0.12);
+  color: #fb7185;
+}
+.dark .streak-pill.streak-active {
+  background: rgba(251, 146, 60, 0.12);
+  color: #fb923c;
+}
 
 @keyframes extinguish {
   0% { color: #ff9600; filter: drop-shadow(0 0 8px #ff9600); transform: scale(1); }
@@ -831,54 +910,46 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
 .speech-bubble {
   background-color: var(--color-surface);
   border: 2px solid var(--color-border);
-  padding: 16px 24px;
+  padding: 14px 20px;
   border-radius: 16px;
   border-bottom-right-radius: 4px;
-  margin-bottom: 24px;
-  font-size: 1.25rem;
+  margin-bottom: 20px;
+  font-size: 1.15rem;
   display: inline-block;
-}
-
-.answer-area {
-  min-height: 60px;
-  border-bottom: 2px solid var(--color-border);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 0;
-  margin-bottom: 32px;
 }
 
 .word-bank {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
 }
 
 .word-btn {
   background-color: var(--color-bg);
   color: var(--color-text);
-  border: 2px solid var(--color-border);
-  box-shadow: 0 2px 0 var(--color-border);
-  padding: 12px 20px;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  border: 1.5px solid var(--color-border);
+  border-bottom-width: 3.5px;
+  padding: 8px 15px;
+  border-radius: 11px;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.1s;
+  transition: transform 0.1s, background-color 0.1s, border-color 0.1s;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.word-btn:active { transform: translateY(2px); box-shadow: 0 0 0 transparent; }
+.word-btn:hover {
+  background-color: var(--color-surface);
+  border-color: #94a3b8;
+}
+.word-btn:active { transform: translateY(2px); border-bottom-width: 1.5px; }
 .word-btn.selected {
   background-color: var(--color-border);
   color: transparent !important;
   box-shadow: none;
+  border-color: var(--color-border);
   pointer-events: none;
-}
-.sortable-ghost {
-  opacity: 0.3;
-  transform: scale(0.95);
-  background-color: var(--color-surface);
 }
 
 /* Question Type 2: Multiple Choice */
@@ -1181,15 +1252,16 @@ transform: rotate(45deg);
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   width: 100%;
-  max-width: 620px;
+  max-width: 640px;
   margin: 20px auto 0;
   direction: rtl;
+  align-items: stretch;
 }
 
 .match-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: 14px;
 }
 
 .match-card {
@@ -1197,19 +1269,23 @@ transform: rotate(45deg);
   border: 2px solid var(--color-border);
   border-bottom-width: 4px;
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px 18px;
   font-weight: 800;
   font-size: 1.05rem;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s, border-color 0.15s, color 0.15s;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
   user-select: none;
-  min-height: 72px;
+  min-height: 68px;
+  height: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text);
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
 }
 .match-card:active {
   transform: translateY(2px);
@@ -1221,6 +1297,9 @@ transform: rotate(45deg);
   background: var(--color-bg);
   border-color: #9ca3af;
 }
+.dark .match-card {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
 .dark .match-card:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: #6b7280;
@@ -1229,11 +1308,13 @@ transform: rotate(45deg);
   border-color: #1cb0f6;
   background: #ddf4ff;
   color: #0284c7;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 0 12px rgba(28, 176, 246, 0.2);
 }
 .dark .match-card.selected {
   background: #0369a1;
   color: #fff;
   border-color: #38bdf8;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 0 14px rgba(56, 189, 248, 0.25);
 }
 .match-card.matched {
   border-color: #e5e7eb;
@@ -1243,8 +1324,9 @@ transform: rotate(45deg);
   margin-top: 2px;
   margin-bottom: -2px;
   cursor: default;
-  opacity: 0.5;
+  opacity: 0.45;
   pointer-events: none;
+  box-shadow: none;
 }
 .dark .match-card.matched {
   border-color: #374151;
@@ -1262,6 +1344,211 @@ transform: rotate(45deg);
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
+}
+
+/* ============================================================
+   تأثيرات ضوئية وانعكاسات متحركة خاصة بصفحة تمرّن والدرس (Practice & Lesson Animated Reflections)
+   ============================================================ */
+
+/* مفاتيح حركة الانعكاس الضوئي الانسيابي المتحرك (Animated Sheen Sweep) */
+@keyframes practiceSheenSweep {
+  0% {
+    transform: translateX(-190%) skewX(-25deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  45% {
+    transform: translateX(270%) skewX(-25deg);
+    opacity: 1;
+  }
+  50%, 100% {
+    transform: translateX(270%) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+@keyframes practiceCardSheenSweep {
+  0% {
+    transform: translateX(-230%) skewX(-25deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  40% {
+    transform: translateX(310%) skewX(-25deg);
+    opacity: 0.8;
+  }
+  45%, 100% {
+    transform: translateX(310%) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+@keyframes practicePulseAura {
+  0%, 100% {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 3px 12px rgba(88, 204, 2, 0.22);
+  }
+  50% {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 6px 22px rgba(88, 204, 2, 0.45);
+  }
+}
+
+@keyframes practiceBlueAura {
+  0%, 100% {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.5), 0 3px 12px rgba(28, 176, 246, 0.22);
+  }
+  50% {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.85), 0 6px 22px rgba(28, 176, 246, 0.45);
+  }
+}
+
+@keyframes practiceTrophyRadiance {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(234, 179, 8, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transform: scale(1.03);
+  }
+}
+
+/* حصر التأثيرات حصرياً في قسم تمرّن والدرس وشاشاته */
+#practice-section .unit-banner,
+#practice-section .tt-action-btn:not(.locked-btn),
+#lesson-section .btn-check.active,
+#lesson-section .btn-feedback,
+#lesson-section .audio-play-btn,
+#lesson-section .match-card,
+#lesson-section .choice-chip-btn,
+#lesson-section .word-btn,
+#lesson-section .mcq-btn,
+#lesson-section .info-card-box,
+#node-achievement-modal .achievement-continue-btn,
+#node-achievement-modal .achieve-stat-card,
+#unit-selector-modal .unit-select-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* انعكاس ضوئي متحرك للأزرار الرئيسية في قسم تمرّن */
+#practice-section .unit-banner::after,
+#practice-section .tt-action-btn:not(.locked-btn)::after,
+#lesson-section .btn-check.active::after,
+#lesson-section .btn-feedback::after,
+#lesson-section .audio-play-btn::after,
+#node-achievement-modal .achievement-continue-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+  transform: translateX(-190%) skewX(-25deg);
+  animation: practiceSheenSweep 4.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* انعكاس ضوئي ناعم ومتحرك للبطاقات وخيارات الأسئلة داخل الدرس */
+#lesson-section .match-card:not(.matched)::after,
+#lesson-section .choice-chip-btn::after,
+#lesson-section .word-btn::after,
+#lesson-section .mcq-btn::after,
+#lesson-section .info-card-box::after,
+#node-achievement-modal .achieve-stat-card::after,
+#unit-selector-modal .unit-select-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.24) 50%,
+    rgba(255, 255, 255, 0.04) 75%,
+    transparent 100%
+  );
+  transform: translateX(-230%) skewX(-25deg);
+  animation: practiceCardSheenSweep 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* تكييف الانعكاس المتحرك مع الوضع الليلي ليبقى فخماً ومريحاً للعين */
+.dark #practice-section .unit-banner::after,
+.dark #practice-section .tt-action-btn:not(.locked-btn)::after,
+.dark #lesson-section .btn-check.active::after,
+.dark #lesson-section .btn-feedback::after,
+.dark #lesson-section .audio-play-btn::after,
+.dark #node-achievement-modal .achievement-continue-btn::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.04) 80%,
+    transparent 100%
+  );
+}
+
+.dark #lesson-section .match-card:not(.matched)::after,
+.dark #lesson-section .choice-chip-btn::after,
+.dark #lesson-section .word-btn::after,
+.dark #lesson-section .mcq-btn::after,
+.dark #lesson-section .info-card-box::after,
+.dark #node-achievement-modal .achieve-stat-card::after,
+.dark #unit-selector-modal .unit-select-card::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.02) 25%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.02) 75%,
+    transparent 100%
+  );
+}
+
+/* هالات ضوئية نبضية فاخرة للأزرار النشطة في تمرّن */
+#lesson-section .btn-check.active,
+#node-achievement-modal .achievement-continue-btn {
+  animation: practicePulseAura 3.2s infinite ease-in-out;
+}
+
+#practice-section .tt-action-btn:not(.locked-btn) {
+  animation: practicePulseAura 3.2s infinite ease-in-out;
+}
+
+#lesson-section .audio-play-btn {
+  animation: practiceBlueAura 3.6s infinite ease-in-out;
+}
+
+#node-achievement-modal .trophy-icon-wrapper {
+  animation: practiceTrophyRadiance 3s infinite ease-in-out;
+}
+
+/* تسريع الانعكاس بشكل طبيعي عند مرور الفأرة */
+#practice-section .unit-banner:hover::after,
+#practice-section .tt-action-btn:not(.locked-btn):hover::after,
+#lesson-section .btn-check.active:hover::after,
+#lesson-section .match-card:hover::after,
+#lesson-section .choice-chip-btn:hover::after,
+#lesson-section .word-btn:hover::after,
+#lesson-section .mcq-btn:hover::after,
+#node-achievement-modal .achievement-continue-btn:hover::after {
+  animation-duration: 1.5s;
 }
 
 /* 2. بطاقة معلومات للفهم والشرح (Info Card with Audio) */
@@ -1612,5 +1899,765 @@ transform: rotate(45deg);
   padding: 14px;
   border-radius: 14px;
 }
+
+/* ============================================================
+   تحسينات السحب والإفلات (Smooth Drag & Drop Reordering)
+   ============================================================ */
+.answer-area {
+  min-height: 56px;
+  border-bottom: 2px dashed var(--color-border);
+  padding: 8px 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s, background-color 0.2s;
+  border-radius: 12px;
+  touch-action: pan-y;
+}
+
+.answer-area.drag-over {
+  border-color: #1cb0f6;
+  background: rgba(28, 176, 246, 0.05);
+}
+
+.answer-word-chip {
+  background: var(--color-surface);
+  border: 1.5px solid #1cb0f6;
+  border-bottom: 3px solid #0284c7;
+  border-radius: 10px;
+  padding: 5px 12px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--color-text);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s;
+  position: relative;
+  touch-action: none;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.answer-word-chip:hover {
+  background-color: #f0f9ff;
+  border-color: #0284c7;
+}
+
+.answer-word-chip:active {
+  cursor: grabbing;
+  transform: scale(0.96);
+}
+
+.dark .answer-word-chip {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: #38bdf8;
+  border-bottom-color: #0284c7;
+  color: #fff;
+}
+
+.dark .answer-word-chip:hover {
+  background: rgba(2, 132, 199, 0.28);
+}
+
+.sortable-ghost {
+  opacity: 0.25 !important;
+  background: rgba(28, 176, 246, 0.15) !important;
+  border: 1.5px dashed #1cb0f6 !important;
+  transform: scale(0.95);
+}
+
+.sortable-chosen {
+  opacity: 0.95;
+  box-shadow: 0 6px 16px rgba(28, 176, 246, 0.3) !important;
+  transform: scale(1.03) rotate(1deg);
+  z-index: 100;
+  border-color: #0284c7 !important;
+}
+
+.sortable-drag {
+  opacity: 1 !important;
+  cursor: grabbing !important;
+}
+
+.sortable-fallback {
+  opacity: 0.95 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 10px !important;
+  border: 1.5px solid #0284c7 !important;
+  border-bottom: 3px solid #0284c7 !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  transform: scale(1.05) !important;
+  cursor: grabbing !important;
+  z-index: 99999 !important;
+  pointer-events: none !important;
+}
+
+/* ============================================================
+   مؤقت العد التنازلي (Countdown Challenge Timer)
+   ============================================================ */
+.lesson-countdown-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ffefe6 0%, #ffe4d6 100%);
+  color: #ea580c;
+  border: 1.5px solid #fdba74;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  font-family: var(--font-sans);
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.15);
+  animation: countdownPulse 2s infinite ease-in-out;
+}
+
+.lesson-countdown-timer.urgent {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+  border-color: #f87171;
+  animation: countdownUrgent 0.8s infinite ease-in-out;
+}
+
+@keyframes countdownPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25); }
+}
+
+@keyframes countdownUrgent {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35); }
+}
+
+.dark .lesson-countdown-timer {
+  background: #431407;
+  color: #fb923c;
+  border-color: #9a3412;
+}
+
+.dark .lesson-countdown-timer.urgent {
+  background: #450a0a;
+  color: #f87171;
+  border-color: #991b1b;
+}
+
+/* العقدة الخاصة بالعد التنازلي في المسار */
+.tile-btn.countdown-node {
+  background: #ea580c !important;
+  border-color: #c2410c !important;
+  color: white !important;
+}
+
+/* ============================================================
+   منتقي الأيقونات البصري (Visual Icon Picker)
+   ============================================================ */
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.icon-picker-item {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-picker-item:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg);
+  transform: translateY(-2px);
+}
+
+.icon-picker-item.selected {
+  border-color: var(--color-accent);
+  background: #22c55e;
+  color: white;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.icon-picker-item svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+/* ============================================================
+   بطاقة الصورة (Image Card Question Type)
+   ============================================================ */
+.image-card-box {
+  width: 100%;
+  max-width: 580px;
+  margin: 15px auto;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.image-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  background: #fdf4ff;
+  color: #a855f7;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: 1px solid #f0abfc;
+}
+
+.dark .image-card-badge {
+  background: #581c87;
+  color: #f5d0fe;
+  border-color: #7e22ce;
+}
+
+.image-card-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.image-card-preview-container {
+  width: 100%;
+  max-height: 320px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.image-card-img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+}
+
+.image-card-img:hover {
+  transform: scale(1.02);
+}
+
+.image-card-audio-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 10px 16px;
+  gap: 12px;
+}
+
+/* ============================================================
+   اختبار الكيبورد الافتراضي المخصص (Virtual Keypad Quiz)
+   ============================================================ */
+.keypad-container {
+  width: 100%;
+  max-width: 580px;
+  margin: 15px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.keypad-hint-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.keypad-screen {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-bottom: 4px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px 24px;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.keypad-display-val {
+  font-size: 1.7rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--color-accent);
+  font-family: monospace, var(--font-sans);
+  direction: ltr;
+  text-align: left;
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.keypad-display-val.empty {
+  color: var(--color-muted);
+  font-size: 1.1rem;
+  letter-spacing: normal;
+  font-family: var(--font-sans);
+  direction: rtl;
+  text-align: right;
+  opacity: 0.6;
+}
+
+.keypad-keys-wrapper {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.keypad-custom-keys {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.keypad-key-btn {
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-bottom: 4px solid var(--color-border);
+  border-radius: 14px;
+  min-width: 58px;
+  height: 58px;
+  padding: 0 16px;
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: all 0.1s ease;
+  font-family: monospace, var(--font-sans);
+}
+
+.keypad-key-btn:hover {
+  background: var(--color-surface);
+  border-color: #84d8ff;
+}
+
+.keypad-key-btn:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+.keypad-actions-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.keypad-action-btn {
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-bottom: 3px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.1s ease;
+}
+
+.keypad-action-btn:hover {
+  border-color: #9ca3af;
+}
+
+.keypad-action-btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+}
+
+.keypad-action-btn.del-btn {
+  color: #e11d48;
+}
+
+.keypad-action-btn.space-btn {
+  min-width: 120px;
+}
+
+/* ============================================================
+   الشاشة الإعلانية التفاعلية في المسار (Floating Mini Ad Screen)
+   ============================================================ */
+.practice-ad-tile-wrapper {
+  position: absolute;
+  z-index: 10;
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateX(-50%);
+}
+
+.practice-ad-tile {
+  position: relative;
+  width: 114px;
+  min-height: 94px;
+  border-radius: 18px;
+  padding: 10px 8px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 0 1.5px rgba(255, 255, 255, 0.35) inset, 0 4px 0 rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  animation: adFloat 3.5s ease-in-out infinite alternate;
+}
+
+.practice-ad-tile:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28), 0 0 0 2px rgba(255, 255, 255, 0.6) inset, 0 6px 0 rgba(0, 0, 0, 0.3);
+}
+
+.practice-ad-tile:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1.5px rgba(255, 255, 255, 0.3) inset, 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* تأثير انعكاس الضوء والبريق (Light Sheen & Reflection) */
+.practice-ad-tile::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 220%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  transform: rotate(25deg);
+  animation: adSheen 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+/* وهج زجاجي علوي */
+.practice-ad-tile::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 18px 18px 0 0;
+  pointer-events: none;
+}
+
+@keyframes adSheen {
+  0% { transform: translateX(-150%) rotate(25deg); }
+  25%, 100% { transform: translateX(150%) rotate(25deg); }
+}
+
+@keyframes adFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-6px); }
+}
+
+.practice-ad-close-btn {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: all 0.15s ease;
+  backdrop-filter: blur(4px);
+  padding: 0;
+}
+
+.practice-ad-close-btn:hover {
+  background: #e11d48;
+  border-color: white;
+  transform: scale(1.15);
+}
+
+.practice-ad-badge {
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  margin-bottom: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  backdrop-filter: blur(4px);
+  letter-spacing: -0.2px;
+}
+
+.practice-ad-text {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.practice-ad-admin-bar {
+  position: absolute;
+  bottom: 2px;
+  display: flex;
+  gap: 4px;
+  z-index: 5;
+}
+
+.practice-ad-admin-btn {
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  padding: 2px 5px;
+  font-size: 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.practice-ad-admin-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: white;
+}
+
+/* نافذة عرض الإعلان التفصيلية (Ad Detail Modal) */
+.ad-display-modal-card {
+  max-width: 520px;
+  width: 92%;
+  border-radius: 26px;
+  overflow: hidden;
+  padding: 0;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.ad-modal-image-container {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  background: #1e1b4b;
+}
+
+.ad-modal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ad-modal-image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(180deg, transparent 0%, var(--color-surface) 100%);
+}
+
+.ad-modal-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.ad-modal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.dark .ad-modal-badge {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+
+.ad-modal-title {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  line-height: 1.35;
+}
+
+.ad-modal-text-content {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+  margin-bottom: 24px;
+  white-space: pre-line;
+  text-align: right;
+  background: var(--color-bg);
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+}
+
+.ad-modal-cta-btn {
+  font-size: 1.05rem;
+  font-weight: 800;
+  padding: 14px 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-bottom: 4px solid #4338ca;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  transition: all 0.15s ease;
+}
+
+.ad-modal-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45);
+}
+
+.ad-modal-cta-btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+}
+
+/* أزرار ألوان الإعلانات في لوحة الأدمن */
+.ad-color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ad-preset-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid white;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s ease;
+}
+
+.ad-preset-btn:hover {
+  transform: scale(1.05);
+}
+
+/* أزرار الإدراج السريع لرموز الكيبورد */
+.keypad-presets-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  background: var(--color-bg);
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--color-border);
+}
+
+.keypad-preset-tag {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.keypad-preset-tag:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+}
+
 
 
