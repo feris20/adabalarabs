@@ -103,24 +103,21 @@
         <!-- ===== تمرّن (المسار التعليمي) ===== -->
         <section id="practice-section" style="display:none;" class="full-screen-section">
             <div class="practice-top-bar">
-                <button class="back-btn" onclick="showSection('home')">
-                    <i data-lucide="x"></i>
+                <button class="back-btn" onclick="showSection('home')" title="العودة للرئيسية">
+                    <i data-lucide="arrow-right"></i>
                 </button>
                 <div class="practice-stats">
-                    <div class="stat-item flag-item">
-                        <i data-lucide="book-open"></i>
-                    </div>
-                    <div class="stat-item streak-item">
+                    <div class="stat-pill streak-pill streak-item" id="practice-streak-display" title="أيام الحماس المتتالية">
                         <i data-lucide="flame"></i>
                         <span>12</span>
                     </div>
-                    <div class="stat-item gem-item">
+                    <div class="stat-pill gem-pill" title="الجواهر المكتسبة">
                         <i data-lucide="gem"></i>
                         <span>340</span>
                     </div>
-                    <div class="stat-item heart-item">
+                    <div class="stat-pill heart-pill" title="القلوب المتبقية">
                         <i data-lucide="heart"></i>
-                        <span>5</span>
+                        <span id="practice-hearts-val">5</span>
                     </div>
                 </div>
             </div>
@@ -132,8 +129,11 @@
                     </div>
 
                     
-                    <div id="admin-add-practice-btn" class="admin-add-area" style="display:none; position: fixed; z-index: 2100; bottom: 32px; left: 32px;">
-                        <button class="admin-add-btn" onclick="openAdminAddPracticeNode()">
+                    <div id="admin-add-practice-btn" class="admin-add-area" style="display:none; position: fixed; z-index: 2100; bottom: 32px; left: 32px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                        <button class="admin-add-ad-btn" onclick="openAdminAddPracticeAd()" title="إضافة شاشة إعلانية في المسار" style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: white; border: 2px solid white; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;">
+                            <i data-lucide="megaphone" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <button class="admin-add-btn" onclick="openAdminAddPracticeNode()" title="إضافة عقدة جديدة">
                             <i data-lucide="plus"></i>
                         </button>
                     </div>
@@ -144,9 +144,14 @@
         <!-- ===== شاشة الدرس (Lesson View) ===== -->
         <section id="lesson-section" style="display:none;" class="full-screen-section lesson-mode">
             <div class="lesson-top-bar">
-                <button class="close-lesson" onclick="showSection('practice')"><i data-lucide="x"></i></button>
+                <button class="close-lesson" onclick="confirmExitLesson()"><i data-lucide="x"></i></button>
                 <div class="lesson-progress-container">
                     <div class="lesson-progress-bar" id="lesson-progress"></div>
+                </div>
+                <!-- مؤقت العد التنازلي لعقد التحدي السريع -->
+                <div id="lesson-countdown-timer" class="lesson-countdown-timer" style="display:none;">
+                    <i data-lucide="timer"></i>
+                    <span id="countdown-timer-val">00:00</span>
                 </div>
                 <div id="mistakes-review-badge" class="mistakes-review-badge" style="display:none;">
                     <i data-lucide="alert-triangle"></i>
@@ -425,34 +430,87 @@
     </div>
 
     <div id="add-practice-node-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'add-practice-node-modal')">
-        <div class="modal-card" style="max-height: 90vh; overflow-y: auto; width: 90%; max-width: 600px;">
+        <div class="modal-card" style="max-height: 90vh; overflow-y: auto; width: 90%; max-width: 640px;">
             <div class="modal-header">
                 <h3 id="node-modal-title">إضافة / تعديل عقدة</h3>
                 <button class="modal-close" onclick="closeModal('add-practice-node-modal')"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
-                <label>نوع العقدة:</label>
-                <select id="new-node-type" class="modal-input" style="margin-bottom: 10px;">
-                    <option value="lesson">درس (Lesson)</option>
-                    <option value="review">مراجعة (Review)</option>
-                    <option value="challenge">تحدي (Challenge)</option>
-                </select>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">نوع العقدة:</label>
+                        <select id="new-node-type" class="modal-input" style="margin-bottom: 0;" onchange="onNodeTypeChange()">
+                            <option value="lesson">درس (Lesson)</option>
+                            <option value="review">مراجعة (Review)</option>
+                            <option value="challenge">تحدي (Challenge)</option>
+                            <option value="countdown">عد تنازلي (Countdown Challenge)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">القسم التعليمي التابع له:</label>
+                        <select id="new-node-unit" class="modal-input" style="margin-bottom: 0;">
+                            <!-- Injected by JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- إعدادات العد التنازلي (تظهر فقط عند اختيار عد تنازلي) -->
+                <div id="countdown-settings-box" style="display:none; background: rgba(234, 88, 12, 0.08); border: 1px dashed #ea580c; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
+                    <label style="font-weight: 800; color: #ea580c; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <i data-lucide="timer" style="width: 18px; height: 18px;"></i>
+                        المدة الزمنية للعد التنازلي (بالثواني):
+                    </label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="new-node-timer-sec" class="modal-input" style="width: 130px; margin-bottom: 0;" value="90" min="10" step="5">
+                        <span style="font-size: 0.85rem; color: var(--color-muted);">(مثال: 60 = دقيقة واحدة، 90 = دقيقة ونصف، 120 = دقيقتان)</span>
+                    </div>
+                </div>
                 
-                <label>العنوان:</label>
-                <input type="text" id="new-node-title" class="modal-input" placeholder="مثال: الاستعارة" style="margin-bottom: 10px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 4px;">عنوان العقدة:</label>
+                <input type="text" id="new-node-title" class="modal-input" placeholder="مثال: الاستعارة" style="margin-bottom: 12px;">
                 
-                <label>الوصف:</label>
-                <input type="text" id="new-node-desc" class="modal-input" placeholder="وصف بسيط..." style="margin-bottom: 10px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 4px;">الوصف المقتضب:</label>
+                <input type="text" id="new-node-desc" class="modal-input" placeholder="وصف بسيط..." style="margin-bottom: 12px;">
                 
-                <label>أيقونة (Lucide Icon):</label>
-                <input type="text" id="new-node-icon" class="modal-input" placeholder="مثال: star, book-open, zap, bookmark, Award" style="margin-bottom: 10px;">
+                <!-- اختيار الأيقونة البصري المتطور -->
+                <div style="margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-weight: 700; margin-bottom: 0;">اختر أيقونة العقدة:</label>
+                        <div id="selected-icon-preview" style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 800; color: var(--color-accent);">
+                            <span id="selected-icon-name">star</span>
+                            <div id="selected-icon-box" style="width: 28px; height: 28px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="star" style="width: 16px; height: 16px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="new-node-icon" value="star">
+                    <input type="text" id="icon-search-input" class="modal-input" placeholder="🔍 ابحث عن أيقونة (مثال: book, fire, zap, sword, heart...)" oninput="filterIconPicker(this.value)" style="margin-bottom: 8px; font-size: 0.88rem; padding: 8px 12px;">
+                    
+                    <div id="icon-picker-grid" class="icon-picker-grid">
+                        <!-- Icons populated by JS -->
+                    </div>
+                </div>
                 
-                <label>نص زر الإجراء في النافذة المنبثقة (Tooltip Action Text):</label>
-                <input type="text" id="new-node-action-text" class="modal-input" placeholder="افتراضي: ابدأ +15 XP" style="margin-bottom: 20px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 4px;">نص زر الإجراء في النافذة المنبثقة (Tooltip Action Text):</label>
+                <input type="text" id="new-node-action-text" class="modal-input" placeholder="افتراضي: ابدأ +15 XP" style="margin-bottom: 14px;">
                 
+                <!-- خيارات ترتيب موقع العقدة -->
+                <div id="node-order-controls" style="display: none; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;">
+                    <label style="font-weight: 700; display: block; margin-bottom: 6px;">موقع وترتيب العقدة في المسار:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-secondary btn-sm" style="flex: 1;" onclick="moveCurrentNodeOrder(-1)">
+                            <i data-lucide="arrow-up"></i> تقديم للأمام (أعلى المسار)
+                        </button>
+                        <button type="button" class="btn-secondary btn-sm" style="flex: 1;" onclick="moveCurrentNodeOrder(1)">
+                            <i data-lucide="arrow-down"></i> تأخير للخلف (أسفل المسار)
+                        </button>
+                    </div>
+                </div>
+
                 <div style="border-top: 1px solid var(--color-border); padding-top: 15px; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4>المستويات (Levels)</h4>
+                        <h4>المستويات والأسئلة (Levels & Questions)</h4>
                         <button class="btn-secondary btn-sm" onclick="addNodeLevel()">+ إضافة مستوى</button>
                     </div>
                     <div id="node-levels-container" style="display:flex; flex-direction:column; gap:15px;"></div>
@@ -514,6 +572,165 @@
                 <span>متابعة إلى المسار</span>
                 <i data-lucide="arrow-left"></i>
             </button>
+        </div>
+    </div>
+
+    <!-- نافذة عرض تفاصيل الإعلان (بحجم وتصميم نافذة الإنجازات) -->
+    <div id="practice-ad-modal" class="modal-overlay" style="display:none; z-index: 3150;" onclick="handleModalBackdrop(event,'practice-ad-modal')">
+        <div class="modal-card ad-display-modal-card" id="ad-modal-card-inner">
+            <button class="modal-close" style="position: absolute; top: 14px; left: 14px; z-index: 10;" onclick="closeModal('practice-ad-modal')">
+                <i data-lucide="x"></i>
+            </button>
+            
+            <div id="ad-modal-image-container" class="ad-modal-image-container" style="display:none;">
+                <img id="ad-modal-img" src="" alt="Ad Image" class="ad-modal-image">
+                <div class="ad-modal-image-overlay"></div>
+            </div>
+
+            <div class="ad-modal-body" id="ad-modal-body-content">
+                <div class="ad-modal-badge" id="ad-modal-badge-tag" style="display:none;">
+                    <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+                    <span id="ad-modal-badge-text">عرض حصري</span>
+                </div>
+                
+                <h2 class="ad-modal-title" id="ad-modal-title">عنوان الإعلان</h2>
+                
+                <div class="ad-modal-text-content" id="ad-modal-text">
+                    تفاصيل ومحتوى الإعلان هنا...
+                </div>
+
+                <div class="ad-modal-actions">
+                    <button class="btn-primary w-full ad-modal-cta-btn" id="ad-modal-cta-btn" onclick="handleAdCtaClick()">
+                        <span id="ad-modal-cta-text">استفد من العرض الآن</span>
+                        <i data-lucide="arrow-left"></i>
+                    </button>
+                    <button class="btn-secondary w-full" onclick="closeModal('practice-ad-modal')" style="margin-top: 8px;">إغلاق</button>
+                    <div id="ad-modal-admin-actions" style="display:none; margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(150,150,150,0.3); display: flex; gap: 8px; justify-content: center;">
+                        <button class="btn-secondary btn-sm" onclick="editAdFromModal()" style="font-size: 0.85rem; color: #6366f1;">
+                            <i data-lucide="pencil" style="width: 14px; height: 14px;"></i> تعديل الإعلان
+                        </button>
+                        <button class="btn-secondary danger btn-sm" onclick="deleteAdFromModal()" style="font-size: 0.85rem; color: #ef4444;">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> إزالة الإعلان
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة وتعديل الإعلانات في المسار (للأدمن) -->
+    <div id="add-practice-ad-modal" class="modal-overlay" style="display:none; z-index: 3250;" onclick="handleModalBackdrop(event,'add-practice-ad-modal')">
+        <div class="modal-card" style="max-height: 90vh; overflow-y: auto; width: 90%; max-width: 620px;">
+            <div class="modal-header">
+                <h3 id="ad-admin-modal-title">إضافة إعلان جديد في المسار</h3>
+                <button class="modal-close" onclick="closeModal('add-practice-ad-modal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">القسم التابع له:</label>
+                        <select id="new-ad-unit" class="modal-input" style="margin-bottom: 0;">
+                            <!-- Injected by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">الجهة في المسار:</label>
+                        <select id="new-ad-side" class="modal-input" style="margin-bottom: 0;">
+                            <option value="auto">تلقائي ذكي (أقصى مسافة أمان)</option>
+                            <option value="right">يمين المسار (Right)</option>
+                            <option value="left">يسار المسار (Left)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">الموقع (بعد العقدة رقم):</label>
+                        <input type="number" id="new-ad-pos" class="modal-input" value="1" min="0" max="20" style="margin-bottom: 0;">
+                    </div>
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">شارة البطاقة المصغرة في المسار:</label>
+                        <input type="text" id="new-ad-badge" class="modal-input" placeholder="مثال: عرض خاص ✨ (اتركه فارغاً للإخفاء)" style="margin-bottom: 0;">
+                    </div>
+                </div>
+
+                <label style="font-weight: 700; display: block; margin-bottom: 4px;">نص الشاشة الإعلانية المصغرة (يظهر مباشرة على البطاقة):</label>
+                <input type="text" id="new-ad-mini-text" class="modal-input" placeholder="مثال: هل تريد اشتراك في تمرن مجاني؟" style="margin-bottom: 14px;">
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-weight: 700; display: block; margin-bottom: 6px;">لون وتدرج خلفية الشاشة الإعلانية:</label>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <input type="color" id="new-ad-color" value="#6366f1" style="height: 38px; width: 60px; padding: 0; border-radius: 8px; cursor: pointer;">
+                        <span style="font-size: 0.85rem; color: var(--color-muted);">أو اختر قالباً جاهزاً من الألوان العاكسة:</span>
+                    </div>
+                    <div class="ad-color-presets">
+                        <button type="button" class="ad-preset-btn" style="background: linear-gradient(135deg, #6366f1, #a855f7);" onclick="setAdColorPreset('#6366f1', 'linear-gradient(135deg, #6366f1, #a855f7)')">بنفسجي أورورا</button>
+                        <button type="button" class="ad-preset-btn" style="background: linear-gradient(135deg, #ec4899, #f43f5e);" onclick="setAdColorPreset('#ec4899', 'linear-gradient(135deg, #ec4899, #f43f5e)')">وردي متوهج</button>
+                        <button type="button" class="ad-preset-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="setAdColorPreset('#f59e0b', 'linear-gradient(135deg, #f59e0b, #d97706)')">ذهبي ملكي</button>
+                        <button type="button" class="ad-preset-btn" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="setAdColorPreset('#10b981', 'linear-gradient(135deg, #10b981, #059669)')">زمردي مشع</button>
+                        <button type="button" class="ad-preset-btn" style="background: linear-gradient(135deg, #0284c7, #2563eb);" onclick="setAdColorPreset('#0284c7', 'linear-gradient(135deg, #0284c7, #2563eb)')">أزرق سحابي</button>
+                        <button type="button" class="ad-preset-btn" style="background: linear-gradient(135deg, #1e1b4b, #312e81);" onclick="setAdColorPreset('#1e1b4b', 'linear-gradient(135deg, #1e1b4b, #312e81)')">ليلي داكن</button>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--color-border); padding-top: 14px; margin-top: 14px;">
+                    <h4 style="color: var(--color-accent); margin-bottom: 10px; font-weight: 800;">محتويات النافذة المنبثقة الكبرى (عند النقر):</h4>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">شارة النافذة المنبثقة (أعلى النافذة):</label>
+                        <input type="text" id="new-ad-modal-badge" class="modal-input" placeholder="مثال: عرض حصري ✨ (اتركه فارغاً لإخفاء الشارة)" style="margin-bottom: 0;">
+                    </div>
+
+                    <label style="font-weight: 700; display: block; margin-bottom: 4px;">عنوان النافذة:</label>
+                    <input type="text" id="new-ad-modal-title" class="modal-input" placeholder="مثال: احصل على اشتراك تمرن مجاني!" style="margin-bottom: 12px;">
+
+                    <label style="font-weight: 700; display: block; margin-bottom: 4px;">صورة الإعلان (رابط URL أو رفع صورة - اختياري):</label>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <input type="text" id="new-ad-image-url" class="modal-input" placeholder="https://example.com/ad-image.jpg" oninput="previewAdminAdImage(this.value)" style="margin-bottom:0; flex:1;">
+                        <label class="btn-secondary btn-sm" style="display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; padding: 0 12px;">
+                            <i data-lucide="upload" style="width:14px;height:14px;"></i> رفع صورة
+                            <input type="file" accept="image/*" style="display:none;" onchange="handleAdminAdImageUpload(this)">
+                        </label>
+                    </div>
+                    <div id="admin-ad-img-preview-box" style="display:none; margin-bottom:12px; text-align:center; background:var(--color-bg); padding:8px; border-radius:10px; border:1px dashed var(--color-border);">
+                        <img id="admin-ad-img-preview" src="" style="max-height:130px; border-radius:8px; max-width:100%; object-fit: cover;">
+                        <button type="button" class="btn-secondary danger btn-sm" style="margin-top:6px; font-size:0.75rem;" onclick="clearAdminAdImage()">إزالة الصورة</button>
+                    </div>
+
+                    <label style="font-weight: 700; display: block; margin-bottom: 4px;">نص وشرح الإعلان بالتفصيل:</label>
+                    <textarea id="new-ad-modal-text" class="modal-textarea" rows="4" placeholder="اكتب الشرح والمميزات بالتفصيل هنا..." style="margin-bottom: 12px;"></textarea>
+
+                    <div style="background: var(--color-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--color-border); margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <label style="font-weight: 800; color: var(--color-text); margin: 0; display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="new-ad-show-cta" checked onchange="toggleAdminCtaFields(this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+                                <span>إظهار زر الإجراء في النافذة (Action Button)</span>
+                            </label>
+                            <span style="font-size: 0.75rem; color: var(--color-muted);">ألغِ التحديد لإزالة الزر تماماً</span>
+                        </div>
+
+                        <div id="admin-cta-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="font-weight: 700; display: block; margin-bottom: 4px;">نص الزر:</label>
+                                <input type="text" id="new-ad-cta-text" class="modal-input" placeholder="مثال: اشترك الآن مجاناً" style="margin-bottom: 0;">
+                            </div>
+                            <div>
+                                <label style="font-weight: 700; display: block; margin-bottom: 4px;">رابط الزر (أو #):</label>
+                                <input type="text" id="new-ad-cta-url" class="modal-input" placeholder="#" style="margin-bottom: 0;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-primary" onclick="savePracticeAd()">حفظ الإعلان</button>
+                    <button class="btn-secondary" onclick="closeModal('add-practice-ad-modal')">إلغاء</button>
+                </div>
+                <button type="button" id="admin-delete-ad-btn" class="btn-secondary danger" style="display:none; color: #ef4444;" onclick="deleteEditingPracticeAd()">
+                    <i data-lucide="trash-2" style="width:14px;height:14px;"></i> حذف هذا الإعلان
+                </button>
+            </div>
         </div>
     </div>
 
