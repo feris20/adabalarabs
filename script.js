@@ -954,7 +954,7 @@ function renderPracticePath() {
 
   const courseUnits = getCourseUnits();
   courseUnits.forEach((unit, unitIdx) => {
-    const unitLocked = isUnitLocked(unitIdx);
+    const unitLocked = isAdmin ? false : isUnitLocked(unitIdx);
     const unitCompleted = isUnitCompleted(unit.id);
 
     // Container for Unit Banner and optional Dropdown Drawer Ad
@@ -1072,21 +1072,25 @@ function renderPracticePath() {
     const unitNodes = practiceNodes.filter(n => Number(n.unitId) === Number(unit.id));
     const svgStr = [];
     
-    // فرض تسلسل منطقي محكم (القسم المقفول تُقفل عقده، والقسم المفتوح عقدة واحدة نشطة فقط)
+    // تسلسل العقد: للمستخدم العادي عقدة نشطة واحدة، أما للأدمن فجميع العقد متاحة للاختبار
     unitNodes.forEach((n) => {
-      if (unitLocked) {
-        // القسم مقفول -> جميع عقده مقفولة
-        n.status = 'locked';
+      if (isAdmin) {
+        if (n.status !== 'completed') {
+          n.status = 'current';
+        }
       } else {
-        // القسم مفتوح
-        if (n.status === 'completed') {
-          // تبقى مكتملة
+        if (unitLocked) {
+          n.status = 'locked';
         } else {
-          if (!globalFoundCurrent) {
-            n.status = 'current';
-            globalFoundCurrent = true;
+          if (n.status === 'completed') {
+            // تبقى مكتملة
           } else {
-            n.status = 'locked';
+            if (!globalFoundCurrent) {
+              n.status = 'current';
+              globalFoundCurrent = true;
+            } else {
+              n.status = 'locked';
+            }
           }
         }
       }
@@ -1128,8 +1132,9 @@ function renderPracticePath() {
         inactiveColor: "#e5e7eb",
       };
 
-      const ringHtml = (statusClass === "status-active") && totalLevels > 0 ? renderProgressRingSVG(ringConfig) : "";
-      const badgeHtml = statusClass === "status-active" ? `<div class="start-badge">ابدأ</div>` : "";
+      const isCurrentActive = statusClass === "status-active";
+      const ringHtml = (isCurrentActive && totalLevels > 0) ? renderProgressRingSVG(ringConfig) : "";
+      const badgeHtml = isCurrentActive ? `<div class="start-badge">ابدأ</div>` : "";
 
       let icon = node.icon;
       if (!icon) {
@@ -1144,7 +1149,7 @@ function renderPracticePath() {
       let tooltipThemeClass = statusClass === 'status-active' ? 'theme-active' : (statusClass === 'status-complete' ? 'theme-complete' : 'theme-locked');
       
       let totalLevelsStr = totalLevels > 0 ? `الدرس ${completedLevels} من ${totalLevels}` : 'درس';
-      if (unitLocked) {
+      if (unitLocked && !isAdmin) {
         totalLevelsStr = `🔒 قسم مقفول (أكمل ${prevUnitTitle})`;
       } else if (node.status === 'completed') {
         totalLevelsStr = 'مكتمل';
@@ -1152,7 +1157,7 @@ function renderPracticePath() {
 
       let startBtnText = node.actionText || 'ابدأ +15 XP';
       let actionsHtml = '';
-      if (unitLocked) {
+      if (unitLocked && !isAdmin) {
         actionsHtml = `
           <button type="button" class="tt-action-btn locked-btn" disabled style="opacity:0.6; cursor:not-allowed;">
             <span>قسم مقفول</span> <i data-lucide="lock" style="width:16px;height:16px;"></i>
@@ -1167,7 +1172,7 @@ function renderPracticePath() {
             <span>${node.actionText || 'إعادة +15 XP'}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
           </button>
         `;
-      } else if (node.status === 'current') {
+      } else if (node.status === 'current' || isAdmin) {
         actionsHtml = `
           <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
             <span>${startBtnText}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
@@ -1277,7 +1282,7 @@ function openUnitSelector() {
   const container = document.getElementById('unit-list-container');
   container.innerHTML = practiceUnits.map((u, idx) => {
     const isCompleted = isUnitCompleted(u.id);
-    const locked = isUnitLocked(idx);
+    const locked = isAdmin ? false : isUnitLocked(idx);
     const isSelected = u.id === currentUnitId;
     
     let statusBadge = '';
@@ -3678,8 +3683,10 @@ async function tryAdminLogin() {
     closeModal('admin-modal');
     input.value=''; err.style.display='none';
     renderMuseumLanding();
+    if(typeof renderCourseSelector === 'function') renderCourseSelector();
+    if(typeof renderPracticePath === 'function') renderPracticePath();
     if(currentPoetId){document.getElementById('admin-add-btn-area').style.display='flex';renderPoetContent(currentPoetId);}
-    if(document.getElementById('admin-add-practice-btn')) document.getElementById('admin-add-practice-btn').style.display = 'block';
+    if(document.getElementById('admin-add-practice-btn')) document.getElementById('admin-add-practice-btn').style.display = 'flex';
   } catch (error) {
     // 🔥 عرض رسالة الخطأ القادمة من السيرفر أو خطأ الاتصال
     err.textContent = error.message === 'Failed to fetch' ? 'لا يمكن الاتصال بالسيرفر' : error.message;
@@ -3694,6 +3701,8 @@ async function adminLogout(e) {
   authToken=null; isAdmin=false;
   sessionStorage.removeItem('adminToken');
   renderMuseumLanding();
+  if(typeof renderCourseSelector === 'function') renderCourseSelector();
+  if(typeof renderPracticePath === 'function') renderPracticePath();
   if(currentPoetId){document.getElementById('admin-add-btn-area').style.display='none';renderPoetContent(currentPoetId);}
   if(document.getElementById('admin-add-practice-btn')) document.getElementById('admin-add-practice-btn').style.display = 'none';
 }
