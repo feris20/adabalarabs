@@ -107,6 +107,9 @@
                     <i data-lucide="arrow-right"></i>
                 </button>
                 <div class="practice-stats">
+                    <button id="course-selector-btn" class="course-selector-toggle-btn" title="تغيير المنهج" onclick="toggleCourseSelector()">
+                        <i data-lucide="plus"></i>
+                    </button>
                     <div class="stat-pill streak-pill streak-item" id="practice-streak-display" title="أيام الحماس المتتالية">
                         <i data-lucide="flame"></i>
                         <span>12</span>
@@ -122,6 +125,17 @@
                 </div>
             </div>
             
+            <div id="course-selector-bar" class="course-selector-bar" style="display: none;">
+                <div class="courses-scroll-container" id="courses-scroll-container">
+                    <!-- Courses injected by JS -->
+                </div>
+                <div id="admin-add-course-container" style="display: none;">
+                     <button class="add-course-btn" onclick="openAddCourseModal()" title="إضافة منهج">
+                        <i data-lucide="plus"></i>
+                     </button>
+                </div>
+            </div>
+
             <div class="practice-scroll-area">
                 <div class="container relative-container" style="position: relative;">
                     <div class="path-container" id="path-container" style="padding-top: 0;">
@@ -626,6 +640,20 @@
                 <button class="modal-close" onclick="closeModal('add-practice-ad-modal')"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
+                <div style="margin-bottom: 14px; background: var(--color-bg); padding: 12px; border-radius: 12px; border: 1.5px solid var(--color-border);">
+                    <label style="font-weight: 800; display: block; margin-bottom: 8px; color: var(--color-accent);">نوع وموضع الإعلان:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 10px; border: 2px solid var(--color-accent); background: rgba(99, 102, 241, 0.12); cursor: pointer; font-weight: 700; font-size: 0.9rem; transition: all 0.2s;" id="ad-type-label-path" onclick="setAdminAdType('path_side')">
+                            <input type="radio" name="new-ad-display-type" value="path_side" checked onchange="setAdminAdType('path_side')" style="accent-color: var(--color-accent);">
+                            <span>📍 بجانب المسار (Floating Mini Screen)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 10px; border: 1.5px solid var(--color-border); background: var(--color-surface); cursor: pointer; font-weight: 700; font-size: 0.9rem; transition: all 0.2s;" id="ad-type-label-unit" onclick="setAdminAdType('unit_drawer')">
+                            <input type="radio" name="new-ad-display-type" value="unit_drawer" onchange="setAdminAdType('unit_drawer')" style="accent-color: var(--color-accent);">
+                            <span>🏷️ منسدل أسفل مربع القسم (Unit Dropdown)</span>
+                        </label>
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div>
                         <label style="font-weight: 700; display: block; margin-bottom: 4px;">القسم التابع له:</label>
@@ -633,7 +661,7 @@
                             <!-- Injected by JS -->
                         </select>
                     </div>
-                    <div>
+                    <div id="ad-side-setting-col">
                         <label style="font-weight: 700; display: block; margin-bottom: 4px;">الجهة في المسار:</label>
                         <select id="new-ad-side" class="modal-input" style="margin-bottom: 0;">
                             <option value="auto">تلقائي ذكي (أقصى مسافة أمان)</option>
@@ -644,17 +672,17 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                    <div>
+                    <div id="ad-pos-setting-col">
                         <label style="font-weight: 700; display: block; margin-bottom: 4px;">الموقع (بعد العقدة رقم):</label>
                         <input type="number" id="new-ad-pos" class="modal-input" value="1" min="0" max="20" style="margin-bottom: 0;">
                     </div>
                     <div>
-                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">شارة البطاقة المصغرة في المسار:</label>
+                        <label style="font-weight: 700; display: block; margin-bottom: 4px;">شارة البطاقة الإعلانية:</label>
                         <input type="text" id="new-ad-badge" class="modal-input" placeholder="مثال: عرض خاص ✨ (اتركه فارغاً للإخفاء)" style="margin-bottom: 0;">
                     </div>
                 </div>
 
-                <label style="font-weight: 700; display: block; margin-bottom: 4px;">نص الشاشة الإعلانية المصغرة (يظهر مباشرة على البطاقة):</label>
+                <label style="font-weight: 700; display: block; margin-bottom: 4px;" id="ad-mini-text-label">نص البطاقة الإعلانية (يظهر على الإعلان قبل فتحه):</label>
                 <input type="text" id="new-ad-mini-text" class="modal-input" placeholder="مثال: هل تريد اشتراك في تمرن مجاني؟" style="margin-bottom: 14px;">
 
                 <div style="margin-bottom: 14px;">
@@ -742,6 +770,31 @@
                 <p style="font-size: 1.2rem; opacity: 0.9;">لقد زادت شعلتك وأصبحت <strong id="streak-celebration-count" style="font-size: 1.5rem;">0</strong> يوم</p>
                 <button class="btn-primary" style="margin-top: 30px; background: white; color: #ff5b00;" onclick="closeModal('streak-celebration-modal')">متابعة</button>
             </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة منهج جديد (Admin) -->
+    <div id="add-course-modal" class="modal-overlay" style="display:none; align-items:center; justify-content:center;">
+        <div class="modal-content" style="max-width:400px; width:90%; padding:24px; border-radius:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="font-size:1.3rem; font-weight:800;">إضافة منهج جديد</h3>
+                <button class="modal-close-btn" onclick="closeModal('add-course-modal')"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-weight:700; margin-bottom:8px;">اسم المنهج</label>
+                <input type="text" id="new-course-title" placeholder="مثال: البلاغة" style="width:100%; padding:10px 14px; border:1px solid var(--color-border); border-radius:12px; background:var(--color-bg); color:var(--color-text);">
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <label style="display:block; font-weight:700; margin-bottom:8px;">الأيقونة (Lucide)</label>
+                <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;" id="course-icon-grid">
+                    <!-- Icons injected via JS -->
+                </div>
+                <input type="hidden" id="new-course-icon" value="book">
+            </div>
+
+            <button class="primary-btn" onclick="saveNewCourse()" style="width:100%; padding:12px; border-radius:12px; font-weight:800;">إضافة</button>
         </div>
     </div>
 
