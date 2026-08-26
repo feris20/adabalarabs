@@ -680,10 +680,15 @@ function savePracticeData() {
 async function syncPracticeToServer() {
   if (!isAdmin || !authToken) return;
   try {
+    // أرسل للسيرفر الهيكل فقط — بدون status أو currentLevelIndex
+    const cleanNodes = practiceNodes.map(n => {
+      const { status, currentLevelIndex, ...rest } = n;
+      return rest;
+    });
     await api.put('/practice', {
       courses: practiceCourses,
       units: practiceUnits,
-      nodes: practiceNodes,
+      nodes: cleanNodes,
       ads: practiceAds
     });
   } catch(e) { console.warn('Practice sync failed:', e); }
@@ -692,15 +697,35 @@ async function syncPracticeToServer() {
 async function loadPracticeFromServer() {
   try {
     const d = await api.get('/practice');
-    if (d && d.nodes && d.nodes.length > 0) {
-      practiceCourses = d.courses || practiceCourses;
-      practiceUnits   = d.units   || practiceUnits;
-      practiceNodes   = d.nodes   || practiceNodes;
-      practiceAds     = d.ads     || practiceAds;
-      // تحديث localStorage كـ cache
-      savePracticeData();
+    if (!d || !d.nodes || d.nodes.length === 0) return;
+
+    // استرجع تقدم المستخدم المحفوظ محلياً
+    const localNodes = JSON.parse(localStorage.getItem('practiceNodes_v4') || '[]');
+
+    // ادمج: الهيكل من السيرفر + التقدم من localStorage
+    const mergedNodes = d.nodes.map(serverNode => {
+      const localNode = localNodes.find(l => l.id === serverNode.id);
+      return {
+        ...serverNode,
+        status: localNode?.status ?? 'locked',
+        currentLevelIndex: localNode?.currentLevelIndex ?? 0
+      };
+    });
+
+    // إذا لم يكن هناك تقدم محلي أصلاً، اجعل العقدة الأولى current
+    const hasAnyProgress = mergedNodes.some(n => n.status !== 'locked');
+    if (!hasAnyProgress && mergedNodes.length > 0) {
+      mergedNodes[0].status = 'current';
     }
-  } catch(e) { console.warn('Practice load failed, using localStorage'); }
+
+    practiceCourses = d.courses?.length ? d.courses : practiceCourses;
+    practiceUnits   = d.units?.length   ? d.units   : practiceUnits;
+    practiceNodes   = mergedNodes;
+    practiceAds     = d.ads?.length     ? d.ads     : practiceAds;
+
+    // احفظ محلياً كـ cache (مع التقدم الصحيح)
+    savePracticeData();
+  } catch(e) { console.warn('Practice load failed, using localStorage cache'); }
 }
 
 function updateStreakDisplay(animateState = null) {
