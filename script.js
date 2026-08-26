@@ -406,10 +406,25 @@ window.addEventListener('resize', updateArudHeight);
 // Practice Path & Streak Logic
 // =============================================
 let streakData = JSON.parse(localStorage.getItem('streakData')) || { count: 0, lastActiveDate: null };
-let practiceUnits = JSON.parse(localStorage.getItem('practiceUnits')) || [
-  { id: 1, title: 'القسم 1: مقدمة في البلاغة', desc: 'فهم الأقسام الرئيسية لعلم البلاغة', color: '#22c55e' }
+
+let practiceCourses = JSON.parse(localStorage.getItem('practiceCourses_v1')) || [
+  { id: 1, title: 'البلاغة', icon: 'book', isHidden: false }
 ];
-let currentUnitId = practiceUnits[0].id;
+let currentCourseId = Number(localStorage.getItem('currentCourseId')) || practiceCourses[0].id;
+
+let practiceUnits = JSON.parse(localStorage.getItem('practiceUnits')) || [
+  { id: 1, title: 'القسم 1: مقدمة في البلاغة', desc: 'فهم الأقسام الرئيسية لعلم البلاغة', color: '#22c55e', courseId: 1 }
+];
+// Migrate existing units to course 1
+practiceUnits.forEach(u => {
+  if (!u.courseId) u.courseId = 1;
+});
+
+function getCourseUnits() {
+  return practiceUnits.filter(u => Number(u.courseId) === currentCourseId);
+}
+
+let currentUnitId = practiceUnits.find(u => Number(u.courseId) === currentCourseId)?.id || practiceUnits[0].id;
 
 const defaultQuestions = [
   {
@@ -612,6 +627,7 @@ const initialPracticeNodes = [
 const initialPracticeAds = [
   {
     id: 1,
+    adType: 'path_side',
     unitId: 1,
     afterNodeIndex: 1, // appears near node 1 on the path
     side: 'right', // 'right' or 'left'
@@ -623,6 +639,20 @@ const initialPracticeAds = [
     imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
     modalText: 'انضم الآن إلى باقة الفرسان في تطبيق البيان:\n• قلوب وطاقة غير محدودة لمواصلة التعلّم دون توقف.\n• مراجعة ذكية فورية لجميع الأخطاء وتكرارها حتى الإتقان.\n• الوصول المبكر لجميع بحور الشعر والشواهد البلاغية المصورة.\n• وسام الفروسية الذهبي الخاص في لوحة الشرف.',
     ctaText: 'اشترك الآن مجاناً',
+    ctaUrl: '#'
+  },
+  {
+    id: 2,
+    adType: 'unit_drawer',
+    unitId: 2,
+    badgeText: 'هدية الوحدة 🎁',
+    miniText: 'احصل على ملخص شامل ومصور لقسم علم المعاني!',
+    bgColor: '#059669',
+    bgGradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+    modalTitle: 'دليل وفرسان علم المعاني والمجاز',
+    imageUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=800&q=80',
+    modalText: 'ملف PDF تفاعلي يحتوي على كافة القواعد، والشواهد القرآنية والشعرية مشروحة ومحللة بدقة تامة لتثبيت علم المعاني في ذهنك بسهولة.',
+    ctaText: 'تحميل الملخص مجاناً',
     ctaUrl: '#'
   }
 ];
@@ -637,6 +667,8 @@ let practiceAds = JSON.parse(localStorage.getItem('practiceAds_v1')) || initialP
 let dismissedPracticeAds = JSON.parse(sessionStorage.getItem('dismissedPracticeAds') || '[]');
 
 function savePracticeData() {
+  localStorage.setItem('practiceCourses_v1', JSON.stringify(practiceCourses));
+  localStorage.setItem('currentCourseId', currentCourseId);
   localStorage.setItem('practiceUnits', JSON.stringify(practiceUnits));
   localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
   localStorage.setItem('practiceAds_v1', JSON.stringify(practiceAds));
@@ -757,6 +789,150 @@ function renderProgressRingSVG(config) {
   return `<svg class="progress-ring" viewBox="0 0 ${size} ${size}">${paths}</svg>`;
 }
 
+function isUnitCompleted(unitId) {
+  const nodes = practiceNodes.filter(n => Number(n.unitId) === Number(unitId));
+  if (nodes.length === 0) return false;
+  return nodes.every(n => n.status === 'completed');
+}
+
+function toggleCourseSelector() {
+  if (window.soundFX) soundFX.tap();
+  const bar = document.getElementById('course-selector-bar');
+  if (bar.style.display === 'none' || !bar.style.display) {
+    bar.style.display = 'flex';
+    renderCourseSelector();
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function renderCourseSelector() {
+  const container = document.getElementById('courses-scroll-container');
+  const adminAddContainer = document.getElementById('admin-add-course-container');
+  if (!container) return;
+  
+  if (adminAddContainer) {
+    adminAddContainer.style.display = isAdmin ? 'block' : 'none';
+  }
+
+  container.innerHTML = practiceCourses
+    .filter(c => !c.isHidden || isAdmin)
+    .map(c => `
+    <div class="course-item-card ${Number(c.id) === currentCourseId ? 'active' : ''}" onclick="selectCourse(${c.id})" style="${c.isHidden ? 'opacity: 0.5;' : ''}">
+      <i data-lucide="${c.icon || 'book'}"></i>
+      <span class="course-item-name">${c.title}</span>
+      ${isAdmin ? `
+      <div class="course-admin-actions">
+        <div class="course-admin-btn hide" onclick="toggleHideCourse(${c.id}, event)" title="${c.isHidden ? 'إظهار' : 'إخفاء'}">
+          <i data-lucide="${c.isHidden ? 'eye-off' : 'eye'}"></i>
+        </div>
+        <div class="course-admin-btn delete" onclick="deleteCourse(${c.id}, event)" title="حذف المنهج">
+          <i data-lucide="trash-2"></i>
+        </div>
+      </div>
+      ` : ''}
+    </div>
+  `).join('');
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function selectCourse(id) {
+  currentCourseId = Number(id);
+  const units = getCourseUnits();
+  if (units.length > 0) {
+    currentUnitId = units[0].id;
+  }
+  savePracticeData();
+  renderCourseSelector();
+  renderPracticePath();
+}
+
+function toggleHideCourse(id, event) {
+  event.stopPropagation();
+  const c = practiceCourses.find(c => Number(c.id) === Number(id));
+  if (c) {
+    c.isHidden = !c.isHidden;
+    savePracticeData();
+    renderCourseSelector();
+  }
+}
+
+function deleteCourse(id, event) {
+  event.stopPropagation();
+  if (!confirm('هل أنت متأكد من حذف هذا المنهج؟ سيتم فقدان جميع الأقسام والعقد التابعة له.')) return;
+  
+  practiceCourses = practiceCourses.filter(c => Number(c.id) !== Number(id));
+  practiceUnits = practiceUnits.filter(u => Number(u.courseId) !== Number(id));
+  // Clean up nodes
+  const remainingUnitIds = practiceUnits.map(u => Number(u.id));
+  practiceNodes = practiceNodes.filter(n => remainingUnitIds.includes(Number(n.unitId)));
+  
+  if (currentCourseId === Number(id) && practiceCourses.length > 0) {
+    currentCourseId = practiceCourses[0].id;
+  }
+  savePracticeData();
+  renderCourseSelector();
+  renderPracticePath();
+}
+
+function openAddCourseModal() {
+  const grid = document.getElementById('course-icon-grid');
+  const icons = ['book', 'pen-tool', 'code', 'database', 'globe', 'cpu', 'lightbulb', 'award', 'compass', 'layers'];
+  
+  grid.innerHTML = icons.map(icon => `
+    <div class="icon-select-btn" onclick="selectCourseIcon('${icon}')" id="course-icon-btn-${icon}" style="display:flex; justify-content:center; align-items:center; padding:12px; border:2px solid var(--color-border); border-radius:12px; cursor:pointer; transition:all 0.2s;">
+      <i data-lucide="${icon}"></i>
+    </div>
+  `).join('');
+  
+  setTimeout(() => selectCourseIcon('book'), 50);
+  document.getElementById('new-course-title').value = '';
+  openModal('add-course-modal');
+  if (window.lucide) lucide.createIcons();
+}
+
+function selectCourseIcon(iconName) {
+  document.getElementById('new-course-icon').value = iconName;
+  document.querySelectorAll('#course-icon-grid .icon-select-btn').forEach(btn => {
+    btn.style.borderColor = 'var(--color-border)';
+    btn.style.background = 'transparent';
+  });
+  const activeBtn = document.getElementById(`course-icon-btn-${iconName}`);
+  if (activeBtn) {
+    activeBtn.style.borderColor = '#6366f1';
+    activeBtn.style.background = 'rgba(99, 102, 241, 0.1)';
+  }
+}
+
+function saveNewCourse() {
+  const title = document.getElementById('new-course-title').value.trim();
+  const icon = document.getElementById('new-course-icon').value;
+  if (!title) return alert('الرجاء إدخال اسم المنهج');
+  
+  const newId = practiceCourses.length > 0 ? Math.max(...practiceCourses.map(c => c.id)) + 1 : 1;
+  practiceCourses.push({ id: newId, title, icon, isHidden: false });
+  
+  // Create an initial unit for the new course
+  const newUnitId = practiceUnits.length > 0 ? Math.max(...practiceUnits.map(u => u.id)) + 1 : 1;
+  practiceUnits.push({ id: newUnitId, title: 'القسم الأول', desc: 'الوصف هنا', color: '#22c55e', courseId: newId });
+
+  savePracticeData();
+  closeModal('add-course-modal');
+  selectCourse(newId);
+}
+
+function isUnitLocked(unitIdx) {
+  const cUnits = getCourseUnits();
+  if (unitIdx <= 0) return false;
+  for (let i = 0; i < unitIdx; i++) {
+    if (!isUnitCompleted(cUnits[i].id)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function renderPracticePath() {
   const container = document.getElementById('path-container');
   if (!container) return;
@@ -774,24 +950,115 @@ function renderPracticePath() {
     }
   }
   
-  practiceUnits.forEach((unit, unitIdx) => {
+  let globalFoundCurrent = false;
+
+  const courseUnits = getCourseUnits();
+  courseUnits.forEach((unit, unitIdx) => {
+    const unitLocked = isUnitLocked(unitIdx);
+    const unitCompleted = isUnitCompleted(unit.id);
+
+    // Container for Unit Banner and optional Dropdown Drawer Ad
+    const unitBannerContainer = document.createElement('div');
+    unitBannerContainer.className = 'unit-banner-container';
+    unitBannerContainer.style.marginTop = unitIdx > 0 ? '60px' : '20px';
+
     // Render Unit Banner
     const banner = document.createElement('div');
-    banner.className = 'unit-banner';
-    banner.style.marginTop = unitIdx > 0 ? '60px' : '20px';
-    if (unit.color) banner.style.backgroundColor = unit.color;
+    banner.className = `unit-banner ${unitLocked ? 'unit-banner-locked' : ''}`;
+    banner.style.margin = '0';
+    if (unit.color && !unitLocked) {
+      banner.style.backgroundColor = unit.color;
+    }
+
+    let statusBadgeHtml = '';
+    let unitIconName = 'book-open';
+    if (unitLocked) {
+      statusBadgeHtml = `<span class="unit-status-badge locked"><i data-lucide="lock" style="width:12px;height:12px;"></i> مقفول</span>`;
+      unitIconName = 'lock';
+    } else if (unitCompleted) {
+      statusBadgeHtml = `<span class="unit-status-badge completed"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> مكتمل</span>`;
+      unitIconName = 'award';
+    } else {
+      statusBadgeHtml = '';
+      unitIconName = 'book-open';
+    }
+
+    const prevUnitTitle = unitIdx > 0 ? (courseUnits[unitIdx - 1]?.title || 'القسم السابق') : '';
+    const unitDescHtml = unitLocked 
+      ? `أكمل جميع عقد "${prevUnitTitle}" لفتح هذا القسم`
+      : unit.desc;
+
     banner.innerHTML = `
         <div class="unit-banner-content">
-            <h2 class="unit-title">${unit.title}</h2>
-            <p class="unit-desc">${unit.desc}</p>
+            <div class="unit-banner-header-row">
+              <h2 class="unit-title" style="margin-bottom:0;">${unit.title}</h2>
+              ${statusBadgeHtml}
+            </div>
+            <p class="unit-desc">${unitDescHtml}</p>
         </div>
         <div class="unit-banner-icon">
-            <i data-lucide="book"></i>
+            <i data-lucide="${unitIconName}"></i>
         </div>
     `;
-    banner.onclick = openUnitSelector;
-    banner.style.cursor = 'pointer';
-    container.appendChild(banner);
+
+    if (unitLocked && !isAdmin) {
+      banner.onclick = () => {
+        alert(`🔒 هذا القسم مقفول! يجب عليك إنهاء جميع عقد "${prevUnitTitle}" أولاً لفتحه.`);
+      };
+    } else {
+      banner.onclick = openUnitSelector;
+    }
+    banner.style.cursor = unitLocked && !isAdmin ? 'not-allowed' : 'pointer';
+    unitBannerContainer.appendChild(banner);
+
+    // Render Unit Drawer Banner Ads (النوع الثاني: الإعلانات المنسدلة من أسفل مربع القسم)
+    const unitDrawerAds = practiceAds.filter(ad => Number(ad.unitId || 1) === Number(unit.id) && ad.adType === 'unit_drawer');
+    unitDrawerAds.forEach(ad => {
+      const isDismissed = dismissedPracticeAds.includes(ad.id);
+      if (isDismissed && !isAdmin) return;
+
+      const drawerEl = document.createElement('div');
+      drawerEl.className = 'unit-banner-drawer-ad';
+      drawerEl.id = `unit-drawer-ad-${ad.id}`;
+      drawerEl.style.background = ad.bgGradient || ad.bgColor || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)';
+      drawerEl.onclick = () => openPracticeAdModal(ad.id);
+
+      let badgeHtml = (ad.badgeText && ad.badgeText.trim()) ? `<div class="unit-drawer-ad-badge">${ad.badgeText.trim()}</div>` : '';
+      let adminToolsHtml = '';
+      if (isAdmin) {
+        adminToolsHtml = `
+          <div style="display:flex; gap:4px; margin-right:4px;">
+            <button type="button" class="unit-drawer-ad-close" style="width:24px;height:24px;background:rgba(0,0,0,0.5);" title="تعديل الإعلان" onclick="editPracticeAd(${ad.id}, event)"><i data-lucide="pencil" style="width:11px;height:11px;"></i></button>
+            <button type="button" class="unit-drawer-ad-close" style="width:24px;height:24px;background:rgba(239,68,68,0.7);" title="حذف الإعلان" onclick="deletePracticeAd(${ad.id}, event)"><i data-lucide="trash-2" style="width:11px;height:11px;"></i></button>
+          </div>
+        `;
+      }
+
+      drawerEl.innerHTML = `
+        <div class="unit-drawer-ad-content">
+          <div class="unit-drawer-ad-icon">
+            <i data-lucide="sparkles" style="width:18px;height:18px;"></i>
+          </div>
+          <div class="unit-drawer-ad-info">
+            ${badgeHtml}
+            <div class="unit-drawer-ad-title">${ad.miniText || 'عرض مميز للقسم'}</div>
+          </div>
+        </div>
+        <div class="unit-drawer-ad-actions" onclick="event.stopPropagation()">
+          ${adminToolsHtml}
+          <button type="button" class="unit-drawer-ad-btn" onclick="openPracticeAdModal(${ad.id})">
+            <span>عرض</span> <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
+          </button>
+          <button type="button" class="unit-drawer-ad-close" title="إخفاء الإعلان" onclick="dismissPracticeAd(${ad.id}, event)">
+            <i data-lucide="x" style="width:14px;height:14px;"></i>
+          </button>
+        </div>
+      `;
+
+      unitBannerContainer.appendChild(drawerEl);
+    });
+
+    container.appendChild(unitBannerContainer);
 
     const nodesWrapper = document.createElement('div');
     nodesWrapper.style.position = 'relative';
@@ -802,19 +1069,26 @@ function renderPracticePath() {
     nodesWrapper.style.gap = '40px';
     nodesWrapper.style.padding = '40px 0';
     
-    const unitNodes = practiceNodes.filter(n => n.unitId === unit.id);
+    const unitNodes = practiceNodes.filter(n => Number(n.unitId) === Number(unit.id));
     const svgStr = [];
     
-    // فرض تسلسل منطقي (عقدة واحدة حالية فقط وما بعدها مقفل)
-    let hasFoundCurrent = false;
+    // فرض تسلسل منطقي محكم (القسم المقفول تُقفل عقده، والقسم المفتوح عقدة واحدة نشطة فقط)
     unitNodes.forEach((n) => {
-      if (!hasFoundCurrent) {
-        if (n.status !== 'completed') {
-          n.status = 'current';
-          hasFoundCurrent = true;
-        }
-      } else {
+      if (unitLocked) {
+        // القسم مقفول -> جميع عقده مقفولة
         n.status = 'locked';
+      } else {
+        // القسم مفتوح
+        if (n.status === 'completed') {
+          // تبقى مكتملة
+        } else {
+          if (!globalFoundCurrent) {
+            n.status = 'current';
+            globalFoundCurrent = true;
+          } else {
+            n.status = 'locked';
+          }
+        }
       }
     });
     
@@ -870,11 +1144,21 @@ function renderPracticePath() {
       let tooltipThemeClass = statusClass === 'status-active' ? 'theme-active' : (statusClass === 'status-complete' ? 'theme-complete' : 'theme-locked');
       
       let totalLevelsStr = totalLevels > 0 ? `الدرس ${completedLevels} من ${totalLevels}` : 'درس';
-      if (node.status === 'completed') totalLevelsStr = 'مكتمل';
+      if (unitLocked) {
+        totalLevelsStr = `🔒 قسم مقفول (أكمل ${prevUnitTitle})`;
+      } else if (node.status === 'completed') {
+        totalLevelsStr = 'مكتمل';
+      }
 
       let startBtnText = node.actionText || 'ابدأ +15 XP';
       let actionsHtml = '';
-      if (node.status === 'completed') {
+      if (unitLocked) {
+        actionsHtml = `
+          <button type="button" class="tt-action-btn locked-btn" disabled style="opacity:0.6; cursor:not-allowed;">
+            <span>قسم مقفول</span> <i data-lucide="lock" style="width:16px;height:16px;"></i>
+          </button>
+        `;
+      } else if (node.status === 'completed') {
         actionsHtml = `
           <button type="button" class="tt-action-btn tt-review" onclick="startLesson('review', ${node.id})">
             <span>مراجعة +5 XP</span> <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
@@ -932,8 +1216,8 @@ function renderPracticePath() {
     });
     
     // Render Floating Mini Ad Screens on Path (with Smart Collision-Avoidance Algorithm)
-    const unitAds = practiceAds.filter(ad => (ad.unitId || 1) === unit.id);
-    unitAds.forEach(ad => {
+    const unitPathAds = practiceAds.filter(ad => Number(ad.unitId || 1) === Number(unit.id) && (ad.adType === 'path_side' || !ad.adType));
+    unitPathAds.forEach(ad => {
       const isDismissed = dismissedPracticeAds.includes(ad.id);
       if (isDismissed && !isAdmin) return;
       
@@ -985,24 +1269,47 @@ function renderPracticePath() {
     container.appendChild(nodesWrapper);
   });
   
-  if (window.lucide) if(window.lucide)lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
 // === Unit Selector ===
 function openUnitSelector() {
   const container = document.getElementById('unit-list-container');
-  container.innerHTML = practiceUnits.map(u => `
-    <div style="padding: 15px; border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; display: flex; align-items:center; justify-content:space-between; ${u.id === currentUnitId ? 'border-color: var(--color-accent); background: var(--color-surface);' : ''}" onclick="selectUnit(${u.id})">
-      <div style="flex: 1;">
-        <h4 style="margin-bottom: 5px; color: ${u.id === currentUnitId ? 'var(--color-accent)' : 'inherit'}">${u.title}</h4>
-        <p style="font-size: 0.85rem; color: var(--color-muted);">${u.desc}</p>
+  container.innerHTML = practiceUnits.map((u, idx) => {
+    const isCompleted = isUnitCompleted(u.id);
+    const locked = isUnitLocked(idx);
+    const isSelected = u.id === currentUnitId;
+    
+    let statusBadge = '';
+    if (locked) {
+      statusBadge = `<span style="font-size: 0.75rem; background: rgba(100,116,139,0.2); color: var(--color-muted); padding: 3px 8px; border-radius: 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="lock" style="width:12px;height:12px;"></i> مقفول</span>`;
+    } else if (isCompleted) {
+      statusBadge = `<span style="font-size: 0.75rem; background: rgba(34,197,94,0.15); color: #22c55e; padding: 3px 8px; border-radius: 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="check" style="width:12px;height:12px;"></i> مكتمل</span>`;
+    } else {
+      statusBadge = '';
+    }
+
+    const prevTitle = idx > 0 ? (practiceUnits[idx - 1]?.title || 'القسم السابق') : '';
+    const clickHandler = (locked && !isAdmin)
+      ? `alert('🔒 هذا القسم مقفول! يجب عليك إكمال جميع عقد &quot;${prevTitle}&quot; أولاً لفتحه.')`
+      : `selectUnit(${u.id})`;
+
+    return `
+      <div style="padding: 15px; border: 1.5px solid ${isSelected ? 'var(--color-accent)' : 'var(--color-border)'}; border-radius: 12px; cursor: ${locked && !isAdmin ? 'not-allowed' : 'pointer'}; opacity: ${locked && !isAdmin ? '0.75' : '1'}; display: flex; align-items:center; justify-content:space-between; ${isSelected ? 'background: var(--color-surface);' : ''}" onclick="${clickHandler}">
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+            <h4 style="margin: 0; color: ${isSelected ? 'var(--color-accent)' : 'inherit'}">${u.title}</h4>
+            ${statusBadge}
+          </div>
+          <p style="font-size: 0.85rem; color: var(--color-muted); margin: 0;">${locked ? `أكمل "${prevTitle}" لفتح هذا القسم` : u.desc}</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          ${isAdmin ? `<button class="btn-secondary btn-sm danger" style="padding: 5px; color: #e11d48; border-color: #e11d48;" onclick="event.stopPropagation(); deleteUnit(${u.id})"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>` : ''}
+          ${isSelected ? '<i data-lucide="check-circle-2" style="color: var(--color-accent)"></i>' : (locked ? '<i data-lucide="lock" style="color: var(--color-muted)"></i>' : '')}
+        </div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        ${isAdmin ? `<button class="btn-secondary btn-sm danger" style="padding: 5px; color: #e11d48; border-color: #e11d48;" onclick="event.stopPropagation(); deleteUnit(${u.id})"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>` : ''}
-        ${u.id === currentUnitId ? '<i data-lucide="check" style="color: var(--color-accent)"></i>' : ''}
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
   
   const adminContainer = document.getElementById('admin-add-unit-container');
   if (adminContainer) adminContainer.style.display = isAdmin ? 'block' : 'none';
@@ -1025,6 +1332,12 @@ function deleteUnit(id) {
 }
 
 function selectUnit(id) {
+  const unitIdx = practiceUnits.findIndex(u => Number(u.id) === Number(id));
+  if (unitIdx > 0 && isUnitLocked(unitIdx) && !isAdmin) {
+    const prevTitle = practiceUnits[unitIdx - 1]?.title || 'القسم السابق';
+    alert(`🔒 هذا القسم مقفول! يجب عليك إكمال جميع عقد "${prevTitle}" أولاً لفتحه.`);
+    return;
+  }
   currentUnitId = id;
   closeModal('unit-selector-modal');
   renderPracticePath();
@@ -1037,7 +1350,7 @@ function addNewUnit() {
   if (!title) return alert('يرجى إدخال عنوان القسم');
   
   const newId = practiceUnits.length > 0 ? Math.max(...practiceUnits.map(u=>u.id)) + 1 : 1;
-  practiceUnits.push({ id: newId, title, desc, color });
+  practiceUnits.push({ id: newId, title, desc, color, courseId: currentCourseId });
   savePracticeData();
   
   document.getElementById('new-unit-title').value = '';
@@ -1207,6 +1520,50 @@ function handleAdCtaClick() {
   }
 }
 
+let currentModalAdType = 'path_side';
+
+function setAdminAdType(type) {
+  currentModalAdType = type || 'path_side';
+  const isUnitDrawer = currentModalAdType === 'unit_drawer';
+  
+  const pathRadio = document.querySelector('input[name="new-ad-display-type"][value="path_side"]');
+  const unitRadio = document.querySelector('input[name="new-ad-display-type"][value="unit_drawer"]');
+  if (pathRadio) pathRadio.checked = !isUnitDrawer;
+  if (unitRadio) unitRadio.checked = isUnitDrawer;
+  
+  const labelPath = document.getElementById('ad-type-label-path');
+  const labelUnit = document.getElementById('ad-type-label-unit');
+  if (labelPath && labelUnit) {
+    if (isUnitDrawer) {
+      labelUnit.style.borderColor = 'var(--color-accent)';
+      labelUnit.style.backgroundColor = 'rgba(99, 102, 241, 0.12)';
+      labelPath.style.borderColor = 'var(--color-border)';
+      labelPath.style.backgroundColor = 'var(--color-surface)';
+    } else {
+      labelPath.style.borderColor = 'var(--color-accent)';
+      labelPath.style.backgroundColor = 'rgba(99, 102, 241, 0.12)';
+      labelUnit.style.borderColor = 'var(--color-border)';
+      labelUnit.style.backgroundColor = 'var(--color-surface)';
+    }
+  }
+
+  const sideCol = document.getElementById('ad-side-setting-col');
+  const posCol = document.getElementById('ad-pos-setting-col');
+  const textLabel = document.getElementById('ad-mini-text-label');
+  
+  if (sideCol) sideCol.style.display = isUnitDrawer ? 'none' : 'block';
+  if (posCol) posCol.style.display = isUnitDrawer ? 'none' : 'block';
+  if (textLabel) {
+    textLabel.textContent = isUnitDrawer 
+      ? 'نص شريط الإعلان المنسدل (يظهر مباشرة أسفل القسم):' 
+      : 'نص البطاقة الإعلانية المصغرة (تظهر بجانب المسار):';
+  }
+}
+
+function handleAdTypeChange(type) {
+  setAdminAdType(type);
+}
+
 function dismissPracticeAd(adId, event) {
   if (event) event.stopPropagation();
   if (soundFX) soundFX.tap();
@@ -1216,9 +1573,9 @@ function dismissPracticeAd(adId, event) {
     sessionStorage.setItem('dismissedPracticeAds', JSON.stringify(dismissedPracticeAds));
   }
   
-  const el = document.getElementById(`practice-ad-tile-${adId}`);
+  const el = document.getElementById(`practice-ad-tile-${adId}`) || document.getElementById(`unit-drawer-ad-${adId}`);
   if (el) {
-    el.style.transform = 'scale(0.3) rotate(-10deg)';
+    el.style.transform = 'scale(0.3) rotate(-6deg)';
     el.style.opacity = '0';
     setTimeout(() => {
       if (el.parentNode) el.parentNode.removeChild(el);
@@ -1237,11 +1594,14 @@ function openAdminAddPracticeAd() {
   editingAdId = null;
   currentAdminAdImage = '';
   
-  document.getElementById('ad-admin-modal-title').textContent = 'إضافة شاشة إعلانية جديدة في المسار';
+  document.getElementById('ad-admin-modal-title').textContent = 'إضافة إعلان جديد في المسار أو أسفل القسم';
+  
+  // Set default ad type
+  setAdminAdType('path_side');
   
   // Populate units dropdown
   const unitSelect = document.getElementById('new-ad-unit');
-  unitSelect.innerHTML = practiceUnits.map(u => `<option value="${u.id}" ${u.id === currentUnitId ? 'selected' : ''}>${u.title}</option>`).join('');
+  unitSelect.innerHTML = practiceUnits.map(u => `<option value="${u.id}" ${Number(u.id) === Number(currentUnitId) ? 'selected' : ''}>${u.title}</option>`).join('');
   
   document.getElementById('new-ad-side').value = 'auto';
   document.getElementById('new-ad-pos').value = '1';
@@ -1274,10 +1634,13 @@ function editPracticeAd(adId, event) {
   editingAdId = adId;
   currentAdminAdImage = ad.imageUrl || '';
   
-  document.getElementById('ad-admin-modal-title').textContent = 'تعديل الشاشة الإعلانية';
+  const adType = ad.adType || 'path_side';
+  document.getElementById('ad-admin-modal-title').textContent = adType === 'unit_drawer' ? 'تعديل الإعلان المنسدل أسفل القسم' : 'تعديل الشاشة الإعلانية بجانب المسار';
+  
+  setAdminAdType(adType);
   
   const unitSelect = document.getElementById('new-ad-unit');
-  unitSelect.innerHTML = practiceUnits.map(u => `<option value="${u.id}" ${u.id === (ad.unitId || currentUnitId) ? 'selected' : ''}>${u.title}</option>`).join('');
+  unitSelect.innerHTML = practiceUnits.map(u => `<option value="${u.id}" ${Number(u.id) === Number(ad.unitId || currentUnitId) ? 'selected' : ''}>${u.title}</option>`).join('');
   
   document.getElementById('new-ad-side').value = ad.side || 'auto';
   document.getElementById('new-ad-pos').value = ad.afterNodeIndex || 0;
@@ -1316,7 +1679,7 @@ function editAdFromModal() {
 
 function deleteAdFromModal() {
   if (!currentOpenAdId) return;
-  if (!confirm('هل أنت متأكد من رغبتك في إزالة هذا الإعلان نهائياً من المسار؟')) return;
+  if (!confirm('هل أنت متأكد من رغبتك في إزالة هذا الإعلان نهائياً؟')) return;
   
   practiceAds = practiceAds.filter(a => a.id !== currentOpenAdId);
   savePracticeData();
@@ -1326,7 +1689,7 @@ function deleteAdFromModal() {
 
 function deleteEditingPracticeAd() {
   if (!editingAdId) return;
-  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً من المسار؟')) return;
+  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً؟')) return;
   
   practiceAds = practiceAds.filter(a => a.id !== editingAdId);
   savePracticeData();
@@ -1336,7 +1699,7 @@ function deleteEditingPracticeAd() {
 
 function deletePracticeAd(adId, event) {
   if (event) event.stopPropagation();
-  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً من المسار؟')) return;
+  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً؟')) return;
   
   practiceAds = practiceAds.filter(a => a.id !== adId);
   savePracticeData();
@@ -1344,7 +1707,10 @@ function deletePracticeAd(adId, event) {
 }
 
 function savePracticeAd() {
-  const unitId = parseInt(document.getElementById('new-ad-unit').value) || currentUnitId;
+  const isUnitDrawer = currentModalAdType === 'unit_drawer';
+  const adType = isUnitDrawer ? 'unit_drawer' : 'path_side';
+
+  const unitId = parseInt(document.getElementById('new-ad-unit').value) || Number(practiceUnits[0]?.id) || 1;
   const side = document.getElementById('new-ad-side').value || 'auto';
   const afterNodeIndex = parseInt(document.getElementById('new-ad-pos').value) || 0;
   const badgeText = document.getElementById('new-ad-badge').value.trim();
@@ -1358,13 +1724,14 @@ function savePracticeAd() {
   const ctaText = document.getElementById('new-ad-cta-text').value.trim();
   const ctaUrl = document.getElementById('new-ad-cta-url').value.trim() || '#';
   
-  if (!miniText) return alert('يرجى كتابة نص الشاشة الإعلانية المصغرة');
+  if (!miniText) return alert('يرجى كتابة نص البطاقة الإعلانية');
   
   const bgGradient = `linear-gradient(135deg, ${bgColor} 0%, ${adjustColorBrightness(bgColor, -25)} 100%)`;
   
   if (editingAdId) {
     const ad = practiceAds.find(a => a.id === editingAdId);
     if (ad) {
+      ad.adType = adType;
       ad.unitId = unitId;
       ad.side = side;
       ad.afterNodeIndex = afterNodeIndex;
@@ -1384,6 +1751,7 @@ function savePracticeAd() {
     const newId = practiceAds.length > 0 ? Math.max(...practiceAds.map(a => a.id)) + 1 : 1;
     practiceAds.push({
       id: newId,
+      adType,
       unitId,
       side,
       afterNodeIndex,
@@ -2164,10 +2532,19 @@ function startLesson(mode, nodeId = null) {
   if (typeof closeAllTooltips === 'function') closeAllTooltips();
   
   const node = practiceNodes.find(n => n.id === currentNodeId);
+  if (!node) return;
+
+  // Strict unit locking check
+  const unitIdx = practiceUnits.findIndex(u => Number(u.id) === Number(node.unitId));
+  if (unitIdx > 0 && isUnitLocked(unitIdx) && !isAdmin) {
+    const prevTitle = practiceUnits[unitIdx - 1]?.title || 'القسم السابق';
+    alert(`🔒 هذا القسم مقفول! يجب عليك إنهاء جميع عقد "${prevTitle}" أولاً لفتحه.`);
+    return;
+  }
   
-  // Strict locking check
-  if (node && node.status === 'locked') {
-    alert('هذا الدرس مقفل! أكمل العقد السابقة أولاً لفتحه.');
+  // Strict node locking check
+  if (node.status === 'locked' && !isAdmin) {
+    alert('🔒 هذا الدرس مقفول! أكمل العقد السابقة أولاً لفتحه.');
     return;
   }
   
@@ -2970,11 +3347,16 @@ function showNodeAchievements(node) {
   document.getElementById('achievement-node-title').textContent = `أكملت عقدة "${node.title}" بنجاح وتألقت في أدب العرب!`;
   
   node.status = 'completed';
-  const nodeIndex = practiceNodes.findIndex(n => n.id === node.id);
-  if (nodeIndex !== -1 && nodeIndex + 1 < practiceNodes.length) {
-    if (practiceNodes[nodeIndex + 1].status === 'locked') {
-      practiceNodes[nodeIndex + 1].status = 'current';
-    }
+  
+  const curUnit = practiceUnits.find(u => Number(u.id) === Number(node.unitId));
+  const curUnitIdx = practiceUnits.findIndex(u => Number(u.id) === Number(node.unitId));
+  const curUnitFinished = curUnit && isUnitCompleted(curUnit.id);
+  
+  if (curUnitFinished && curUnitIdx + 1 < practiceUnits.length) {
+    const nextUnit = practiceUnits[curUnitIdx + 1];
+    document.getElementById('achievement-node-title').textContent = `🎉 مبروك! لقد أنهيت جميع عقد "${curUnit.title}" بنجاح، وتم فتح القسم التالي "${nextUnit.title}"!`;
+  } else {
+    document.getElementById('achievement-node-title').textContent = `أكملت عقدة "${node.title}" بنجاح وتألقت في أدب العرب!`;
   }
   
   activateStreak();
