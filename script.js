@@ -41,6 +41,235 @@ const SAMPLE_VERSES = [
   "فلا بدَّ أنْ يستجيبَ القدرْ"
 ];
 // =============================================
+// محرك المؤثرات الصوتية التفاعلية الخاص بصفحة تمرّن (Practice Sound System)
+// =============================================
+function isPracticeActive() {
+  try {
+    const practiceSec = document.getElementById('practice-section');
+    const lessonSec = document.getElementById('lesson-section');
+    const inPractice = practiceSec && practiceSec.style.display !== 'none';
+    const inLesson = lessonSec && lessonSec.style.display !== 'none';
+    const achieveModal = document.getElementById('node-achievement-modal');
+    const unitModal = document.getElementById('unit-selector-modal');
+    const addPracticeModal = document.getElementById('add-practice-node-modal');
+    const streakModal = document.getElementById('streak-celebration-modal');
+
+    const inAchieve = achieveModal && achieveModal.style.display === 'flex';
+    const inUnit = unitModal && unitModal.style.display === 'flex';
+    const inAddNode = addPracticeModal && addPracticeModal.style.display === 'flex';
+    const inStreak = streakModal && streakModal.style.display === 'flex';
+
+    return inPractice || inLesson || inAchieve || inUnit || inAddNode || inStreak;
+  } catch(e) {
+    return false;
+  }
+}
+
+class SoundSystem {
+  constructor() {
+    this.ctx = null;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  // صوت نقرة الأزرار الخفيفة (Duolingo-style crisp tap)
+  tap() {
+    if (!isPracticeActive()) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, t);
+      osc.frequency.exponentialRampToValueAtTime(140, t + 0.04);
+
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.045);
+    } catch(e) {}
+  }
+
+  // صوت توصيل ناجح لزوج كلمات (Two-tone match chord)
+  matchSuccess() {
+    if (!isPracticeActive()) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      [659.25, 987.77].forEach((freq, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t + i * 0.06);
+        gain.gain.setValueAtTime(0.18, t + i * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.06 + 0.16);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t + i * 0.06);
+        osc.stop(t + i * 0.06 + 0.18);
+      });
+    } catch(e) {}
+  }
+
+  // نغمة النجاح وحل السؤال (Joyful Success Arpeggio)
+  success() {
+    if (!isPracticeActive()) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + idx * 0.065);
+        gain.gain.setValueAtTime(0.22, t + idx * 0.065);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.065 + 0.22);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t + idx * 0.065);
+        osc.stop(t + idx * 0.065 + 0.24);
+      });
+    } catch(e) {}
+  }
+
+  // صوت الخطأ الخفيف (Gentle Error Thud)
+  error() {
+    if (!isPracticeActive()) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(320, t);
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, t);
+      osc.frequency.exponentialRampToValueAtTime(75, t + 0.2);
+
+      gain.gain.setValueAtTime(0.22, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.21);
+    } catch(e) {}
+  }
+
+  // الرنين السحري الفخم لفتح النافذة والبطاقات (Magical Fairy Chime)
+  magicChime() {
+    if (!isPracticeActive()) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const freqs = [880, 1174.66, 1318.51, 1760, 2093];
+      freqs.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + idx * 0.045);
+        gain.gain.setValueAtTime(0.12, t + idx * 0.045);
+        gain.gain.exponentialRampToValueAtTime(0.0005, t + idx * 0.045 + 0.42);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t + idx * 0.045);
+        osc.stop(t + idx * 0.045 + 0.45);
+      });
+    } catch(e) {}
+  }
+
+  // صوت اختفاء/إغلاق النافذة (Soft Whoosh Close)
+  popupClose() {
+    if (!isPracticeActive()) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, t);
+      osc.frequency.exponentialRampToValueAtTime(120, t + 0.09);
+
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.1);
+    } catch(e) {}
+  }
+
+  // انتصار وإتمام المستوى (Grand Fanfare Victory)
+  levelWin() {
+    if (!isPracticeActive()) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const chords = [
+        { freqs: [523.25, 659.25], time: 0, dur: 0.16 },
+        { freqs: [659.25, 783.99], time: 0.14, dur: 0.16 },
+        { freqs: [783.99, 1046.5], time: 0.28, dur: 0.2 },
+        { freqs: [1046.5, 1318.5, 1567.98], time: 0.44, dur: 0.55 }
+      ];
+      chords.forEach(c => {
+        c.freqs.forEach(f => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, t + c.time);
+          gain.gain.setValueAtTime(0.18, t + c.time);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + c.time + c.dur);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t + c.time);
+          osc.stop(t + c.time + c.dur + 0.05);
+        });
+      });
+    } catch(e) {}
+  }
+}
+
+const soundFX = new SoundSystem();
+window.soundFX = soundFX;
+
+// تفعيل الصوت عند أول تفاعل من المستخدم
+document.addEventListener('pointerdown', () => {
+  if (soundFX) soundFX.init();
+}, { once: true });
+
+// =============================================
 // ① API — كل الطلبات تمر من هنا
 // =============================================
 let authToken = sessionStorage.getItem('adminToken') || null;
@@ -184,6 +413,13 @@ let currentUnitId = practiceUnits[0].id;
 
 const defaultQuestions = [
   {
+    type: 'image_card',
+    title: 'شجرة علوم البلاغة العربية',
+    imageUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80',
+    audioUrl: '',
+    note: 'تنقسم البلاغة إلى ثلاثة علوم: علم المعاني، وعلم البيان (التشبيه والاستعارة والكناية)، وعلم البديع.'
+  },
+  {
     type: 'info_card',
     title: 'أركان التشبيه الأربعة',
     text: 'يقوم التشبيه في البلاغة العربية على أربعة أركان أساسية:\n١. المشبه: وهو الشيء المراد وصفه.\n٢. المشبه به: الشيء الذي يُشبه به.\n٣. أداة التشبيه: مثل (الكاف، كأن، يشبه).\n٤. وجه الشبه: الصفة المشتركة بينهما.',
@@ -200,6 +436,12 @@ const defaultQuestions = [
     ]
   },
   {
+    type: 'translate',
+    text: 'العلم يرفع بيتاً لا عماد له',
+    words: ['العلم', 'يرفع', 'بيتاً', 'لا', 'عماد', 'له', 'والجهل', 'يهدم'],
+    correct: ['العلم', 'يرفع', 'بيتاً', 'لا', 'عماد', 'له']
+  },
+  {
     type: 'fill_blank_text',
     title: 'أكمل الفراغ بالكلمة المناسبة كتابةً:',
     sentence: 'الخيلُ والليلُ والبيداءُ تعرفُني ... والسيفُ والرمحُ والقرطاسُ و[___]',
@@ -213,31 +455,33 @@ const defaultQuestions = [
     correct: 'وجه الشبه'
   },
   {
+    type: 'keypad',
+    title: 'تقطيع تفعيلة بحر الكامل:',
+    text: 'اكتب التقطيع العروضي لتفعيلة (مُتَفَاعِلُنْ) مستخدمًا الحركات والسكنات:',
+    keys: ['/', '٠', '!', '$', '؟', '،'],
+    correct: ['///٠//٠', '//٠//٠', '///0//0', '///0//0/']
+  },
+  {
     type: 'mcq',
     text: 'ما نوع التشبيه في: "العلم كالنور في الهداية"؟',
     options: ['تشبيه مفصل', 'تشبيه مجمل', 'تشبيه بليغ', 'استعارة تصريحية'],
     correct: 0
-  },
-  {
-    type: 'translate',
-    text: 'العلم يرفع بيتاً لا عماد له',
-    words: ['العلم', 'يرفع', 'بيتاً', 'لا', 'عماد', 'له', 'والجهل', 'يهدم'],
-    correct: ['العلم', 'يرفع', 'بيتاً', 'لا', 'عماد', 'له']
   }
 ];
 
-let practiceNodes = JSON.parse(localStorage.getItem('practiceNodes')) || [
+const initialPracticeNodes = [
   {
     id: 1,
     unitId: 1,
     type: 'lesson',
     status: 'completed',
-    title: 'مقدمة البلاغة',
-    desc: 'أساسيات البلاغة والتذوق',
+    title: 'مقدمة البلاغة والشواهد',
+    desc: 'بطاقة توضيحية وتوصيل وترتيب كلمات',
     actionText: 'ابدأ +15 XP',
+    icon: 'book-open',
     levels: [
-      { id: 1, title: 'المستوى 1', questions: defaultQuestions.slice(0, 3) },
-      { id: 2, title: 'المستوى 2', questions: defaultQuestions.slice(3) }
+      { id: 1, title: 'المستوى 1: التأسيس', questions: [defaultQuestions[0], defaultQuestions[1], defaultQuestions[3]] },
+      { id: 2, title: 'المستوى 2: التثبيت', questions: [defaultQuestions[2], defaultQuestions[7]] }
     ]
   },
   {
@@ -245,24 +489,157 @@ let practiceNodes = JSON.parse(localStorage.getItem('practiceNodes')) || [
     unitId: 1,
     type: 'lesson',
     status: 'current',
-    title: 'أركان التشبيه',
-    desc: 'المشبه والمشبه به وأداة التشبيه',
+    title: 'أركان التشبيه وسلاسة الترتيب',
+    desc: 'اختبارات التوصيل وملء الفراغ وترتيب الكلمات',
     actionText: 'ابدأ التحدي +20 XP',
     currentLevelIndex: 0,
+    icon: 'star',
     levels: [
-      { id: 1, title: 'المستوى 1', questions: [defaultQuestions[0], defaultQuestions[1], defaultQuestions[4]] },
-      { id: 2, title: 'المستوى 2', questions: [defaultQuestions[2], defaultQuestions[3], defaultQuestions[5]] }
+      { id: 1, title: 'المستوى 1: الأركان', questions: [defaultQuestions[1], defaultQuestions[2], defaultQuestions[3]] },
+      { id: 2, title: 'المستوى 2: التطبيق', questions: [defaultQuestions[4], defaultQuestions[5], defaultQuestions[7]] }
     ]
   },
-  { id: 3, unitId: 1, type: 'review', status: 'locked', title: 'مراجعة التشبيه', desc: 'تثبيت المفاهيم السابقة', actionText: 'مراجعة +10 XP', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] },
-  { id: 4, unitId: 1, type: 'challenge', status: 'locked', title: 'تحدي الفرسان', desc: 'اختبار السرعة والدقة', actionText: 'خوض التحدي', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] },
-  { id: 5, unitId: 1, type: 'lesson', status: 'locked', title: 'الاستعارة', desc: 'الاستعارة المكنية والتصريحية', actionText: 'ابدأ +15 XP', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] },
-  { id: 6, unitId: 1, type: 'lesson', status: 'locked', title: 'الكناية', desc: 'أنواع الكناية وأسرارها', actionText: 'ابدأ +15 XP', levels: [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }] }
+  {
+    id: 3,
+    unitId: 1,
+    type: 'lesson',
+    status: 'locked',
+    title: 'اختبار الكيبورد العروضي والرموز',
+    desc: 'تجربة لوحة المفاتيح التفاعلية للتقطيع والرموز',
+    actionText: 'بدء اختبار الكيبورد',
+    icon: 'keyboard',
+    levels: [
+      { 
+        id: 1, 
+        title: 'المستوى 1', 
+        questions: [
+          defaultQuestions[6],
+          {
+            type: 'keypad',
+            title: 'تركيب معادلة التشبيه التام:',
+            text: 'اكتب الرموز بالترتيب: [مشبه] + [أداة] + [مشبه به]',
+            keys: ['[مشبه]', '+', '[أداة]', '[مشبه به]', '[وجه شبه]', '-'],
+            correct: ['[مشبه] + [أداة] + [مشبه به]', '[مشبه]+[أداة]+[مشبه به]']
+          },
+          {
+            type: 'translate',
+            text: 'وإذا المنية أنشبت أظفارها',
+            words: ['وإذا', 'المنية', 'أنشبت', 'أظفارها', 'ألفيت', 'كل', 'تميمة'],
+            correct: ['وإذا', 'المنية', 'أنشبت', 'أظفارها']
+          }
+        ] 
+      }
+    ]
+  },
+  {
+    id: 4,
+    unitId: 1,
+    type: 'countdown',
+    timeLimit: 45,
+    status: 'locked',
+    title: 'تحدي العد التنازلي السريع (45 ثانية)',
+    desc: 'أجب قبل نفاد الوقت مع مؤقت تحذيري نابض!',
+    actionText: 'خوض التحدي السريع',
+    icon: 'timer',
+    levels: [
+      { 
+        id: 1, 
+        title: 'المستوى السريع', 
+        questions: [
+          {
+            type: 'mcq',
+            text: 'ما هو التشبيه الذي حُذفت منه أداة التشبيه ووجه الشبه معاً؟',
+            options: ['التشبيه البليغ', 'التشبيه المؤكد', 'التشبيه التمثيلي', 'الاستعارة'],
+            correct: 0
+          },
+          {
+            type: 'translate',
+            text: 'العلم نور والجهل ظلام',
+            words: ['العلم', 'نور', 'والجهل', 'ظلام', 'والسيف', 'أصدق'],
+            correct: ['العلم', 'نور', 'والجهل', 'ظلام']
+          },
+          {
+            type: 'fill_blank_choice',
+            title: 'اختر الكلمة المناسبة:',
+            sentence: 'إذا حُذف المشبه به ودُلّ عليه بشيء من لوازمه تسمى استعارة [___].',
+            options: ['مكنية', 'تصريحية', 'تمثيلية', 'مرشحة'],
+            correct: 'مكنية'
+          }
+        ] 
+      }
+    ]
+  },
+  {
+    id: 5,
+    unitId: 1,
+    type: 'lesson',
+    status: 'locked',
+    title: 'الاستعارة وبطاقات الصور',
+    desc: 'شواهد بصرية وبلاغية تفاعلية',
+    actionText: 'ابدأ +15 XP',
+    icon: 'image',
+    levels: [
+      {
+        id: 1,
+        title: 'المستوى 1',
+        questions: [
+          {
+            type: 'image_card',
+            title: 'الاستعارة التصريحية والمكنية',
+            imageUrl: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=800&q=80',
+            audioUrl: '',
+            note: 'الاستعارة التصريحية: ما صُرح فيها بلفظ المشبه به. والاستعارة المكنية: ما حُذف منها المشبه به ورُمز له بشيء من لوازمه.'
+          },
+          defaultQuestions[2],
+          defaultQuestions[3]
+        ]
+      }
+    ]
+  },
+  {
+    id: 6,
+    unitId: 1,
+    type: 'review',
+    status: 'locked',
+    title: 'تحدي الفرسان والمراجعة الشاملة',
+    desc: 'تثبيت ومراجعة لجميع الأنماط البلاغية والعروضية',
+    actionText: 'مراجعة +25 XP',
+    icon: 'refresh-cw',
+    levels: [{ id: 1, title: 'المستوى الختامي', questions: defaultQuestions }]
+  }
 ];
+
+const initialPracticeAds = [
+  {
+    id: 1,
+    unitId: 1,
+    afterNodeIndex: 1, // appears near node 1 on the path
+    side: 'right', // 'right' or 'left'
+    badgeText: 'عرض حصري ✨',
+    miniText: 'هل تريد اشتراكاً في "تمرّن" مجاناً؟',
+    bgColor: '#6366f1',
+    bgGradient: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+    modalTitle: 'احصل على اشتراك "تمرّن" المميز مجاناً!',
+    imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+    modalText: 'انضم الآن إلى باقة الفرسان في تطبيق البيان:\n• قلوب وطاقة غير محدودة لمواصلة التعلّم دون توقف.\n• مراجعة ذكية فورية لجميع الأخطاء وتكرارها حتى الإتقان.\n• الوصول المبكر لجميع بحور الشعر والشواهد البلاغية المصورة.\n• وسام الفروسية الذهبي الخاص في لوحة الشرف.',
+    ctaText: 'اشترك الآن مجاناً',
+    ctaUrl: '#'
+  }
+];
+
+let practiceNodes = JSON.parse(localStorage.getItem('practiceNodes_v4'));
+if (!practiceNodes || !practiceNodes.some(n => n.type === 'countdown')) {
+  practiceNodes = initialPracticeNodes;
+  localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
+}
+
+let practiceAds = JSON.parse(localStorage.getItem('practiceAds_v1')) || initialPracticeAds;
+let dismissedPracticeAds = JSON.parse(sessionStorage.getItem('dismissedPracticeAds') || '[]');
 
 function savePracticeData() {
   localStorage.setItem('practiceUnits', JSON.stringify(practiceUnits));
-  localStorage.setItem('practiceNodes', JSON.stringify(practiceNodes));
+  localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
+  localStorage.setItem('practiceAds_v1', JSON.stringify(practiceAds));
   localStorage.setItem('streakData', JSON.stringify(streakData));
 }
 
@@ -386,7 +763,16 @@ function renderPracticePath() {
   container.innerHTML = '';
   
   const adminBtn = document.getElementById('admin-add-practice-btn');
-  if (adminBtn) adminBtn.style.display = isAdmin ? 'block' : 'none';
+  if (adminBtn) adminBtn.style.display = isAdmin ? 'flex' : 'none';
+
+  // Update current unit badge in top bar
+  const unitBadge = document.getElementById('practice-current-unit-badge');
+  if (unitBadge) {
+    const curUnit = practiceUnits.find(u => u.id === currentUnitId) || practiceUnits[0];
+    if (curUnit) {
+      unitBadge.textContent = curUnit.title.length > 18 ? curUnit.title.substring(0, 18) + '...' : curUnit.title;
+    }
+  }
   
   practiceUnits.forEach((unit, unitIdx) => {
     // Render Unit Banner
@@ -477,6 +863,7 @@ function renderPracticePath() {
           if (node.type === 'lesson') icon = 'book-open';
           if (node.type === 'review') icon = 'refresh-cw';
           if (node.type === 'challenge') icon = 'zap';
+          if (node.type === 'countdown') icon = 'timer';
           if (node.status === 'completed') icon = 'check';
       }
 
@@ -542,6 +929,44 @@ function renderPracticePath() {
       `;
 
       nodesWrapper.appendChild(el);
+    });
+    
+    // Render Floating Mini Ad Screens on Path (with Smart Collision-Avoidance Algorithm)
+    const unitAds = practiceAds.filter(ad => (ad.unitId || 1) === unit.id);
+    unitAds.forEach(ad => {
+      const isDismissed = dismissedPracticeAds.includes(ad.id);
+      if (isDismissed && !isAdmin) return;
+      
+      const safePos = calculateSafeAdPosition(ad, unitNodes);
+      
+      const adWrapper = document.createElement('div');
+      adWrapper.className = `practice-ad-tile-wrapper side-${safePos.side}`;
+      adWrapper.id = `practice-ad-tile-${ad.id}`;
+      adWrapper.style.top = `${safePos.top}px`;
+      adWrapper.style.left = `calc(50% + ${safePos.offsetX}px)`;
+      
+      let adminToolsHtml = '';
+      if (isAdmin) {
+        adminToolsHtml = `
+          <div class="practice-ad-admin-bar">
+            <button type="button" class="practice-ad-admin-btn" title="تعديل الإعلان" onclick="editPracticeAd(${ad.id}, event)"><i data-lucide="pencil" style="width:11px;height:11px;"></i></button>
+            <button type="button" class="practice-ad-admin-btn" title="حذف الإعلان" style="color:#f87171;" onclick="deletePracticeAd(${ad.id}, event)"><i data-lucide="trash-2" style="width:11px;height:11px;"></i></button>
+          </div>
+        `;
+      }
+      
+      adWrapper.innerHTML = `
+        <div class="practice-ad-tile" style="background: ${ad.bgGradient || ad.bgColor || '#6366f1'};" onclick="openPracticeAdModal(${ad.id})">
+          <button type="button" class="practice-ad-close-btn" title="إخفاء الإعلان" onclick="dismissPracticeAd(${ad.id}, event)">
+            <i data-lucide="x" style="width:12px;height:12px;"></i>
+          </button>
+          ${(ad.badgeText && ad.badgeText.trim()) ? `<div class="practice-ad-badge">${ad.badgeText.trim()}</div>` : ''}
+          <div class="practice-ad-text">${ad.miniText || 'إعلان'}</div>
+          ${adminToolsHtml}
+        </div>
+      `;
+      
+      nodesWrapper.appendChild(adWrapper);
     });
     
     const svgWrapper = document.createElement('div');
@@ -622,23 +1047,549 @@ function addNewUnit() {
   selectUnit(newId);
 }
 
+// === Practice Ad Banners (خوارزمية الأمان المانعة للتداخل وإدارة الإعلانات) ===
+
+// خوارزمية ذكية تضمن منع ظهور الإعلان فوق أي عقدة مع مسافة أمان مؤكدة
+function calculateSafeAdPosition(ad, unitNodes) {
+  const adHalfWidth = 57;
+  const adHalfHeight = 47;
+  const nodeRadius = 46; // نصف قطر العقدة مع حلقة التقدم والشارات
+  const SAFE_CLEARANCE_X = 40; // أدنى مسافة أمان أفقية تفصل بين حافة العقدة وحافة الإعلان
+  const SAFE_CLEARANCE_Y = 20; // مسافة أمان رأسية
+
+  const totalNodes = unitNodes.length;
+  if (totalNodes === 0) {
+    return { top: 60, offsetX: 155, side: 'right' };
+  }
+
+  const targetIndex = Math.min(Math.max(0, ad.afterNodeIndex || 0), totalNodes - 1);
+  
+  // نحدد الموضع الرأسي المثالي في الوادي بين العقدتين لتعظيم مسافة الخلوص
+  let candidateCenterY = 80 + targetIndex * 120 + 60;
+  if (targetIndex >= totalNodes - 1) {
+    candidateCenterY = 80 + targetIndex * 120 + 65;
+  }
+
+  // حساب الإحداثيات الهندسية لجميع عقد الوحدة
+  const nodeGeometries = unitNodes.map((n, idx) => {
+    const cX = Math.sin(idx * 1.5) * 60;
+    const cY = 80 + idx * 120;
+    return {
+      index: idx,
+      centerX: cX,
+      centerY: cY,
+      left: cX - nodeRadius,
+      right: cX + nodeRadius,
+      top: cY - nodeRadius,
+      bottom: cY + nodeRadius
+    };
+  });
+
+  // تحديد العقد القريبة رأسياً في منطقة تأثير الإعلان
+  const verticallyCloseNodes = nodeGeometries.filter(ng => {
+    const distY = Math.abs(ng.centerY - candidateCenterY);
+    return distY < (nodeRadius + adHalfHeight + SAFE_CLEARANCE_Y);
+  });
+
+  // حساب أقصى امتداد للعقد القريبة يميناً ويساراً
+  let maxRightEdge = 0;
+  let minLeftEdge = 0;
+  verticallyCloseNodes.forEach(ng => {
+    if (ng.right > maxRightEdge) maxRightEdge = ng.right;
+    if (ng.left < minLeftEdge) minLeftEdge = ng.left;
+  });
+
+  // مسافة أساسية أدنى عن خط منتصف المسار
+  const minCenterDistance = 145;
+
+  const safeRightX = Math.max(minCenterDistance, maxRightEdge + SAFE_CLEARANCE_X + adHalfWidth);
+  const safeLeftX = Math.min(-minCenterDistance, minLeftEdge - SAFE_CLEARANCE_X - adHalfWidth);
+
+  let chosenSide = ad.side || 'auto';
+  if (chosenSide === 'auto') {
+    const targetNodeX = Math.sin(targetIndex * 1.5) * 60;
+    // إذا كانت العقدة مائلة لليمين، يكون اليسار متسعاً جداً والعكس
+    if (targetNodeX > 15) {
+      chosenSide = 'left';
+    } else if (targetNodeX < -15) {
+      chosenSide = 'right';
+    } else {
+      chosenSide = (Math.abs(safeLeftX) <= Math.abs(safeRightX)) ? 'left' : 'right';
+    }
+  }
+
+  const finalOffsetX = chosenSide === 'left' ? safeLeftX : safeRightX;
+  const finalTop = candidateCenterY - adHalfHeight;
+
+  return {
+    top: Math.round(finalTop),
+    offsetX: Math.round(finalOffsetX),
+    side: chosenSide
+  };
+}
+
+let currentOpenAdId = null;
+let editingAdId = null;
+let currentAdminAdImage = '';
+
+function openPracticeAdModal(adId) {
+  const ad = practiceAds.find(a => a.id === adId);
+  if (!ad) return;
+  
+  currentOpenAdId = adId;
+  
+  const modal = document.getElementById('practice-ad-modal');
+  const imgContainer = document.getElementById('ad-modal-image-container');
+  const imgEl = document.getElementById('ad-modal-img');
+  const badgeTag = document.getElementById('ad-modal-badge-tag');
+  const badgeText = document.getElementById('ad-modal-badge-text');
+  const titleEl = document.getElementById('ad-modal-title');
+  const textEl = document.getElementById('ad-modal-text');
+  const ctaBtn = document.getElementById('ad-modal-cta-btn');
+  const ctaText = document.getElementById('ad-modal-cta-text');
+  const adminActions = document.getElementById('ad-modal-admin-actions');
+  
+  if (ad.imageUrl) {
+    imgContainer.style.display = 'block';
+    imgEl.src = ad.imageUrl;
+  } else {
+    imgContainer.style.display = 'none';
+    imgEl.src = '';
+  }
+  
+  // شارة أعلى النافذة المنبثقة (يمكن تعديلها أو إخفاؤها)
+  const displayModalBadge = (ad.modalBadgeText !== undefined) ? ad.modalBadgeText : (ad.badgeText || 'عرض حصري ✨');
+  if (displayModalBadge && displayModalBadge.trim()) {
+    badgeTag.style.display = 'inline-flex';
+    badgeText.textContent = displayModalBadge.trim();
+  } else {
+    badgeTag.style.display = 'none';
+  }
+  
+  titleEl.textContent = ad.modalTitle || ad.miniText || 'عرض خاص';
+  textEl.textContent = ad.modalText || 'لا يوجد شرح تفصيلي متاح حالياً.';
+  
+  // زر الإجراء CTA: إمكانية إزالته بالكامل أو تخصيصه
+  const shouldShowCta = (ad.showCta !== false) && ad.ctaText && ad.ctaText.trim().length > 0;
+  if (shouldShowCta) {
+    ctaBtn.style.display = 'flex';
+    ctaText.textContent = ad.ctaText.trim();
+    if (ad.bgGradient) {
+      ctaBtn.style.background = ad.bgGradient;
+    } else if (ad.bgColor) {
+      ctaBtn.style.background = ad.bgColor;
+    } else {
+      ctaBtn.style.background = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+    }
+  } else {
+    ctaBtn.style.display = 'none';
+  }
+  
+  if (adminActions) {
+    adminActions.style.display = isAdmin ? 'flex' : 'none';
+  }
+  
+  if (soundFX) soundFX.tap();
+  openModal('practice-ad-modal');
+  if (window.lucide) lucide.createIcons();
+}
+
+function handleAdCtaClick() {
+  const ad = practiceAds.find(a => a.id === currentOpenAdId);
+  if (!ad) return;
+  
+  if (ad.ctaUrl && ad.ctaUrl !== '#' && ad.ctaUrl.trim().startsWith('http')) {
+    window.open(ad.ctaUrl.trim(), '_blank');
+  } else {
+    if (soundFX) soundFX.success();
+    alert('🎉 مبارك! تم تسجيل اهتمامك بهذا العرض بنجاح.');
+    closeModal('practice-ad-modal');
+  }
+}
+
+function dismissPracticeAd(adId, event) {
+  if (event) event.stopPropagation();
+  if (soundFX) soundFX.tap();
+  
+  if (!dismissedPracticeAds.includes(adId)) {
+    dismissedPracticeAds.push(adId);
+    sessionStorage.setItem('dismissedPracticeAds', JSON.stringify(dismissedPracticeAds));
+  }
+  
+  const el = document.getElementById(`practice-ad-tile-${adId}`);
+  if (el) {
+    el.style.transform = 'scale(0.3) rotate(-10deg)';
+    el.style.opacity = '0';
+    setTimeout(() => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 250);
+  }
+}
+
+function toggleAdminCtaFields(show) {
+  const fields = document.getElementById('admin-cta-fields');
+  if (fields) {
+    fields.style.display = show ? 'grid' : 'none';
+  }
+}
+
+function openAdminAddPracticeAd() {
+  editingAdId = null;
+  currentAdminAdImage = '';
+  
+  document.getElementById('ad-admin-modal-title').textContent = 'إضافة شاشة إعلانية جديدة في المسار';
+  
+  // Populate units dropdown
+  const unitSelect = document.getElementById('new-ad-unit');
+  unitSelect.innerHTML = practiceUnits.map(u => `<option value="${u.id}" ${u.id === currentUnitId ? 'selected' : ''}>${u.title}</option>`).join('');
+  
+  document.getElementById('new-ad-side').value = 'auto';
+  document.getElementById('new-ad-pos').value = '1';
+  document.getElementById('new-ad-badge').value = 'عرض خاص ✨';
+  document.getElementById('new-ad-mini-text').value = 'هل تريد اشتراكاً في "تمرّن" مجاناً؟';
+  document.getElementById('new-ad-color').value = '#6366f1';
+  document.getElementById('new-ad-modal-badge').value = 'عرض حصري ✨';
+  document.getElementById('new-ad-modal-title').value = 'احصل على اشتراك "تمرّن" المميز مجاناً!';
+  document.getElementById('new-ad-image-url').value = '';
+  document.getElementById('new-ad-modal-text').value = 'استمتع بمميزات حصرية، طاقة غير محدودة، ومراجعة فورية لجميع بحور الشعر والشواهد البلاغية!';
+  
+  document.getElementById('new-ad-show-cta').checked = true;
+  toggleAdminCtaFields(true);
+  document.getElementById('new-ad-cta-text').value = 'اشترك الآن مجاناً';
+  document.getElementById('new-ad-cta-url').value = '#';
+  
+  const deleteBtn = document.getElementById('admin-delete-ad-btn');
+  if (deleteBtn) deleteBtn.style.display = 'none';
+  
+  clearAdminAdImage();
+  openModal('add-practice-ad-modal');
+  if (window.lucide) lucide.createIcons();
+}
+
+function editPracticeAd(adId, event) {
+  if (event) event.stopPropagation();
+  const ad = practiceAds.find(a => a.id === adId);
+  if (!ad) return;
+  
+  editingAdId = adId;
+  currentAdminAdImage = ad.imageUrl || '';
+  
+  document.getElementById('ad-admin-modal-title').textContent = 'تعديل الشاشة الإعلانية';
+  
+  const unitSelect = document.getElementById('new-ad-unit');
+  unitSelect.innerHTML = practiceUnits.map(u => `<option value="${u.id}" ${u.id === (ad.unitId || currentUnitId) ? 'selected' : ''}>${u.title}</option>`).join('');
+  
+  document.getElementById('new-ad-side').value = ad.side || 'auto';
+  document.getElementById('new-ad-pos').value = ad.afterNodeIndex || 0;
+  document.getElementById('new-ad-badge').value = ad.badgeText || '';
+  document.getElementById('new-ad-mini-text').value = ad.miniText || '';
+  document.getElementById('new-ad-color').value = ad.bgColor || '#6366f1';
+  document.getElementById('new-ad-modal-badge').value = (ad.modalBadgeText !== undefined) ? ad.modalBadgeText : (ad.badgeText || '');
+  document.getElementById('new-ad-modal-title').value = ad.modalTitle || '';
+  document.getElementById('new-ad-image-url').value = ad.imageUrl || '';
+  document.getElementById('new-ad-modal-text').value = ad.modalText || '';
+  
+  const hasCta = ad.showCta !== false && (ad.ctaText !== undefined ? ad.ctaText.length > 0 : true);
+  document.getElementById('new-ad-show-cta').checked = hasCta;
+  toggleAdminCtaFields(hasCta);
+  document.getElementById('new-ad-cta-text').value = ad.ctaText || 'اشترك الآن مجاناً';
+  document.getElementById('new-ad-cta-url').value = ad.ctaUrl || '#';
+  
+  const deleteBtn = document.getElementById('admin-delete-ad-btn');
+  if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+  
+  if (ad.imageUrl) {
+    previewAdminAdImage(ad.imageUrl);
+  } else {
+    clearAdminAdImage();
+  }
+  
+  openModal('add-practice-ad-modal');
+  if (window.lucide) lucide.createIcons();
+}
+
+function editAdFromModal() {
+  if (!currentOpenAdId) return;
+  closeModal('practice-ad-modal');
+  editPracticeAd(currentOpenAdId);
+}
+
+function deleteAdFromModal() {
+  if (!currentOpenAdId) return;
+  if (!confirm('هل أنت متأكد من رغبتك في إزالة هذا الإعلان نهائياً من المسار؟')) return;
+  
+  practiceAds = practiceAds.filter(a => a.id !== currentOpenAdId);
+  savePracticeData();
+  closeModal('practice-ad-modal');
+  renderPracticePath();
+}
+
+function deleteEditingPracticeAd() {
+  if (!editingAdId) return;
+  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً من المسار؟')) return;
+  
+  practiceAds = practiceAds.filter(a => a.id !== editingAdId);
+  savePracticeData();
+  closeModal('add-practice-ad-modal');
+  renderPracticePath();
+}
+
+function deletePracticeAd(adId, event) {
+  if (event) event.stopPropagation();
+  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً من المسار؟')) return;
+  
+  practiceAds = practiceAds.filter(a => a.id !== adId);
+  savePracticeData();
+  renderPracticePath();
+}
+
+function savePracticeAd() {
+  const unitId = parseInt(document.getElementById('new-ad-unit').value) || currentUnitId;
+  const side = document.getElementById('new-ad-side').value || 'auto';
+  const afterNodeIndex = parseInt(document.getElementById('new-ad-pos').value) || 0;
+  const badgeText = document.getElementById('new-ad-badge').value.trim();
+  const miniText = document.getElementById('new-ad-mini-text').value.trim();
+  const bgColor = document.getElementById('new-ad-color').value;
+  const modalBadgeText = document.getElementById('new-ad-modal-badge').value.trim();
+  const modalTitle = document.getElementById('new-ad-modal-title').value.trim();
+  const imageUrl = currentAdminAdImage || document.getElementById('new-ad-image-url').value.trim();
+  const modalText = document.getElementById('new-ad-modal-text').value.trim();
+  const showCta = document.getElementById('new-ad-show-cta').checked;
+  const ctaText = document.getElementById('new-ad-cta-text').value.trim();
+  const ctaUrl = document.getElementById('new-ad-cta-url').value.trim() || '#';
+  
+  if (!miniText) return alert('يرجى كتابة نص الشاشة الإعلانية المصغرة');
+  
+  const bgGradient = `linear-gradient(135deg, ${bgColor} 0%, ${adjustColorBrightness(bgColor, -25)} 100%)`;
+  
+  if (editingAdId) {
+    const ad = practiceAds.find(a => a.id === editingAdId);
+    if (ad) {
+      ad.unitId = unitId;
+      ad.side = side;
+      ad.afterNodeIndex = afterNodeIndex;
+      ad.badgeText = badgeText;
+      ad.miniText = miniText;
+      ad.bgColor = bgColor;
+      ad.bgGradient = bgGradient;
+      ad.modalBadgeText = modalBadgeText;
+      ad.modalTitle = modalTitle;
+      ad.imageUrl = imageUrl;
+      ad.modalText = modalText;
+      ad.showCta = showCta;
+      ad.ctaText = ctaText;
+      ad.ctaUrl = ctaUrl;
+    }
+  } else {
+    const newId = practiceAds.length > 0 ? Math.max(...practiceAds.map(a => a.id)) + 1 : 1;
+    practiceAds.push({
+      id: newId,
+      unitId,
+      side,
+      afterNodeIndex,
+      badgeText,
+      miniText,
+      bgColor,
+      bgGradient,
+      modalBadgeText,
+      modalTitle,
+      imageUrl,
+      modalText,
+      showCta,
+      ctaText,
+      ctaUrl
+    });
+  }
+  
+  savePracticeData();
+  closeModal('add-practice-ad-modal');
+  renderPracticePath();
+}
+
+function adjustColorBrightness(hex, percent) {
+  let num = parseInt(hex.replace('#', ''), 16);
+  let r = (num >> 16) + Math.round(255 * (percent / 100));
+  let g = ((num >> 8) & 0x00FF) + Math.round(255 * (percent / 100));
+  let b = (num & 0x0000FF) + Math.round(255 * (percent / 100));
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+function setAdColorPreset(color, gradient) {
+  document.getElementById('new-ad-color').value = color;
+}
+
+function previewAdminAdImage(url) {
+  const box = document.getElementById('admin-ad-img-preview-box');
+  const img = document.getElementById('admin-ad-img-preview');
+  if (url && url.trim()) {
+    img.src = url;
+    box.style.display = 'block';
+    currentAdminAdImage = url;
+  } else {
+    box.style.display = 'none';
+    img.src = '';
+    currentAdminAdImage = '';
+  }
+}
+
+function handleAdminAdImageUpload(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      currentAdminAdImage = e.target.result;
+      document.getElementById('new-ad-image-url').value = '';
+      previewAdminAdImage(currentAdminAdImage);
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function clearAdminAdImage() {
+  document.getElementById('new-ad-image-url').value = '';
+  currentAdminAdImage = '';
+  const box = document.getElementById('admin-ad-img-preview-box');
+  if (box) box.style.display = 'none';
+}
+
+// دالة مساعدة لإدراج رموز الكيبورد السريعة في نافذة الأدمن
+window.appendKeypadSymbol = function(btnEl, symbolStr) {
+  const wrapper = btnEl.closest('.admin-question-wrapper') || btnEl.closest('div');
+  const input = wrapper.querySelector('.q-keys');
+  if (!input) return;
+  
+  let val = input.value.trim();
+  if (!val) {
+    input.value = symbolStr;
+  } else {
+    // Avoid double +
+    if (val.endsWith('+')) {
+      input.value = val + symbolStr;
+    } else {
+      input.value = val + '+' + symbolStr;
+    }
+  }
+  input.focus();
+};
+
 // === Admin Practice Node Management ===
+
+const AVAILABLE_ICONS = [
+  'star', 'book-open', 'book', 'zap', 'feather', 'award', 'trophy', 'crown', 'scroll', 'bookmark',
+  'flame', 'target', 'shield', 'compass', 'heart', 'sparkles', 'help-circle', 'check-circle-2', 'pen-tool', 'music',
+  'lightbulb', 'gem', 'sword', 'flag', 'sun', 'moon', 'eye', 'clock', 'key', 'map-pin',
+  'layers', 'activity', 'smile', 'globe', 'hash', 'volume-2', 'mic', 'play', 'coffee', 'bell',
+  'gift', 'glasses', 'sparkle', 'medal', 'cpu', 'terminal', 'search', 'folder', 'code', 'file-text',
+  'anchor', 'scissors', 'timer', 'send', 'check'
+];
 
 let editingNodeId = null;
 
+function populateIconPicker(selected = 'star') {
+  const grid = document.getElementById('icon-picker-grid');
+  if (!grid) return;
+  grid.innerHTML = AVAILABLE_ICONS.map(icon => `
+    <div class="icon-picker-item ${icon === selected ? 'selected' : ''}" data-icon="${icon}" onclick="selectIcon('${icon}')" title="${icon}">
+      <i data-lucide="${icon}"></i>
+    </div>
+  `).join('');
+  updateSelectedIconDisplay(selected);
+  if (window.lucide) lucide.createIcons();
+}
+
+window.filterIconPicker = function(query) {
+  const q = (query || '').toLowerCase().trim();
+  const items = document.querySelectorAll('.icon-picker-item');
+  items.forEach(item => {
+    const iconName = item.dataset.icon || '';
+    if (!q || iconName.toLowerCase().includes(q)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+};
+
+window.selectIcon = function(iconName) {
+  if (soundFX) soundFX.tap();
+  document.getElementById('new-node-icon').value = iconName;
+  document.querySelectorAll('.icon-picker-item').forEach(item => {
+    item.classList.toggle('selected', item.dataset.icon === iconName);
+  });
+  updateSelectedIconDisplay(iconName);
+};
+
+function updateSelectedIconDisplay(iconName) {
+  const nameEl = document.getElementById('selected-icon-name');
+  const boxEl = document.getElementById('selected-icon-box');
+  if (nameEl) nameEl.textContent = iconName;
+  if (boxEl) {
+    boxEl.innerHTML = `<i data-lucide="${iconName}" style="width:16px;height:16px;"></i>`;
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+window.onNodeTypeChange = function() {
+  const type = document.getElementById('new-node-type').value;
+  const timerBox = document.getElementById('countdown-settings-box');
+  if (timerBox) {
+    timerBox.style.display = type === 'countdown' ? 'block' : 'none';
+  }
+};
+
+function populateNodeUnitDropdown(selectedUnitId) {
+  const unitSelect = document.getElementById('new-node-unit');
+  if (!unitSelect) return;
+  unitSelect.innerHTML = practiceUnits.map(u => `
+    <option value="${u.id}" ${u.id === selectedUnitId ? 'selected' : ''}>الوحدة ${u.id}: ${u.title}</option>
+  `).join('');
+}
+
+window.moveCurrentNodeOrder = function(direction) {
+  if (!editingNodeId) return;
+  const idx = practiceNodes.findIndex(n => n.id === editingNodeId);
+  if (idx === -1) return;
+  
+  const targetIdx = idx + direction;
+  if (targetIdx < 0 || targetIdx >= practiceNodes.length) {
+    alert(direction < 0 ? 'العقدة في بداية المسار بالفعل!' : 'العقدة في نهاية المسار بالفعل!');
+    return;
+  }
+  
+  const temp = practiceNodes[idx];
+  practiceNodes[idx] = practiceNodes[targetIdx];
+  practiceNodes[targetIdx] = temp;
+  
+  if (soundFX) soundFX.tap();
+  savePracticeData();
+  renderPracticePath();
+  alert('تم نقل العقدة وتغيير ترتيبها بنجاح!');
+};
+
 function openAdminAddPracticeNode() {
   try {
-
-  editingNodeId = null;
-  document.getElementById('node-modal-title').textContent = 'إضافة عقدة جديدة';
-  document.getElementById('new-node-title').value = '';
-  document.getElementById('new-node-desc').value = '';
-  document.getElementById('new-node-icon').value = '';
-  document.getElementById('new-node-action-text').value = '';
-  document.getElementById('new-node-type').value = 'lesson';
-  document.getElementById('node-levels-container').innerHTML = '';
-  addNodeLevel(); // Add default level
-      openModal('add-practice-node-modal');
+    editingNodeId = null;
+    document.getElementById('node-modal-title').textContent = 'إضافة عقدة جديدة';
+    document.getElementById('new-node-title').value = '';
+    document.getElementById('new-node-desc').value = '';
+    document.getElementById('new-node-icon').value = 'star';
+    document.getElementById('new-node-action-text').value = '';
+    document.getElementById('new-node-type').value = 'lesson';
+    document.getElementById('new-node-timer-sec').value = '90';
+    document.getElementById('icon-search-input').value = '';
+    
+    const orderBox = document.getElementById('node-order-controls');
+    if (orderBox) orderBox.style.display = 'none';
+    
+    populateNodeUnitDropdown(currentUnitId);
+    populateIconPicker('star');
+    onNodeTypeChange();
+    
+    document.getElementById('node-levels-container').innerHTML = '';
+    addNodeLevel(); // Add default level
+    openModal('add-practice-node-modal');
   } catch (err) {
     alert('Error opening modal: ' + err.message);
     console.error(err);
@@ -654,9 +1605,18 @@ function editCurrentNode() {
   document.getElementById('node-modal-title').textContent = 'تعديل العقدة';
   document.getElementById('new-node-title').value = node.title || '';
   document.getElementById('new-node-desc').value = node.desc || '';
-  document.getElementById('new-node-icon').value = node.icon || '';
+  document.getElementById('new-node-icon').value = node.icon || 'star';
   document.getElementById('new-node-action-text').value = node.actionText || '';
   document.getElementById('new-node-type').value = node.type || 'lesson';
+  document.getElementById('new-node-timer-sec').value = node.timerSeconds || 90;
+  document.getElementById('icon-search-input').value = '';
+  
+  const orderBox = document.getElementById('node-order-controls');
+  if (orderBox) orderBox.style.display = 'block';
+  
+  populateNodeUnitDropdown(node.unitId || currentUnitId);
+  populateIconPicker(node.icon || 'star');
+  onNodeTypeChange();
   
   const levelsContainer = document.getElementById('node-levels-container');
   levelsContainer.innerHTML = '';
@@ -709,8 +1669,10 @@ function createLevelElement(index) {
         <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'mcq')">+ خيارات</button>
         <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'match')">+ توصيل</button>
         <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'info_card')">+ بطاقة معلومات</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'image_card')">+ بطاقة صورة</button>
         <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'fill_blank_text')">+ فراغ (كتابة)</button>
         <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'fill_blank_choice')">+ فراغ (اختيارات)</button>
+        <button class="btn-secondary btn-sm" onclick="addQuestionToLevel(this, 'keypad')">+ اختبار كيبورد</button>
     </div>
   `;
   return wrapper;
@@ -726,6 +1688,42 @@ function addQuestionToLevel(btn, type) {
   const container = btn.closest('.admin-level-wrapper').querySelector('.level-questions-container');
   container.appendChild(createQuestionElement({ type }));
 }
+
+window.previewAdminCardImage = function(inputEl) {
+  const previewBox = inputEl.closest('.admin-question-wrapper').querySelector('.admin-img-preview-box');
+  const imgEl = previewBox?.querySelector('img');
+  if (inputEl.value.trim().length > 5) {
+    if (imgEl) imgEl.src = inputEl.value.trim();
+    if (previewBox) previewBox.style.display = 'block';
+  } else {
+    if (previewBox) previewBox.style.display = 'none';
+  }
+};
+
+window.handleAdminImageUpload = function(fileInput) {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const qWrapper = fileInput.closest('.admin-question-wrapper');
+    const inputUrl = qWrapper.querySelector('.q-image');
+    const previewBox = qWrapper.querySelector('.admin-img-preview-box');
+    const imgEl = previewBox?.querySelector('img');
+    if (inputUrl) inputUrl.value = dataUrl;
+    if (imgEl) imgEl.src = dataUrl;
+    if (previewBox) previewBox.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.clearAdminCardImage = function(btnEl) {
+  const qWrapper = btnEl.closest('.admin-question-wrapper');
+  const inputUrl = qWrapper.querySelector('.q-image');
+  const previewBox = qWrapper.querySelector('.admin-img-preview-box');
+  if (inputUrl) inputUrl.value = '';
+  if (previewBox) previewBox.style.display = 'none';
+};
 
 function createQuestionElement(qData) {
   const wrapper = document.createElement('div');
@@ -784,10 +1782,28 @@ function createQuestionElement(qData) {
       <textarea class="modal-textarea q-text" rows="3" placeholder="اكتب الشرح والمعلومات هنا..." style="margin-bottom:10px;">${qData.text || ''}</textarea>
       
       <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">إعدادات الصوت (اختياري):</label>
-      <div style="font-size: 0.75rem; color: var(--color-muted); margin-bottom: 8px;">
-        * يمكنك لصق رابط مباشر لملف MP3. <br>
-        * لحذف الصوت أو عدم استخدامه، اترك هذا الحقل فارغاً (سيتم الاعتماد على النطق الآلي إذا لزم الأمر).
+      <input type="text" class="modal-input q-audio" placeholder="https://example.com/audio.mp3" value="${qData.audioUrl || ''}">
+    `;
+  } else if (qData.type === 'image_card') {
+    html += `
+      <div style="font-weight:800; margin-bottom:10px; color:#a855f7; font-size: 1.1rem;"><i data-lucide="image" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>بطاقة صورة توضيحية</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">عنوان البطاقة:</label>
+      <input type="text" class="modal-input q-title" placeholder="مثال: بحور الشعر العربي الستة عشر" value="${qData.title || ''}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">رابط الصورة (URL) أو رفع صورة:</label>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="text" class="modal-input q-image" placeholder="https://example.com/diagram.png" value="${qData.imageUrl || ''}" oninput="previewAdminCardImage(this)" style="margin-bottom:0; flex:1;">
+        <label class="btn-secondary btn-sm" style="display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; padding: 0 12px;">
+          <i data-lucide="upload" style="width:14px;height:14px;"></i> رفع صورة
+          <input type="file" accept="image/*" style="display:none;" onchange="handleAdminImageUpload(this)">
+        </label>
       </div>
+      <div class="admin-img-preview-box" style="margin-bottom:10px; text-align:center; display:${qData.imageUrl ? 'block' : 'none'}; background:var(--color-bg); padding:8px; border-radius:10px; border:1px dashed var(--color-border);">
+        <img src="${qData.imageUrl || ''}" style="max-height:120px; border-radius:8px; max-width:100%;">
+        <button type="button" class="btn-secondary danger btn-sm" style="margin-top:6px; font-size:0.75rem;" onclick="clearAdminCardImage(this)">إزالة الصورة</button>
+      </div>
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">إعدادات الصوت (اختياري):</label>
       <input type="text" class="modal-input q-audio" placeholder="https://example.com/audio.mp3" value="${qData.audioUrl || ''}">
     `;
   } else if (qData.type === 'fill_blank_text') {
@@ -818,11 +1834,47 @@ function createQuestionElement(qData) {
       <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الخيار الصحيح (يجب أن يطابق أحد الخيارات):</label>
       <input type="text" class="modal-input q-correct" placeholder="وجه الشبه" value="${qData.correct || ''}">
     `;
+  } else if (qData.type === 'keypad') {
+    let keysStr = Array.isArray(qData.keys) ? qData.keys.join('+') : (qData.keys || '٠+/+$+!');
+    html += `
+      <div style="font-weight:800; margin-bottom:10px; color:#0d9488; font-size: 1.1rem;"><i data-lucide="keyboard" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>اختبار الكيبورد الافتراضي المخصص</div>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">عنوان السؤال / التعليمات:</label>
+      <input type="text" class="modal-input q-title" placeholder="اكتب التقطيع العروضي للبيت:" value="${qData.title || 'اكتب التقطيع العروضي للبيت:'}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">النص المساعد أو البيت الشعري (اختياري):</label>
+      <input type="text" class="modal-input q-text" placeholder="مثال: إذا الشّعْبُ يَوْمَاً أرَادَ الحَيَاةْ" value="${qData.text || ''}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">أزرار الكيبورد المتاحة (يمكنك كتابة أي رمز أو كلمة والفصل بـ +):</label>
+      <div class="keypad-presets-bar">
+        <span style="font-size:0.75rem; color:var(--color-muted); width:100%; margin-bottom:2px; font-weight:700;">إدراج سريع بنقرة واحدة:</span>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '٠')">٠ (ساكن)</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '/')">/ (متحرك)</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '//٠')">//٠</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '///٠')">///٠</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '!')">!</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '؟')">؟</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '$')">$</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '#')">#</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '@')">@</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '[مشبه]')">[مشبه]</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '[أداة]')">[أداة]</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, '[مشبه به]')">[مشبه به]</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, 'َ')">َ</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, 'ُ')">ُ</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, 'ِ')">ِ</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, 'ْ')">ْ</button>
+        <button type="button" class="keypad-preset-tag" onclick="appendKeypadSymbol(this, 'ّ')">ّ</button>
+      </div>
+      <input type="text" class="modal-input q-keys" placeholder="مثال: ٠+/+$+!+؟+@+[مشبه]" value="${keysStr}" style="margin-bottom:10px;">
+      
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">النمط / الصيغة الصحيحة المطلوبة بدقة (يمكن وضع أكثر من إجابة بفصلها بـ +):</label>
+      <input type="text" class="modal-input q-correct" placeholder="مثال: //٠//٠//٠ أو //0//0//0" value="${qData.correct || ''}">
+    `;
   }
   
   wrapper.innerHTML = html;
   setTimeout(() => {
-    if (window.lucide) if(window.lucide)lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
   }, 10);
   return wrapper;
 }
@@ -831,8 +1883,10 @@ function savePracticeNode() {
   const title = document.getElementById('new-node-title').value.trim();
   const desc = document.getElementById('new-node-desc').value.trim();
   const type = document.getElementById('new-node-type').value;
-  const icon = document.getElementById('new-node-icon').value.trim();
+  const icon = document.getElementById('new-node-icon').value.trim() || 'star';
   const actionText = document.getElementById('new-node-action-text').value.trim();
+  const unitId = parseInt(document.getElementById('new-node-unit').value) || currentUnitId;
+  const timerSeconds = parseInt(document.getElementById('new-node-timer-sec').value) || 90;
   
   if (!title) return alert('يرجى إدخال عنوان العقدة');
   
@@ -869,6 +1923,11 @@ function savePracticeNode() {
         const text = (w.querySelector('.q-text')?.value || '').trim();
         const audioUrl = (w.querySelector('.q-audio')?.value || '').trim();
         if (text || titleQ) questions.push({ type: 'info_card', title: titleQ || 'معلومة', text, audioUrl, note: 'اقرأ البطاقة أو استمع للشرح ثم اضغط مفهوم' });
+      } else if (qType === 'image_card') {
+        const titleQ = (w.querySelector('.q-title')?.value || '').trim();
+        const imageUrl = (w.querySelector('.q-image')?.value || '').trim();
+        const audioUrl = (w.querySelector('.q-audio')?.value || '').trim();
+        if (titleQ || imageUrl) questions.push({ type: 'image_card', title: titleQ || 'صورة توضيحية', imageUrl, audioUrl, note: 'تأمل الصورة ثم اضغط مفهوم' });
       } else if (qType === 'fill_blank_text') {
         const titleQ = (w.querySelector('.q-title')?.value || '').trim();
         const sentence = (w.querySelector('.q-sentence')?.value || '').trim();
@@ -880,6 +1939,12 @@ function savePracticeNode() {
         const options = (w.querySelector('.q-options')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
         const correct = (w.querySelector('.q-correct')?.value || '').trim();
         if (sentence) questions.push({ type: 'fill_blank_choice', title: titleQ || 'اختر الكلمة المناسبة:', sentence, options, correct });
+      } else if (qType === 'keypad') {
+        const titleQ = (w.querySelector('.q-title')?.value || '').trim();
+        const text = (w.querySelector('.q-text')?.value || '').trim();
+        const keys = (w.querySelector('.q-keys')?.value || '').split('+').map(s=>s.trim()).filter(s=>s);
+        const correct = (w.querySelector('.q-correct')?.value || '').trim();
+        if (correct) questions.push({ type: 'keypad', title: titleQ || 'اختبار الكيبورد:', text, keys: keys.length ? keys : ['٠', '/', '$', '!'], correct });
       }
     });
     
@@ -895,25 +1960,28 @@ function savePracticeNode() {
   if (editingNodeId) {
     const node = practiceNodes.find(n => n.id === editingNodeId);
     if (node) {
+      node.unitId = unitId;
       node.title = title;
       node.desc = desc;
       node.type = type;
       node.levels = levels;
       node.icon = icon;
       node.actionText = actionText;
+      if (type === 'countdown') node.timerSeconds = timerSeconds;
       delete node.questions;
     }
   } else {
     const newId = practiceNodes.length > 0 ? Math.max(...practiceNodes.map(n=>n.id)) + 1 : 1;
     practiceNodes.push({
       id: newId,
-      unitId: currentUnitId,
+      unitId: unitId,
       type: type,
-      status: practiceNodes.filter(n=>n.unitId===currentUnitId).length === 0 ? 'current' : 'locked',
+      status: practiceNodes.filter(n=>n.unitId===unitId).length === 0 ? 'current' : 'locked',
       title,
       desc,
       icon,
       actionText,
+      timerSeconds: type === 'countdown' ? timerSeconds : undefined,
       levels
     });
   }
@@ -934,6 +2002,7 @@ window.toggleTooltip = function(nodeId, event) {
     if (!isVisible) {
         tooltip.classList.remove('hidden');
         tooltip.classList.add('visible');
+        if (soundFX) soundFX.magicChime();
         if (nodeEl) nodeEl.style.zIndex = '50';
         
         setTimeout(() => {
@@ -946,12 +2015,17 @@ window.toggleTooltip = function(nodeId, event) {
 };
 
 window.closeAllTooltips = function() {
+    let closedAny = false;
     document.querySelectorAll('.tooltip-card.visible').forEach(card => {
         card.classList.remove('visible');
         card.classList.add('hidden');
         const nodeEl = card.closest('.tile-node');
         if (nodeEl) nodeEl.style.zIndex = '2';
+        closedAny = true;
     });
+    if (closedAny && soundFX) {
+        soundFX.popupClose();
+    }
 };
 
 document.addEventListener('click', () => {
@@ -963,11 +2037,13 @@ function closeNodePopup() {
 }
 
 window.editNode = function(nodeId) {
+    if (soundFX) soundFX.tap();
     currentNodeId = nodeId;
     editCurrentNode();
 };
 
 window.deleteNode = function(nodeId) {
+    if (soundFX) soundFX.tap();
     currentNodeId = nodeId;
     deleteCurrentNode();
 };
@@ -987,15 +2063,21 @@ let activeNodeLevelCount = 1;
 // Question interaction states
 let userAnswers = []; // For translate
 let selectedOption = null; // For mcq
-let selectedMatchColA = null; // For match
-let selectedMatchColB = null;
-let matchedPairIndices = [];
+let selectedMatchColA = null; // For match: { id, text, el }
+let selectedMatchColB = null; // For match: { id, text, el }
+let matchedPairsRecord = []; // Records interchangeable matching progress
 let shuffledMatchLeft = [];
 let shuffledMatchRight = [];
 let fillBlankInputText = ''; // For fill_blank_text
 let fillBlankSelectedChoice = null; // For fill_blank_choice
+let keypadCurrentVal = ''; // For keypad
 let cardAudioPlaying = false;
 let currentCardAudio = null;
+
+// Countdown Challenge Timer state
+let countdownTimerInterval = null;
+let countdownSecondsRemaining = 0;
+let isCurrentNodeCountdown = false;
 
 // Helper to normalize Arabic text for forgiving comparison
 function normalizeArabic(text) {
@@ -1011,11 +2093,84 @@ function normalizeArabic(text) {
     .toLowerCase();
 }
 
+function startCountdownTimer(seconds) {
+  stopCountdownTimer();
+  countdownSecondsRemaining = seconds;
+  const timerBadge = document.getElementById('lesson-countdown-timer');
+  const timerVal = document.getElementById('countdown-timer-val');
+  if (timerBadge) {
+    timerBadge.style.display = 'inline-flex';
+    timerBadge.classList.remove('urgent');
+  }
+  
+  function updateDisplay() {
+    const mins = Math.floor(countdownSecondsRemaining / 60);
+    const secs = countdownSecondsRemaining % 60;
+    const str = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    if (timerVal) timerVal.textContent = str;
+    if (countdownSecondsRemaining <= 15 && timerBadge) {
+      timerBadge.classList.add('urgent');
+    }
+  }
+  
+  updateDisplay();
+  
+  countdownTimerInterval = setInterval(() => {
+    countdownSecondsRemaining--;
+    updateDisplay();
+    if (countdownSecondsRemaining <= 0) {
+      stopCountdownTimer();
+      handleCountdownExpired();
+    }
+  }, 1000);
+}
+
+function stopCountdownTimer() {
+  if (countdownTimerInterval) {
+    clearInterval(countdownTimerInterval);
+    countdownTimerInterval = null;
+  }
+  const timerBadge = document.getElementById('lesson-countdown-timer');
+  if (timerBadge) timerBadge.style.display = 'none';
+}
+
+function handleCountdownExpired() {
+  if (soundFX) soundFX.error();
+  alert('⌛ انتهى الوقت! لقد خسرت تحدي العد التنازلي. سيتم إعادة ضبط تقدم هذه العقدة لتجربتها مجدداً.');
+  
+  const node = practiceNodes.find(n => n.id === currentNodeId);
+  if (node) {
+    node.currentLevelIndex = 0;
+    savePracticeData();
+  }
+  showSection('practice');
+}
+
+window.confirmExitLesson = function() {
+  const node = practiceNodes.find(n => n.id === currentNodeId);
+  if (isCurrentNodeCountdown && node && node.status !== 'completed') {
+    const ok = confirm('⚠️ هذا تحدي عد تنازلي! الخروج الآن سيؤدي إلى إلغاء تقدمك وإعادة ضبط العقدة بالكامل. هل تريد الخروج حقاً؟');
+    if (!ok) return;
+    node.currentLevelIndex = 0;
+    savePracticeData();
+  }
+  stopCountdownTimer();
+  showSection('practice');
+};
+
 function startLesson(mode, nodeId = null) {
+  if (soundFX) soundFX.tap();
   if (nodeId) currentNodeId = nodeId;
   if (typeof closeAllTooltips === 'function') closeAllTooltips();
   
   const node = practiceNodes.find(n => n.id === currentNodeId);
+  
+  // Strict locking check
+  if (node && node.status === 'locked') {
+    alert('هذا الدرس مقفل! أكمل العقد السابقة أولاً لفتحه.');
+    return;
+  }
+  
   currentLessonQuestions = [];
   nodeStartTime = Date.now();
   nodeSessionMistakes = [];
@@ -1025,6 +2180,15 @@ function startLesson(mode, nodeId = null) {
   
   const badge = document.getElementById('mistakes-review-badge');
   if (badge) badge.style.display = 'none';
+  
+  isCurrentNodeCountdown = (node?.type === 'countdown');
+  
+  if (isCurrentNodeCountdown) {
+    const totalSecs = node.timerSeconds || 90;
+    startCountdownTimer(totalSecs);
+  } else {
+    stopCountdownTimer();
+  }
   
   if (node) {
     if (!node.levels || node.levels.length === 0) {
@@ -1071,10 +2235,12 @@ function loadQuestion() {
   selectedOption = null;
   selectedMatchColA = null;
   selectedMatchColB = null;
-  matchedPairIndices = [];
+  matchedPairsRecord = [];
   fillBlankInputText = '';
   fillBlankSelectedChoice = null;
+  keypadCurrentVal = '';
   cardAudioPlaying = false;
+  
   if (currentCardAudio) {
     try { currentCardAudio.pause(); } catch(e){}
     currentCardAudio = null;
@@ -1102,35 +2268,34 @@ function loadQuestion() {
       <div class="speech-bubble">${q.text}</div>
       <div class="answer-area" id="answer-area"></div>
       <div class="word-bank" id="word-bank">
-        ${(q.words || []).map((w) => `<button class="word-btn" onclick="selectWord('${w.replace(/'/g, "\\'")}', this)">${w}</button>`).join('')}
+        ${(q.words || []).map((w) => `<button type="button" class="word-btn" onclick="selectWord('${w.replace(/'/g, "\\'")}', this)">${w}</button>`).join('')}
       </div>
     `;
   } else if (q.type === 'mcq') {
     html = `
       <h2 class="question-title">${q.text}</h2>
       <div class="mcq-options">
-        ${(q.options || []).map((opt, i) => `<button class="mcq-btn" onclick="selectOption(${i}, this)">${opt}</button>`).join('')}
+        ${(q.options || []).map((opt, i) => `<button type="button" class="mcq-btn" onclick="selectOption(${i}, this)">${opt}</button>`).join('')}
       </div>
     `;
   } else if (q.type === 'match') {
-    // Prepare pairs
     const pairs = q.pairs || [];
-    shuffledMatchLeft = pairs.map((p, idx) => ({ id: idx, text: p.left })).sort(() => 0.5 - Math.random());
-    shuffledMatchRight = pairs.map((p, idx) => ({ id: idx, text: p.right })).sort(() => 0.5 - Math.random());
+    shuffledMatchLeft = pairs.map((p, idx) => ({ id: `L_${idx}_${Math.random().toString(36).substring(2, 7)}`, text: p.left })).sort(() => 0.5 - Math.random());
+    shuffledMatchRight = pairs.map((p, idx) => ({ id: `R_${idx}_${Math.random().toString(36).substring(2, 7)}`, text: p.right })).sort(() => 0.5 - Math.random());
     
     html = `
       <h2 class="question-title">${q.title || 'صل بين الكلمات وما يناسبها'}</h2>
       <div class="match-container" id="match-container">
         <div class="match-col" id="match-col-a">
           ${shuffledMatchLeft.map((item) => `
-            <div class="match-card" data-col="left" data-id="${item.id}" onclick="selectMatchCard('left', ${item.id}, this)">
+            <div class="match-card" data-col="left" data-id="${item.id}" onclick="selectMatchCard('left', '${item.id}', this)">
               ${item.text}
             </div>
           `).join('')}
         </div>
         <div class="match-col" id="match-col-b">
           ${shuffledMatchRight.map((item) => `
-            <div class="match-card" data-col="right" data-id="${item.id}" onclick="selectMatchCard('right', ${item.id}, this)">
+            <div class="match-card" data-col="right" data-id="${item.id}" onclick="selectMatchCard('right', '${item.id}', this)">
               ${item.text}
             </div>
           `).join('')}
@@ -1154,6 +2319,28 @@ function loadQuestion() {
             <span id="card-audio-label">استمع</span>
           </button>
         </div>
+      </div>
+    `;
+  } else if (q.type === 'image_card') {
+    btnCheck.textContent = 'مفهوم';
+    btnCheck.className = 'btn-check active';
+    
+    html = `
+      <div class="image-card-box">
+        <div class="image-card-badge"><i data-lucide="image"></i> بطاقة صورة توضيحية</div>
+        <h2 class="image-card-title">${q.title || 'صورة توضيحية'}</h2>
+        <div class="image-card-preview-container">
+          <img src="${q.imageUrl || 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&auto=format&fit=crop&q=80'}" class="image-card-img" alt="${q.title || 'صورة'}" />
+        </div>
+        ${q.audioUrl ? `
+          <div class="image-card-audio-bar">
+            <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-muted);">${q.note || 'استمع للشرح التوضيحي للصورة'}</span>
+            <button type="button" class="audio-play-btn" id="card-audio-btn" onclick="toggleCardAudio()">
+              <i data-lucide="volume-2" id="card-audio-icon"></i>
+              <span id="card-audio-label">استمع</span>
+            </button>
+          </div>
+        ` : ''}
       </div>
     `;
   } else if (q.type === 'fill_blank_text') {
@@ -1182,14 +2369,38 @@ function loadQuestion() {
         </div>
       </div>
     `;
+  } else if (q.type === 'keypad') {
+    const keys = Array.isArray(q.keys) ? q.keys : (q.keys || '٠+/+$+!').split('+');
+    html = `
+      <h2 class="question-title">${q.title || 'اكتب النمط باستخدام المفاتيح:'}</h2>
+      <div class="keypad-container">
+        ${q.text ? `<div class="keypad-hint-box">${q.text}</div>` : ''}
+        <div class="keypad-screen">
+          <div class="keypad-display-val empty" id="keypad-display">اضغط على المفاتيح بالأسفل للكتابة...</div>
+        </div>
+        <div class="keypad-keys-wrapper">
+          <div class="keypad-custom-keys">
+            ${keys.map(k => `
+              <button type="button" class="keypad-key-btn" onclick="typeKeypadChar('${k.replace(/'/g, "\\'")}')">${k}</button>
+            `).join('')}
+          </div>
+          <div class="keypad-actions-row">
+            <button type="button" class="keypad-action-btn space-btn" onclick="typeKeypadChar(' ')">مسافة</button>
+            <button type="button" class="keypad-action-btn del-btn" onclick="backspaceKeypad()"><i data-lucide="delete"></i> حذف</button>
+            <button type="button" class="keypad-action-btn" onclick="clearKeypad()"><i data-lucide="rotate-ccw"></i> مسح</button>
+          </div>
+        </div>
+      </div>
+    `;
   }
   
   area.innerHTML = html;
-  if (window.lucide) if(window.lucide)lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
-// 1. Translate (Reorder)
+// 1. Translate (Smooth Drag & Drop Reordering and Click to Remove)
 window.selectWord = function(word, btnEl) {
+  if (soundFX) soundFX.tap();
   userAnswers.push(word);
   btnEl.classList.add('selected');
   renderAnswerArea();
@@ -1197,47 +2408,155 @@ window.selectWord = function(word, btnEl) {
 };
 
 window.removeWord = function(index) {
+  if (soundFX) soundFX.tap();
   const word = userAnswers.splice(index, 1)[0];
   renderAnswerArea();
-  const btns = document.querySelectorAll('.word-btn');
-  btns.forEach(btn => {
-    if (btn.textContent === word && btn.classList.contains('selected')) {
+  
+  // Unselect one matching button in word bank
+  const btns = document.querySelectorAll('#word-bank .word-btn.selected');
+  for (let btn of btns) {
+    if (btn.textContent.trim() === word.trim()) {
       btn.classList.remove('selected');
+      break;
     }
-  });
+  }
   checkIfReady();
 };
 
 function renderAnswerArea() {
   const area = document.getElementById('answer-area');
-  if(!area) return;
+  if (!area) return;
+  
   area.innerHTML = userAnswers.map((w, i) => `
-    <button class="word-btn" onclick="removeWord(${i})" data-index="${i}">${w}</button>
+    <div class="answer-word-chip" data-index="${i}" role="button" tabindex="0" title="انقر للإزالة أو اسحب لتغيير الترتيب">
+      <span class="chip-text">${w}</span>
+    </div>
   `).join('');
 
-  if (window.Sortable && area) {
-    if (area.sortableInstance) {
-      area.sortableInstance.destroy();
-    }
-    area.sortableInstance = new Sortable(area, {
-      animation: 150,
-      ghostClass: 'sortable-ghost',
-      onEnd: function (evt) {
-        const oldIndex = evt.oldIndex;
-        const newIndex = evt.newIndex;
-        if (oldIndex !== newIndex) {
-          const movedWord = userAnswers.splice(oldIndex, 1)[0];
-          userAnswers.splice(newIndex, 0, movedWord);
+  initAnswerChipsDrag(area);
+}
+
+function initAnswerChipsDrag(area) {
+  const chips = Array.from(area.querySelectorAll('.answer-word-chip'));
+  
+  chips.forEach((chip) => {
+    chip.onpointerdown = (e) => {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const chipIndex = parseInt(chip.getAttribute('data-index'), 10);
+      let isDragging = false;
+      let dragAvatar = null;
+      let ghostEl = chip;
+      
+      const initialRect = chip.getBoundingClientRect();
+      
+      const onPointerMove = (ev) => {
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        
+        if (!isDragging && Math.hypot(dx, dy) > 5) {
+          isDragging = true;
+          
+          // Create floating avatar
+          dragAvatar = document.createElement('div');
+          dragAvatar.className = 'answer-word-chip sortable-fallback';
+          dragAvatar.innerHTML = `<span class="chip-text">${chip.querySelector('.chip-text')?.textContent || chip.textContent}</span>`;
+          dragAvatar.style.position = 'fixed';
+          dragAvatar.style.left = `${initialRect.left}px`;
+          dragAvatar.style.top = `${initialRect.top}px`;
+          dragAvatar.style.width = `${initialRect.width}px`;
+          dragAvatar.style.height = `${initialRect.height}px`;
+          dragAvatar.style.margin = '0';
+          dragAvatar.style.zIndex = '99999';
+          dragAvatar.style.pointerEvents = 'none';
+          dragAvatar.style.boxSizing = 'border-box';
+          document.body.appendChild(dragAvatar);
+          
+          ghostEl.classList.add('sortable-ghost');
+          if (soundFX) soundFX.tap();
+        }
+        
+        if (isDragging && dragAvatar) {
+          dragAvatar.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(1.05) rotate(1deg)`;
+          
+          // Find closest sibling in answer-area
+          const currentChips = Array.from(area.querySelectorAll('.answer-word-chip:not(.sortable-fallback)'));
+          let closestChip = null;
+          let minDistance = Infinity;
+          
+          currentChips.forEach(c => {
+            if (c === ghostEl) return;
+            const r = c.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            const cy = r.top + r.height / 2;
+            const dist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+            if (dist < minDistance) {
+              minDistance = dist;
+              closestChip = c;
+            }
+          });
+          
+          if (closestChip && minDistance < 70) {
+            const r = closestChip.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            
+            // RTL-aware insertion: In RTL, moving to right of center is before, left of center is after
+            const isRTL = document.documentElement.dir === 'rtl' || getComputedStyle(area).direction === 'rtl';
+            const isBefore = isRTL ? (ev.clientX > cx) : (ev.clientX < cx);
+            
+            if (isBefore) {
+              if (closestChip.previousElementSibling !== ghostEl) {
+                area.insertBefore(ghostEl, closestChip);
+                if (soundFX) soundFX.tap();
+              }
+            } else {
+              if (closestChip.nextElementSibling !== ghostEl) {
+                area.insertBefore(ghostEl, closestChip.nextElementSibling);
+                if (soundFX) soundFX.tap();
+              }
+            }
+          }
+        }
+      };
+      
+      const onPointerUp = (ev) => {
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
+        
+        if (dragAvatar && dragAvatar.parentNode) {
+          dragAvatar.parentNode.removeChild(dragAvatar);
+        }
+        
+        ghostEl.classList.remove('sortable-ghost');
+        
+        if (isDragging) {
+          // Collect new order from DOM
+          const newOrder = Array.from(area.querySelectorAll('.answer-word-chip:not(.sortable-fallback)'))
+            .map(el => (el.querySelector('.chip-text')?.textContent || el.textContent).trim())
+            .filter(Boolean);
+          
+          userAnswers = newOrder;
           renderAnswerArea();
           checkIfReady();
+        } else {
+          // Pure click/tap -> remove word
+          removeWord(chipIndex);
         }
-      },
-    });
-  }
+      };
+      
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+    };
+  });
 }
 
 // 2. MCQ
 window.selectOption = function(index, btnEl) {
+  if (soundFX) soundFX.tap();
   selectedOption = index;
   const btns = document.querySelectorAll('.mcq-btn');
   btns.forEach(b => b.classList.remove('selected'));
@@ -1245,23 +2564,39 @@ window.selectOption = function(index, btnEl) {
   checkIfReady();
 };
 
-// 3. Match Pairs
+// 3. Match Pairs (Flexible interchangeable matching algorithm)
 window.selectMatchCard = function(col, id, cardEl) {
   if (cardEl.classList.contains('matched')) return;
+  if (soundFX) soundFX.tap();
+  
+  const text = cardEl.textContent.trim();
   
   if (col === 'left') {
     document.querySelectorAll('#match-col-a .match-card').forEach(c => c.classList.remove('selected'));
     cardEl.classList.add('selected');
-    selectedMatchColA = { id, el: cardEl };
+    selectedMatchColA = { id, text, el: cardEl };
   } else {
     document.querySelectorAll('#match-col-b .match-card').forEach(c => c.classList.remove('selected'));
     cardEl.classList.add('selected');
-    selectedMatchColB = { id, el: cardEl };
+    selectedMatchColB = { id, text, el: cardEl };
   }
   
-  // If both selected, verify pair
   if (selectedMatchColA && selectedMatchColB) {
-    const isPair = selectedMatchColA.id === selectedMatchColB.id;
+    const q = currentLessonQuestions[currentQuestionIndex];
+    const validPairs = q.pairs || [];
+    
+    const normLeft = normalizeArabic(selectedMatchColA.text);
+    const normRight = normalizeArabic(selectedMatchColB.text);
+    
+    const totalCountInQuestion = validPairs.filter(
+      p => normalizeArabic(p.left) === normLeft && normalizeArabic(p.right) === normRight
+    ).length;
+    
+    const alreadyMatchedCount = (matchedPairsRecord || []).filter(
+      p => normalizeArabic(p.left) === normLeft && normalizeArabic(p.right) === normRight
+    ).length;
+    
+    const isPair = (totalCountInQuestion > 0) && (alreadyMatchedCount < totalCountInQuestion);
     const elA = selectedMatchColA.el;
     const elB = selectedMatchColB.el;
     
@@ -1270,19 +2605,22 @@ window.selectMatchCard = function(col, id, cardEl) {
       elB.classList.remove('selected');
       elA.classList.add('matched');
       elB.classList.add('matched');
-      matchedPairIndices.push(selectedMatchColA.id);
+      matchedPairsRecord.push({ left: selectedMatchColA.text, right: selectedMatchColB.text });
       selectedMatchColA = null;
       selectedMatchColB = null;
       
-      const q = currentLessonQuestions[currentQuestionIndex];
-      if (matchedPairIndices.length === (q.pairs || []).length) {
-        document.getElementById('btn-check-answer').classList.add('active');
-        // Auto trigger victory feedback after brief pause
+      if (matchedPairsRecord.length === validPairs.length) {
+        if (soundFX) soundFX.success();
+        const btn = document.getElementById('btn-check-answer');
+        if (btn) btn.classList.add('active');
         setTimeout(() => {
           checkAnswer();
-        }, 300);
+        }, 320);
+      } else {
+        if (soundFX) soundFX.matchSuccess();
       }
     } else {
+      if (soundFX) soundFX.error();
       elA.classList.add('shake-error');
       elB.classList.add('shake-error');
       setTimeout(() => {
@@ -1290,12 +2628,12 @@ window.selectMatchCard = function(col, id, cardEl) {
         elB.classList.remove('selected', 'shake-error');
         selectedMatchColA = null;
         selectedMatchColB = null;
-      }, 500);
+      }, 450);
     }
   }
 };
 
-// 4. Info Card Audio
+// 4. Info Card / Image Card Audio
 window.toggleCardAudio = function() {
   const q = currentLessonQuestions[currentQuestionIndex];
   const btn = document.getElementById('card-audio-btn');
@@ -1327,7 +2665,7 @@ window.toggleCardAudio = function() {
       if (label) label.textContent = 'استمع';
     };
     currentCardAudio.play().catch(() => {
-      speakCardText(q.title + '. ' + q.text);
+      speakCardText(q.title + '. ' + (q.text || ''));
     });
   } else {
     speakCardText((q.title ? q.title + '. ' : '') + (q.text || ''));
@@ -1369,6 +2707,7 @@ window.handleFillBlankInput = function(val) {
 
 // 6. Fill Blank Choice
 window.selectBlankChoice = function(word, chipEl) {
+  if (soundFX) soundFX.tap();
   fillBlankSelectedChoice = word;
   const slot = document.getElementById('blank-slot-choice');
   if (slot) {
@@ -1381,6 +2720,7 @@ window.selectBlankChoice = function(word, chipEl) {
 };
 
 window.clearBlankChoice = function() {
+  if (soundFX) soundFX.tap();
   fillBlankSelectedChoice = null;
   const slot = document.getElementById('blank-slot-choice');
   if (slot) {
@@ -1390,6 +2730,42 @@ window.clearBlankChoice = function() {
   document.querySelectorAll('.choice-chip-btn').forEach(c => c.classList.remove('used'));
   checkIfReady();
 };
+
+// 7. Virtual Keypad Controls
+window.typeKeypadChar = function(char) {
+  if (soundFX) soundFX.tap();
+  keypadCurrentVal += char;
+  updateKeypadDisplay();
+  checkIfReady();
+};
+
+window.backspaceKeypad = function() {
+  if (soundFX) soundFX.tap();
+  if (keypadCurrentVal.length > 0) {
+    keypadCurrentVal = keypadCurrentVal.slice(0, -1);
+    updateKeypadDisplay();
+    checkIfReady();
+  }
+};
+
+window.clearKeypad = function() {
+  if (soundFX) soundFX.tap();
+  keypadCurrentVal = '';
+  updateKeypadDisplay();
+  checkIfReady();
+};
+
+function updateKeypadDisplay() {
+  const disp = document.getElementById('keypad-display');
+  if (!disp) return;
+  if (keypadCurrentVal.length === 0) {
+    disp.textContent = 'اضغط على المفاتيح بالأسفل للكتابة...';
+    disp.className = 'keypad-display-val empty';
+  } else {
+    disp.textContent = keypadCurrentVal;
+    disp.className = 'keypad-display-val';
+  }
+}
 
 function checkIfReady() {
   const q = currentLessonQuestions[currentQuestionIndex];
@@ -1403,15 +2779,18 @@ function checkIfReady() {
     if (selectedOption !== null) btn.classList.add('active');
     else btn.classList.remove('active');
   } else if (q.type === 'match') {
-    if (matchedPairIndices.length === (q.pairs || []).length) btn.classList.add('active');
+    if (matchedPairsRecord.length === (q.pairs || []).length) btn.classList.add('active');
     else btn.classList.remove('active');
-  } else if (q.type === 'info_card') {
+  } else if (q.type === 'info_card' || q.type === 'image_card') {
     btn.classList.add('active');
   } else if (q.type === 'fill_blank_text') {
     if (fillBlankInputText.trim().length > 0) btn.classList.add('active');
     else btn.classList.remove('active');
   } else if (q.type === 'fill_blank_choice') {
     if (fillBlankSelectedChoice !== null) btn.classList.add('active');
+    else btn.classList.remove('active');
+  } else if (q.type === 'keypad') {
+    if (keypadCurrentVal.trim().length > 0) btn.classList.add('active');
     else btn.classList.remove('active');
   }
 }
@@ -1422,8 +2801,9 @@ window.checkAnswer = function() {
   
   const q = currentLessonQuestions[currentQuestionIndex];
   
-  // Info card always succeeds without testing
-  if (q.type === 'info_card') {
+  // Cards succeed without quiz evaluation
+  if (q.type === 'info_card' || q.type === 'image_card') {
+    if (soundFX) soundFX.tap();
     nextQuestion();
     return;
   }
@@ -1436,13 +2816,27 @@ window.checkAnswer = function() {
   } else if (q.type === 'mcq') {
     isCorrect = selectedOption === q.correct;
   } else if (q.type === 'match') {
-    isCorrect = matchedPairIndices.length === (q.pairs || []).length;
+    isCorrect = matchedPairsRecord.length === (q.pairs || []).length;
   } else if (q.type === 'fill_blank_text') {
     const userNorm = normalizeArabic(fillBlankInputText);
     const accepted = Array.isArray(q.correct) ? q.correct : [q.correct];
     isCorrect = accepted.some(ans => normalizeArabic(ans) === userNorm);
   } else if (q.type === 'fill_blank_choice') {
     isCorrect = normalizeArabic(fillBlankSelectedChoice) === normalizeArabic(q.correct);
+  } else if (q.type === 'keypad') {
+    const userRaw = (keypadCurrentVal || '').trim();
+    const userNorm = normalizeArabic(userRaw).replace(/\s+/g, ' ');
+    const acceptedArr = (Array.isArray(q.correct) ? q.correct : (typeof q.correct === 'string' ? q.correct.split('+') : [q.correct]))
+      .map(s => (s || '').trim());
+    
+    isCorrect = acceptedArr.some(acc => {
+      if (acc === userRaw) return true;
+      if (normalizeArabic(acc).replace(/\s+/g, ' ') === userNorm) return true;
+      // Allow conversion between Eastern Arabic digits and standard digits (٠ <-> 0)
+      const convAcc = acc.replace(/٠/g, '0');
+      const convUser = userRaw.replace(/٠/g, '0');
+      return convAcc === convUser;
+    });
   }
   
   const feedback = document.getElementById('lesson-feedback-bar');
@@ -1451,15 +2845,22 @@ window.checkAnswer = function() {
   const desc = document.getElementById('feedback-desc');
   
   if (isCorrect) {
+    if (soundFX) soundFX.success();
     totalQuestionsCorrectFirstTry++;
     feedback.className = 'lesson-feedback-bar show success';
     icon.innerHTML = '<i data-lucide="check"></i>';
     title.textContent = 'رائع جداً!';
     desc.textContent = 'إجابة صحيحة وممتازة';
   } else {
-    // Record mistake for end-of-node review
-    if (!nodeSessionMistakes.some(m => m === q)) {
-      nodeSessionMistakes.push(q);
+    if (soundFX) soundFX.error();
+    
+    // In review mode: re-queue this exact question to be repeated until mastered!
+    if (isMistakesReviewMode) {
+      currentLessonQuestions.push(q);
+    } else {
+      if (!nodeSessionMistakes.some(m => m === q)) {
+        nodeSessionMistakes.push(q);
+      }
     }
     
     feedback.className = 'lesson-feedback-bar show error';
@@ -1470,6 +2871,7 @@ window.checkAnswer = function() {
     else if (q.type === 'mcq') desc.textContent = `الصحيح: ${q.options[q.correct]}`;
     else if (q.type === 'fill_blank_text') desc.textContent = `الصحيح: ${Array.isArray(q.correct) ? q.correct[0] : q.correct}`;
     else if (q.type === 'fill_blank_choice') desc.textContent = `الصحيح: ${q.correct}`;
+    else if (q.type === 'keypad') desc.textContent = `النمط الصحيح: ${q.correct}`;
     else desc.textContent = 'حاول التركيز مرة أخرى';
     
     // Reduce heart count
@@ -1479,10 +2881,11 @@ window.checkAnswer = function() {
       if (h > 0) hc.textContent = h - 1;
     }
   }
-  if (window.lucide) if(window.lucide)lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 };
 
 window.nextQuestion = function() {
+  if (soundFX) soundFX.tap();
   currentQuestionIndex++;
   if (currentQuestionIndex < currentLessonQuestions.length) {
     loadQuestion();
@@ -1509,8 +2912,13 @@ function handleLevelCompletion() {
     
     // If currently in Mistakes Review mode
     if (isMistakesReviewMode) {
+      if (currentQuestionIndex < currentLessonQuestions.length) {
+        loadQuestion();
+        return;
+      }
       // Completed reviewing mistakes!
       isMistakesReviewMode = false;
+      stopCountdownTimer();
       showNodeAchievements(node);
       return;
     }
@@ -1518,7 +2926,7 @@ function handleLevelCompletion() {
     node.currentLevelIndex++;
     
     if (node.currentLevelIndex < node.levels.length) {
-      // Prompt or continue next level
+      // Continue next level
       savePracticeData();
       currentLessonQuestions = node.levels[node.currentLevelIndex].questions || defaultQuestions;
       currentQuestionIndex = 0;
@@ -1538,6 +2946,7 @@ function handleLevelCompletion() {
         document.getElementById('lesson-progress').style.width = '0%';
         loadQuestion();
       } else {
+        stopCountdownTimer();
         showNodeAchievements(node);
       }
     }
@@ -1545,6 +2954,7 @@ function handleLevelCompletion() {
 }
 
 function showNodeAchievements(node) {
+  if (soundFX) soundFX.levelWin();
   const durationSec = Math.max(1, Math.floor((Date.now() - nodeStartTime) / 1000));
   const mins = Math.floor(durationSec / 60);
   const secs = durationSec % 60;
@@ -1572,7 +2982,7 @@ function showNodeAchievements(node) {
   renderPracticePath();
   
   openModal('node-achievement-modal');
-  if (window.lucide) if(window.lucide)lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
 window.finishNodeAchievement = function() {
@@ -1647,7 +3057,10 @@ function renderQuiz() {
 }
 
 function handleAnswer(sel,correct) {
-  if(sel===correct) score++;
+  const isRight = sel === correct;
+  if(isRight) {
+    score++;
+  }
   const total=QUIZZES[activeQuizType].length;
   if(quizIndex<total-1){quizIndex++;renderQuiz();}else showResult();
 }
@@ -1853,8 +3266,21 @@ let annotationCtx  = null;
 let museumModalVerses = [];
 
 // ----- Modals -----
-function openModal(id){const m=document.getElementById(id);if(m){m.style.display='flex';if(window.lucide)lucide.createIcons();}}
-function closeModal(id){const m=document.getElementById(id);if(m)m.style.display='none';}
+function openModal(id){
+  const m=document.getElementById(id);
+  if(m){
+    m.style.display='flex';
+    if(soundFX) soundFX.magicChime();
+    if(window.lucide)lucide.createIcons();
+  }
+}
+function closeModal(id){
+  const m=document.getElementById(id);
+  if(m) {
+    m.style.display='none';
+    if(soundFX) soundFX.popupClose();
+  }
+}
 function handleModalBackdrop(e,id){if(e.target===e.currentTarget)closeModal(id);}
 
 async function tryAdminLogin() {
@@ -2300,6 +3726,17 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   window.openUnitSelector=openUnitSelector; window.addNewUnit=addNewUnit; window.selectUnit=selectUnit;
   window.openAdminAddPracticeNode=openAdminAddPracticeNode; window.addNodeLevel=addNodeLevel; window.addQuestionToLevel=addQuestionToLevel; window.editCurrentNode=editCurrentNode; window.deleteCurrentNode=deleteCurrentNode;
   window.savePracticeNode=savePracticeNode;
+
+  // تفاعل الأصوات للنقرات محصور حصرياً بصفحة تمرّن والدرس وشاشاتها
+  document.addEventListener('click', (e) => {
+    const inPracticeZone = e.target.closest('#practice-section, #lesson-section, #node-achievement-modal, #unit-selector-modal, #add-practice-node-modal, #streak-celebration-modal, .tooltip-card');
+    if (!inPracticeZone) return;
+
+    const btn = e.target.closest('button, .nav-btn, .btn-primary, .btn-secondary, .theme-btn, .unit-banner, .modal-close, .admin-btn-accent, .tt-action-btn, .choice-btn, .match-card, .word-btn, .mcq-btn, .choice-chip-btn');
+    if (btn && soundFX) {
+      soundFX.tap();
+    }
+  });
 
   if(window.lucide)lucide.createIcons();
 });
