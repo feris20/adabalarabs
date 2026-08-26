@@ -13,7 +13,7 @@
   --color-input-bg: #F9F8F6;
 }
 .dark {
-  --color-bg:       #0C0A09;
+  --color-bg:       #141F25;
   --color-surface:  #1C1917;
   --color-border:   #2D2A28;
   --color-text:     #F5F5F4;
@@ -526,6 +526,124 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
+.course-selector-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 8px;
+}
+.course-selector-toggle-btn:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-text);
+}
+.dark .course-selector-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.course-selector-bar {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.courses-scroll-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.course-item-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  min-width: 80px;
+  transition: all 0.2s;
+  position: relative;
+}
+.course-item-card:hover {
+  border-color: #a8a29e;
+  transform: translateY(-2px);
+}
+.course-item-card.active {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+.course-item-card i {
+  margin-bottom: 4px;
+}
+.course-item-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.course-item-card.active .course-item-name {
+  color: #16a34a;
+}
+.course-admin-actions {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.course-item-card:hover .course-admin-actions {
+  opacity: 1;
+}
+.course-admin-btn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text);
+}
+.course-admin-btn.delete { color: #ef4444; }
+.course-admin-btn.hide { color: #f59e0b; }
+
+.add-course-btn {
+  background: rgba(99, 102, 241, 0.1);
+  border: 2px dashed rgba(99, 102, 241, 0.4);
+  color: #6366f1;
+  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.add-course-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+}
+
 .back-btn {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -671,6 +789,48 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
   box-shadow: 0 4px 0 #46a302;
   width: 100%;
   max-width: 700px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.unit-banner.unit-banner-locked {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+  box-shadow: 0 4px 0 #1e293b !important;
+  opacity: 0.88;
+  cursor: not-allowed !important;
+}
+
+.unit-banner-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.unit-status-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.2px;
+}
+.unit-status-badge.locked {
+  background: rgba(0, 0, 0, 0.4);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.unit-status-badge.completed {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.unit-status-badge.active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .unit-title {
@@ -2346,6 +2506,168 @@ transform: rotate(45deg);
   pointer-events: auto;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform: translateX(-50%);
+}
+
+/* ============================================================
+   الإعلان المنسدل أسفل مربع القسم (Unit Drawer Banner Ad)
+   ============================================================ */
+.unit-banner-container {
+  width: 100%;
+  max-width: 700px;
+  margin: 24px 0 16px;
+  position: relative;
+}
+
+.unit-banner-drawer-ad {
+  position: relative;
+  width: calc(100% - 24px);
+  margin: -10px auto 14px auto;
+  border-radius: 0 0 18px 18px;
+  padding: 12px 18px 12px 18px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16), 0 0 0 1.5px rgba(255, 255, 255, 0.3) inset, 0 4px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: unitAdSlideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 1;
+}
+
+.unit-banner-drawer-ad:hover {
+  transform: translateY(2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22), 0 0 0 2px rgba(255, 255, 255, 0.5) inset, 0 5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.unit-banner-drawer-ad:active {
+  transform: translateY(4px);
+}
+
+/* بريق الضوء المتحرك على الشريط المنسدل */
+.unit-banner-drawer-ad::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 220%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  transform: rotate(25deg);
+  animation: adSheen 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes unitAdSlideDown {
+  0% { opacity: 0; transform: translateY(-16px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.unit-drawer-ad-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.unit-drawer-ad-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.unit-drawer-ad-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.unit-drawer-ad-title {
+  color: white;
+  font-weight: 800;
+  font-size: 0.92rem;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unit-drawer-ad-badge {
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
+}
+
+.unit-drawer-ad-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.unit-drawer-ad-btn {
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.unit-drawer-ad-btn:hover {
+  transform: scale(1.05);
+}
+
+.unit-drawer-ad-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.unit-drawer-ad-close:hover {
+  background: #e11d48;
+  border-color: white;
+  transform: scale(1.15);
 }
 
 .practice-ad-tile {
