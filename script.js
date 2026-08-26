@@ -4100,6 +4100,7 @@ function escHtml(str){return(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 document.addEventListener('DOMContentLoaded', async ()=>{
   // ① التحقق من الجلسة المحفوظة
   await verifyStoredToken();
+  await loadPracticeFromServer(); // ← أضف هذا السطر
 
   loadVerses();
 
