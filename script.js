@@ -675,6 +675,32 @@ function savePracticeData() {
   localStorage.setItem('streakData', JSON.stringify(streakData));
 }
 
+async function syncPracticeToServer() {
+  if (!isAdmin || !authToken) return;
+  try {
+    await api.put('/practice', {
+      courses: practiceCourses,
+      units: practiceUnits,
+      nodes: practiceNodes,
+      ads: practiceAds
+    });
+  } catch(e) { console.warn('Practice sync failed:', e); }
+}
+
+async function loadPracticeFromServer() {
+  try {
+    const d = await api.get('/practice');
+    if (d && d.nodes && d.nodes.length > 0) {
+      practiceCourses = d.courses || practiceCourses;
+      practiceUnits   = d.units   || practiceUnits;
+      practiceNodes   = d.nodes   || practiceNodes;
+      practiceAds     = d.ads     || practiceAds;
+      // تحديث localStorage كـ cache
+      savePracticeData();
+    }
+  } catch(e) { console.warn('Practice load failed, using localStorage'); }
+}
+
 function updateStreakDisplay(animateState = null) {
   const streakItem = document.querySelector('.streak-item');
   if (!streakItem) return;
