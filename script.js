@@ -673,6 +673,8 @@ function savePracticeData() {
   localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
   localStorage.setItem('practiceAds_v1', JSON.stringify(practiceAds));
   localStorage.setItem('streakData', JSON.stringify(streakData));
+  
+  syncPracticeToServer(); // ← أضف هذا السطر فقط
 }
 
 async function syncPracticeToServer() {
