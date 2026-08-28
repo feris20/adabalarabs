@@ -2756,19 +2756,21 @@ function loadQuestion() {
     btnCheck.textContent = 'مفهوم';
     btnCheck.className = 'btn-check active';
     
-    const formattedText = (q.text || '').replace(/\n/g, '<br>');
+    const formattedText = parseCardText(q.text || '');
+    const audioBar = q.hideAudio ? '' : `
+      <div class="info-card-audio-bar">
+        <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-muted);">${q.note || 'استمع للشرح أو اقرأ البطاقة'}</span>
+        <button type="button" class="audio-play-btn" id="card-audio-btn" onclick="toggleCardAudio()">
+          <i data-lucide="volume-2" id="card-audio-icon"></i>
+          <span id="card-audio-label">استمع</span>
+        </button>
+      </div>`;
     html = `
       <div class="info-card-box">
         <div class="info-card-badge"><i data-lucide="book-open"></i> بطاقة معرفية</div>
         <h2 class="info-card-title">${q.title || 'شرح وتوضيح'}</h2>
         <div class="info-card-body">${formattedText}</div>
-        <div class="info-card-audio-bar">
-          <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-muted);">${q.note || 'استمع للشرح أو اقرأ البطاقة'}</span>
-          <button type="button" class="audio-play-btn" id="card-audio-btn" onclick="toggleCardAudio()">
-            <i data-lucide="volume-2" id="card-audio-icon"></i>
-            <span id="card-audio-label">استمع</span>
-          </button>
-        </div>
+        ${audioBar}
       </div>
     `;
   } else if (q.type === 'image_card') {
