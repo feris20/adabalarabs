@@ -2656,6 +2656,21 @@ function startLesson(mode, nodeId = null) {
   loadQuestion();
 }
 
+function parseCardText(text) {
+  if (!text) return '';
+  return text
+    // **نص** → bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // c#color:نصc → ملون بلون مخصص
+    .replace(/c(#[0-9a-fA-F]{3,6}|[a-z]+):([^c]+)c/g,
+      (_, color, content) => `<span style="color:${color}; font-weight:700;">${content}</span>`)
+    // cنصc → لون ذهبي افتراضي
+    .replace(/c([^c\n]+)c/g,
+      (_, content) => `<span style="color:#f59e0b; font-weight:800;">${content}</span>`)
+    // أسطر جديدة
+    .replace(/\n/g, '<br>');
+}
+
 function loadQuestion() {
   if (currentQuestionIndex >= currentLessonQuestions.length) {
     handleLevelCompletion();
