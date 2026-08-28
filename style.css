@@ -1123,9 +1123,9 @@ body { background-color: var(--color-bg); color: var(--color-text); font-family:
 
 /* Question Type 2: Multiple Choice */
 .mcq-options {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .mcq-btn {
@@ -2997,5 +2997,23 @@ transform: rotate(45deg);
   background: rgba(2, 132, 199, 0.08);
 }
 
+/* إصلاح overflow بطاقة المعلومات */
+.info-card-box {
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
 
+.info-card-badge,
+.info-card-title,
+.info-card-audio-bar {
+  flex-shrink: 0;
+}
+
+.info-card-body {
+  flex: 1;
+  overflow-y: auto;
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  max-height: 38vh;
+}
 
