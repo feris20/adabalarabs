@@ -2143,6 +2143,22 @@ window.handleAdminImageUpload = function(fileInput) {
   reader.readAsDataURL(file);
 };
 
+window.handleAdminAudioUpload = function(fileInput) {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const qWrapper = fileInput.closest('.admin-question-wrapper');
+    const audioInput = qWrapper.querySelector('.q-audio');
+    if (audioInput) {
+      audioInput.value = e.target.result;
+      audioInput.style.color = '#16a34a';
+      audioInput.title = 'تم رفع الملف: ' + file.name;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
 window.clearAdminCardImage = function(btnEl) {
   const qWrapper = btnEl.closest('.admin-question-wrapper');
   const inputUrl = qWrapper.querySelector('.q-image');
@@ -2202,13 +2218,26 @@ function createQuestionElement(qData) {
     html += `
       <div style="font-weight:800; margin-bottom:10px; color:#9333ea; font-size: 1.1rem;"><i data-lucide="info" style="display:inline-block; vertical-align:middle; width:18px; margin-left:5px;"></i>بطاقة معلومات</div>
       <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">عنوان البطاقة:</label>
-      <input type="text" class="modal-input q-title" placeholder="مثال: أركان التشبيه" value="${qData.title || ''}" style="margin-bottom:10px;">
+      <input type="text" class="modal-input q-title" placeholder="مثال: أركان التشبيه" value="${escHtml(qData.title || '')}" style="margin-bottom:10px;">
       
-      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">نص الشرح (يمكنك استخدام أسطر جديدة):</label>
-      <textarea class="modal-textarea q-text" rows="3" placeholder="اكتب الشرح والمعلومات هنا..." style="margin-bottom:10px;">${qData.text || ''}</textarea>
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">نص الشرح:</label>
+      <div style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.2); border-radius:8px; padding:8px 10px; margin-bottom:6px; font-size:0.78rem; color:var(--color-muted); line-height:1.7;">
+        💡 <strong>**نص**</strong> = عريض &nbsp;|&nbsp; <strong>cنصc</strong> = لون ذهبي &nbsp;|&nbsp; <strong>c#ff0000:نصc</strong> = لون مخصص
+      </div>
+      <textarea class="modal-textarea q-text" rows="4" placeholder="اكتب الشرح هنا... يمكن استخدام **عريض** و cملونc" style="margin-bottom:10px;">${escHtml(qData.text || '')}</textarea>
       
-      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">إعدادات الصوت (اختياري):</label>
-      <input type="text" class="modal-input q-audio" placeholder="https://example.com/audio.mp3" value="${qData.audioUrl || ''}">
+      <label style="font-size: 0.85rem; font-weight: 700; display:block; margin-bottom:4px;">الصوت (رابط أو رفع ملف):</label>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="text" class="modal-input q-audio" placeholder="https://example.com/audio.mp3 أو ارفع ملفاً" value="${escHtml(qData.audioUrl || '')}" style="margin-bottom:0; flex:1;">
+        <label class="btn-secondary btn-sm" style="display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; padding:0 10px; white-space:nowrap;">
+          <i data-lucide="upload" style="width:13px;height:13px;"></i> رفع
+          <input type="file" accept="audio/*" style="display:none;" onchange="handleAdminAudioUpload(this)">
+        </label>
+      </div>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 10px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); border-radius:8px;">
+        <input type="checkbox" class="q-hide-audio" ${qData.hideAudio ? 'checked' : ''} style="width:16px;height:16px; cursor:pointer;">
+        <span style="font-size:0.85rem; font-weight:700; color:#dc2626;">إخفاء زر تشغيل الصوت بالكامل</span>
+      </label>
     `;
   } else if (qData.type === 'image_card') {
     html += `
@@ -2348,7 +2377,7 @@ function savePracticeNode() {
         const titleQ = (w.querySelector('.q-title')?.value || '').trim();
         const text = (w.querySelector('.q-text')?.value || '').trim();
         const audioUrl = (w.querySelector('.q-audio')?.value || '').trim();
-        if (text || titleQ) questions.push({ type: 'info_card', title: titleQ || 'معلومة', text, audioUrl, note: 'اقرأ البطاقة أو استمع للشرح ثم اضغط مفهوم' });
+        const hideAudio = !!(w.querySelector('.q-hide-audio')?.checked); if (text || titleQ) questions.push({ type: 'info_card', title: titleQ || 'معلومة', text, audioUrl, hideAudio, note: 'اقرأ البطاقة أو استمع للشرح ثم اضغط مفهوم' });
       } else if (qType === 'image_card') {
         const titleQ = (w.querySelector('.q-title')?.value || '').trim();
         const imageUrl = (w.querySelector('.q-image')?.value || '').trim();
