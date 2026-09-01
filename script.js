@@ -958,23 +958,36 @@ async function showLeaderboard() {
   }
 }
 
-// ===== Hamburger Menu =====
-function toggleHamburgerMenu() {
-  const menu = document.getElementById('hamburger-menu');
-  if (!menu) return;
-  if (menu.style.display === 'none' || !menu.style.display) {
-    menu.style.display = 'block';
-    if(window.lucide) lucide.createIcons();
-  } else {
-    menu.style.display = 'none';
+// ===== Practice Menu Animation =====
+function togglePracticeMenu(event) {
+  if (event) event.stopPropagation();
+  const wrapper = document.getElementById('practice-stats-wrapper');
+  const iconMenu = document.getElementById('hamburger-icon-menu');
+  const iconX = document.getElementById('hamburger-icon-x');
+  if (wrapper) {
+    wrapper.classList.toggle('menu-active');
+    if (wrapper.classList.contains('menu-active')) {
+      if (iconMenu) iconMenu.style.display = 'none';
+      if (iconX) iconX.style.display = 'block';
+    } else {
+      if (iconMenu) iconMenu.style.display = 'block';
+      if (iconX) iconX.style.display = 'none';
+    }
   }
 }
+window.togglePracticeMenu = togglePracticeMenu;
+window.toggleHamburgerMenu = togglePracticeMenu;
+
 // إغلاق القائمة عند النقر خارجها
 document.addEventListener('click', (e) => {
-  const menu = document.getElementById('hamburger-menu');
-  if (!menu || menu.style.display === 'none') return;
-  if (!e.target.closest('.nav-user-area')) {
-    menu.style.display = 'none';
+  const wrapper = document.getElementById('practice-stats-wrapper');
+  if (!wrapper || !wrapper.classList.contains('menu-active')) return;
+  if (!e.target.closest('.practice-stats')) {
+    wrapper.classList.remove('menu-active');
+    const iconMenu = document.getElementById('hamburger-icon-menu');
+    const iconX = document.getElementById('hamburger-icon-x');
+    if (iconMenu) iconMenu.style.display = 'block';
+    if (iconX) iconX.style.display = 'none';
   }
 });
 
@@ -3853,6 +3866,7 @@ function showSection(id) {
     if (id === 'museum') renderMuseumLanding();
     if (id === 'profile') renderProfileSection();
   }
+  
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
