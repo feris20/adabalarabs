@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <nav class="navbar">
@@ -27,6 +28,39 @@
                     <i data-lucide="sun" id="sun-icon" style="display:none"></i>
                 </button>
             </div>
+            <div class="nav-user-area">
+  <button id="nav-login-btn" class="nav-login-btn" onclick="openLoginModal()">
+    <i data-lucide="user"></i>
+    <span>دخول</span>
+  </button>
+  <div id="nav-user-avatar" class="nav-user-avatar" style="display:none;" onclick="showSection('profile')">
+    <img src="" alt="avatar" id="nav-avatar-img">
+  </div>
+  <button class="nav-hamburger-btn" onclick="toggleHamburgerMenu()" title="القائمة">
+    <i data-lucide="menu"></i>
+  </button>
+  <div id="hamburger-menu" class="hamburger-menu" style="display:none;">
+    <button onclick="showLeaderboard(); toggleHamburgerMenu()">
+      <i data-lucide="trophy"></i> لوحة المتصدرين
+    </button>
+    <button onclick="showSection('profile'); toggleHamburgerMenu()">
+      <i data-lucide="user-circle"></i> حسابي
+    </button>
+    <div class="hamburger-divider"></div>
+    <button onclick="showSection('home'); toggleHamburgerMenu()">
+      <i data-lucide="home"></i> الرئيسية
+    </button>
+    <button onclick="showSection('practice'); toggleHamburgerMenu()">
+      <i data-lucide="book-open"></i> تمرّن
+    </button>
+    <button onclick="showSection('museum'); toggleHamburgerMenu()">
+      <i data-lucide="landmark"></i> المتحف
+    </button>
+    <button onclick="showSection('arud'); toggleHamburgerMenu()">
+      <i data-lucide="feather"></i> المحلل العروضي
+    </button>
+  </div>
+</div>
         </div>
     </nav>
 
@@ -99,7 +133,15 @@
                 </div>
             </section>
         </section>
-
+<!-- ===== الملف الشخصي ===== -->
+<section id="profile-section" style="display:none;">
+  <div class="container py-8" style="max-width:680px;">
+    <button class="back-btn" onclick="showSection('home')">
+      <i data-lucide="arrow-right"></i> العودة
+    </button>
+    <div id="profile-content"><!-- injected by JS --></div>
+  </div>
+</section>
         <!-- ===== تمرّن (المسار التعليمي) ===== -->
         <section id="practice-section" style="display:none;" class="full-screen-section">
             <div class="practice-top-bar">
@@ -800,5 +842,52 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="script.js"></script>
+    <!-- مودال تسجيل الدخول -->
+<div id="login-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'login-modal')">
+  <div class="modal-card modal-small" style="text-align:center; padding:32px;">
+    <button class="modal-close" style="position:absolute;top:14px;left:14px;" onclick="closeModal('login-modal')">
+      <i data-lucide="x"></i>
+    </button>
+    <div style="width:56px;height:56px;background:var(--color-surface);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <i data-lucide="user" style="width:28px;height:28px;color:var(--color-muted);"></i>
+    </div>
+    <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:8px;">أهلاً بك في البيان!</h3>
+    <p style="color:var(--color-muted);font-size:0.9rem;margin-bottom:24px;">سجّل دخولك لحفظ تقدمك والمنافسة على المتصدرين</p>
+    <div id="google-signin-btn-container" style="display:flex;justify-content:center;"></div>
+    <p style="color:var(--color-muted);font-size:0.75rem;margin-top:16px;opacity:0.7;">تسجيل الدخول يعني موافقتك على سياسة الخصوصية</p>
+  </div>
+</div>
+
+<!-- مودال لوحة المتصدرين -->
+<div id="leaderboard-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'leaderboard-modal')">
+  <div class="modal-card" style="max-width:520px;">
+    <div class="modal-header">
+      <h3><i data-lucide="trophy" style="display:inline;width:18px;height:18px;margin-left:6px;color:#f59e0b;"></i> لوحة المتصدرين</h3>
+      <button class="modal-close" onclick="closeModal('leaderboard-modal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" id="leaderboard-content" style="gap:8px;">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- مودال تعديل اسم المنهج -->
+<div id="edit-course-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'edit-course-modal')">
+  <div class="modal-card modal-small">
+    <div class="modal-header">
+      <h3>تعديل اسم المنهج</h3>
+      <button class="modal-close" onclick="closeModal('edit-course-modal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-course-id">
+      <label style="font-weight:700;display:block;margin-bottom:6px;">الاسم الجديد:</label>
+      <input type="text" id="edit-course-name-input" class="modal-input" placeholder="اسم المنهج...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="saveEditedCourseName()">حفظ</button>
+      <button class="btn-secondary" onclick="closeModal('edit-course-modal')">إلغاء</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
