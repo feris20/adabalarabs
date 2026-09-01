@@ -3017,3 +3017,218 @@ transform: rotate(45deg);
   max-height: 38vh;
 }
 
+/* ===== ناف بار - منطقة المستخدم ===== */
+.nav-user-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.nav-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text);
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.2s;
+}
+.nav-login-btn:hover { background: var(--color-bg); border-color: #9ca3af; }
+.nav-login-btn i { width: 16px; height: 16px; }
+
+.nav-user-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid var(--color-border);
+  transition: border-color 0.2s;
+}
+.nav-user-avatar:hover { border-color: var(--color-accent); }
+.nav-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.nav-hamburger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.nav-hamburger-btn:hover { background: var(--color-surface); }
+.nav-hamburger-btn i { width: 20px; height: 20px; }
+
+.hamburger-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  min-width: 200px;
+  z-index: 500;
+  overflow: hidden;
+  animation: fadeInDown 0.2s ease;
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hamburger-menu button {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 12px 16px;
+  background: none; border: none;
+  color: var(--color-text); cursor: pointer;
+  font-size: 0.9rem; font-weight: 600; font-family: var(--font-sans);
+  transition: background 0.15s;
+  text-align: right;
+}
+.hamburger-menu button:hover { background: var(--color-surface); }
+.hamburger-menu button i { width: 18px; height: 18px; color: var(--color-muted); }
+.hamburger-divider { height: 1px; background: var(--color-border); margin: 4px 0; }
+
+/* ===== تصغير الأيقونات العلوية في تمرّن ===== */
+.stat-pill {
+  padding: 4px 9px;
+  font-size: 0.82rem;
+  gap: 5px;
+}
+.stat-pill i { width: 14px; height: 14px; }
+
+/* ===== قسم الملف الشخصي ===== */
+.profile-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.profile-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2540 100%);
+  padding: 32px 24px 20px;
+  text-align: center;
+  position: relative;
+}
+.profile-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  border: 3px solid white;
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+.profile-avatar-placeholder {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 3px solid white;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px;
+  color: white;
+}
+.profile-name { color: white; font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+.profile-email { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
+.profile-bio { color: rgba(255,255,255,0.85); font-size: 0.9rem; margin-top: 8px; }
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--color-border);
+}
+.profile-stat {
+  padding: 16px 12px;
+  text-align: center;
+  border-left: 1px solid var(--color-border);
+}
+.profile-stat:last-child { border-left: none; }
+.profile-stat-val { font-size: 1.4rem; font-weight: 900; color: var(--color-text); display: block; }
+.profile-stat-label { font-size: 0.75rem; color: var(--color-muted); font-weight: 600; }
+
+.profile-edit-form {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* ===== لوحة المتصدرين ===== */
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.leaderboard-rank {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--color-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 900;
+  flex-shrink: 0;
+}
+.leaderboard-rank.gold   { background: #fef08a; color: #ca8a04; }
+.leaderboard-rank.silver { background: #e2e8f0; color: #64748b; }
+.leaderboard-rank.bronze { background: #fed7aa; color: #c2410c; }
+.leaderboard-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--color-border);
+  flex-shrink: 0;
+}
+.leaderboard-avatar-placeholder {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--color-border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-muted);
+}
+.leaderboard-info { flex: 1; min-width: 0; }
+.leaderboard-name { font-weight: 700; font-size: 0.95rem; }
+.leaderboard-xp { font-size: 0.8rem; color: var(--color-muted); }
+.leaderboard-streak {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.85rem; font-weight: 800; color: #ea580c;
+}
+
+/* مؤشر تحميل لوحة المتصدرين */
+.leaderboard-loading {
+  text-align: center;
+  padding: 30px;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* ===== تعديل اسم المنهج ===== */
+.course-edit-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--color-muted); width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; padding: 0; transition: color 0.15s;
+}
+.course-edit-btn:hover { color: #6366f1; }
+
+@media (max-width: 768px) {
+  .profile-stats { grid-template-columns: repeat(3, 1fr); }
+}
