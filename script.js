@@ -274,6 +274,9 @@ document.addEventListener('pointerdown', () => {
 // =============================================
 let authToken = sessionStorage.getItem('adminToken') || null;
 let isAdmin   = false;
+let currentUser = null;
+let userToken   = localStorage.getItem('userToken') || null;
+const GOOGLE_CLIENT_ID = '612595539801-ik8h3fjp1migc6skf7iia6a79megdmhc.apps.googleusercontent.com'; // ← نفس Client ID
 
 // 🔥 هذا المتغير يوجه كل طلبات المتحف والأدمن لتمر عبر الوسيط الشامل 🔥
 const BASE_URL = '/api';
@@ -666,6 +669,338 @@ if (!practiceNodes || !practiceNodes.some(n => n.type === 'countdown')) {
 let practiceAds = JSON.parse(localStorage.getItem('practiceAds_v1')) || initialPracticeAds;
 let dismissedPracticeAds = JSON.parse(sessionStorage.getItem('dismissedPracticeAds') || '[]');
 
+// ===== Google Sign-In & User Management =====
+
+function initGoogleSignIn() {
+  if (!window.google) return;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true
+  });
+  // زر التسجيل في المودال
+  const container = document.getElementById('google-signin-btn-container');
+  if (container) {
+    google.accounts.id.renderButton(container, {
+      theme: 'outline', size: 'large', locale: 'ar',
+      text: 'signin_with', shape: 'rounded', width: 280
+    });
+  }
+}
+
+async function handleGoogleCredential(response) {
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'فشل تسجيل الدخول');
+    
+    userToken   = data.token;
+    currentUser = data.user;
+    localStorage.setItem('userToken',    userToken);
+    localStorage.setItem('currentUser',  JSON.stringify(currentUser));
+    
+    closeModal('login-modal');
+    updateNavUserDisplay();
+    syncProgressToServer();
+    
+    if (window.lucide) lucide.createIcons();
+  } catch(e) {
+    alert('خطأ في تسجيل الدخول: ' + e.message);
+  }
+}
+
+async function loadUserFromStorage() {
+  const stored = localStorage.getItem('currentUser');
+  if (stored) {
+    try { currentUser = JSON.parse(stored); } catch {}
+  }
+  if (userToken) {
+    try {
+      const r = await fetch('/api/user/me', {
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      if (r.ok) {
+        currentUser = await r.json();
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      } else if (r.status === 401) {
+        userToken = null; currentUser = null;
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('currentUser');
+      }
+    } catch(e) {}
+  }
+  updateNavUserDisplay();
+}
+
+function updateNavUserDisplay() {
+  const loginBtn = document.getElementById('nav-login-btn');
+  const avatar   = document.getElementById('nav-user-avatar');
+  const img      = document.getElementById('nav-avatar-img');
+  
+  if (currentUser) {
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (avatar)   avatar.style.display = 'flex';
+    if (img && currentUser.photo) img.src = currentUser.photo;
+  } else {
+    if (loginBtn) loginBtn.style.display = 'flex';
+    if (avatar)   avatar.style.display = 'none';
+  }
+}
+
+function openLoginModal() {
+  openModal('login-modal');
+  setTimeout(() => initGoogleSignIn(), 100);
+}
+
+function userSignOut() {
+  if (!confirm('هل تريد تسجيل الخروج؟')) return;
+  userToken = null; currentUser = null;
+  localStorage.removeItem('userToken');
+  localStorage.removeItem('currentUser');
+  if (window.google) google.accounts.id.disableAutoSelect();
+  updateNavUserDisplay();
+  showSection('home');
+}
+
+async function deleteUserAccount() {
+  if (!confirm('⚠️ هل أنت متأكد من حذف حسابك نهائياً؟ لا يمكن التراجع.')) return;
+  try {
+    await fetch('/api/user/me', {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${userToken}` }
+    });
+    userSignOut();
+  } catch(e) { alert('خطأ في حذف الحساب'); }
+}
+
+async function saveUserProfile() {
+  if (!userToken) return;
+  const name = document.getElementById('profile-name-input')?.value.trim();
+  const bio  = document.getElementById('profile-bio-input')?.value.trim();
+  if (!name) return alert('يرجى إدخال الاسم');
+  
+  try {
+    const r = await fetch('/api/user/me', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`
+      },
+      body: JSON.stringify({ name, bio })
+    });
+    if (r.ok) {
+      currentUser = await r.json();
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      renderProfileSection();
+      updateNavUserDisplay();
+    }
+  } catch(e) { alert('خطأ في الحفظ'); }
+}
+
+async function syncProgressToServer() {
+  if (!userToken) return;
+  const completedNodes = practiceNodes.filter(n => n.status === 'completed').length;
+  const totalXP = completedNodes * 15;
+  const progress = {};
+  
+  practiceNodes.forEach(n => {
+    if (n.status === 'completed') {
+      progress[String(n.id)] = { status: 'completed', levelIndex: n.levels?.length || 0 };
+    } else if (n.status === 'current') {
+      progress[String(n.id)] = { status: 'current', levelIndex: n.currentLevelIndex || 0 };
+    }
+  });
+  
+  try {
+    await fetch('/api/user/progress', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`
+      },
+      body: JSON.stringify({ totalXP, highestStreak: streakData.count, progress })
+    });
+    if (currentUser) {
+      currentUser.totalXP = Math.max(currentUser.totalXP || 0, totalXP);
+      currentUser.highestStreak = Math.max(currentUser.highestStreak || 0, streakData.count);
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+  } catch(e) {}
+}
+
+// ===== Profile Section =====
+function renderProfileSection() {
+  const container = document.getElementById('profile-content');
+  if (!container) return;
+  
+  if (!currentUser) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;">
+        <i data-lucide="user-x" style="width:56px;height:56px;color:var(--color-muted);margin:0 auto 16px;display:block;"></i>
+        <h2 style="margin-bottom:12px;">لم تسجّل الدخول</h2>
+        <p style="color:var(--color-muted);margin-bottom:24px;">سجّل دخولك لعرض ملفك الشخصي</p>
+        <button class="btn-primary" onclick="openLoginModal()">
+          <i data-lucide="log-in"></i> تسجيل الدخول
+        </button>
+      </div>`;
+    if(window.lucide) lucide.createIcons();
+    return;
+  }
+  
+  const completedNodes = practiceNodes.filter(n => n.status === 'completed').length;
+  const totalNodes     = practiceNodes.length;
+  const xp             = currentUser.totalXP || 0;
+  const bestStreak     = currentUser.highestStreak || 0;
+  const joinDate       = currentUser.joinedAt
+    ? new Date(currentUser.joinedAt).toLocaleDateString('ar-SA', {year:'numeric',month:'long',day:'numeric'})
+    : '';
+  
+  const photoHtml = currentUser.photo
+    ? `<img src="${escHtml(currentUser.photo)}" alt="avatar" class="profile-avatar">`
+    : `<div class="profile-avatar-placeholder"><i data-lucide="user" style="width:36px;height:36px;"></i></div>`;
+  
+  container.innerHTML = `
+    <div class="profile-card">
+      <div class="profile-header">
+        ${photoHtml}
+        <div class="profile-name">${escHtml(currentUser.name || 'مستخدم')}</div>
+        <div class="profile-email">${escHtml(currentUser.email || '')}</div>
+        ${currentUser.bio ? `<div class="profile-bio">${escHtml(currentUser.bio)}</div>` : ''}
+        ${joinDate ? `<div style="color:rgba(255,255,255,0.5);font-size:0.75rem;margin-top:6px;">عضو منذ ${joinDate}</div>` : ''}
+      </div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <span class="profile-stat-val" style="color:#f59e0b;">${xp}</span>
+          <span class="profile-stat-label">نقاط XP</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-val" style="color:#ea580c;">${bestStreak}</span>
+          <span class="profile-stat-label">أعلى ستريك</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-val">${completedNodes}/${totalNodes}</span>
+          <span class="profile-stat-label">عقد مكتملة</span>
+        </div>
+      </div>
+      <div class="profile-edit-form">
+        <label style="font-weight:700;font-size:0.85rem;">الاسم المعروض:</label>
+        <input type="text" id="profile-name-input" class="modal-input"
+          value="${escHtml(currentUser.name || '')}" placeholder="اسمك..." maxlength="50">
+        <label style="font-weight:700;font-size:0.85rem;">نبذة عنك (اختياري):</label>
+        <textarea id="profile-bio-input" class="modal-textarea" rows="2"
+          placeholder="أخبرنا عنك..." maxlength="200">${escHtml(currentUser.bio || '')}</textarea>
+        <div class="profile-actions">
+          <button class="btn-primary btn-sm" onclick="saveUserProfile()">
+            <i data-lucide="save" style="width:14px;height:14px;"></i> حفظ التغييرات
+          </button>
+          <button class="btn-secondary btn-sm" onclick="showLeaderboard()">
+            <i data-lucide="trophy" style="width:14px;height:14px;"></i> المتصدرون
+          </button>
+          <button class="btn-secondary btn-sm" onclick="userSignOut()" style="margin-right:auto;">
+            <i data-lucide="log-out" style="width:14px;height:14px;"></i> خروج
+          </button>
+          <button class="btn-secondary btn-sm danger" onclick="deleteUserAccount()">
+            <i data-lucide="trash-2" style="width:14px;height:14px;"></i> حذف الحساب
+          </button>
+        </div>
+      </div>
+    </div>`;
+  
+  if(window.lucide) lucide.createIcons();
+}
+
+// ===== Leaderboard =====
+async function showLeaderboard() {
+  const content = document.getElementById('leaderboard-content');
+  if (content) {
+    content.innerHTML = `<div class="leaderboard-loading">جاري التحميل...</div>`;
+  }
+  openModal('leaderboard-modal');
+  
+  try {
+    const r = await fetch('/api/leaderboard');
+    const data = await r.json();
+    
+    if (!data.length) {
+      content.innerHTML = `<p style="text-align:center;color:var(--color-muted);padding:20px;">لا يوجد متصدرون بعد. كن الأول!</p>`;
+      return;
+    }
+    
+    const rankClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const rankIcon  = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    
+    content.innerHTML = data.map((u, i) => `
+      <div class="leaderboard-item">
+        <div class="leaderboard-rank ${rankClass(i)}">${rankIcon(i)}</div>
+        ${u.photo
+          ? `<img src="${escHtml(u.photo)}" class="leaderboard-avatar" alt="${escHtml(u.name)}">`
+          : `<div class="leaderboard-avatar-placeholder"><i data-lucide="user" style="width:18px;height:18px;"></i></div>`
+        }
+        <div class="leaderboard-info">
+          <div class="leaderboard-name">${escHtml(u.name)}</div>
+          <div class="leaderboard-xp">${u.totalXP} نقطة XP</div>
+        </div>
+        <div class="leaderboard-streak">
+          <i data-lucide="flame" style="width:14px;height:14px;"></i>
+          ${u.highestStreak}
+        </div>
+      </div>
+    `).join('');
+    
+    if(window.lucide) lucide.createIcons();
+  } catch(e) {
+    if (content) content.innerHTML = `<p style="text-align:center;color:var(--color-muted);">فشل تحميل المتصدرين</p>`;
+  }
+}
+
+// ===== Hamburger Menu =====
+function toggleHamburgerMenu() {
+  const menu = document.getElementById('hamburger-menu');
+  if (!menu) return;
+  if (menu.style.display === 'none' || !menu.style.display) {
+    menu.style.display = 'block';
+    if(window.lucide) lucide.createIcons();
+  } else {
+    menu.style.display = 'none';
+  }
+}
+// إغلاق القائمة عند النقر خارجها
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('hamburger-menu');
+  if (!menu || menu.style.display === 'none') return;
+  if (!e.target.closest('.nav-user-area')) {
+    menu.style.display = 'none';
+  }
+});
+
+// ===== Admin: Edit Course Name =====
+function openEditCourseModal(courseId, currentName, event) {
+  event.stopPropagation();
+  document.getElementById('edit-course-id').value = courseId;
+  document.getElementById('edit-course-name-input').value = currentName;
+  openModal('edit-course-modal');
+}
+
+function saveEditedCourseName() {
+  const id   = Number(document.getElementById('edit-course-id').value);
+  const name = document.getElementById('edit-course-name-input').value.trim();
+  if (!name) return alert('يرجى إدخال اسم');
+  
+  const course = practiceCourses.find(c => Number(c.id) === id);
+  if (course) {
+    course.title = name;
+    savePracticeData();
+    closeModal('edit-course-modal');
+    renderCourseSelector();
+    renderPracticePath();
+  }
+}
+
 function savePracticeData() {
   localStorage.setItem('practiceCourses_v1', JSON.stringify(practiceCourses));
   localStorage.setItem('currentCourseId', currentCourseId);
@@ -674,7 +1009,8 @@ function savePracticeData() {
   localStorage.setItem('practiceAds_v1', JSON.stringify(practiceAds));
   localStorage.setItem('streakData', JSON.stringify(streakData));
   
-  syncPracticeToServer(); // ← أضف هذا السطر فقط
+  syncPracticeToServer();
+  syncProgressToServer(); // ← أضف هذا السطر
 }
 
 async function syncPracticeToServer() {
@@ -879,6 +1215,9 @@ function renderCourseSelector() {
         <div class="course-admin-btn hide" onclick="toggleHideCourse(${c.id}, event)" title="${c.isHidden ? 'إظهار' : 'إخفاء'}">
           <i data-lucide="${c.isHidden ? 'eye-off' : 'eye'}"></i>
         </div>
+        <div class="course-admin-btn" style="color:#6366f1;" onclick="openEditCourseModal(${c.id}, '${c.title.replace(/'/g,"\\'")}', event)" title="تعديل الاسم">
+  <i data-lucide="pencil"></i>
+</div>
         <div class="course-admin-btn delete" onclick="deleteCourse(${c.id}, event)" title="حذف المنهج">
           <i data-lucide="trash-2"></i>
         </div>
@@ -3477,7 +3816,7 @@ window.finishNodeAchievement = function() {
 };
 
 // Update showSection to handle practice path rendering
-const ALL_SECTIONS = ['home','tests','quiz','arud','museum','museum-poet', 'practice', 'lesson'];
+const ALL_SECTIONS = ['home','tests','quiz','arud','museum','museum-poet', 'practice', 'lesson', 'profile'];
 
 function showSection(id) {
   ALL_SECTIONS.forEach(s => {
