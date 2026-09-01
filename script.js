@@ -3805,7 +3805,8 @@ function showNodeAchievements(node) {
   activateStreak();
   savePracticeData();
   renderPracticePath();
-  
+  syncProgressToServer();
+   
   openModal('node-achievement-modal');
   if (window.lucide) lucide.createIcons();
 }
@@ -4512,7 +4513,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   // ① التحقق من الجلسة المحفوظة
   await verifyStoredToken();
   await loadPracticeFromServer(); // ← أضف هذا السطر
-
+  await loadUserFromStorage();
+   
   loadVerses();
 
   // إشعار استرجاع الأبيات
