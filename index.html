@@ -23,44 +23,20 @@
                 <a href="#" onclick="showSection('practice'); return false;">تمرّن</a>
                 <a href="#" onclick="showSection('museum'); return false;">المتحف</a>
                 <a href="#" onclick="showSection('arud'); return false;">المحلل العروضي</a>
-                <button id="theme-toggle" class="theme-btn">
-                    <i data-lucide="moon" id="moon-icon"></i>
-                    <i data-lucide="sun" id="sun-icon" style="display:none"></i>
-                </button>
             </div>
             <div class="nav-user-area">
-  <button id="nav-login-btn" class="nav-login-btn" onclick="openLoginModal()">
-    <i data-lucide="user"></i>
-    <span>دخول</span>
-  </button>
-  <div id="nav-user-avatar" class="nav-user-avatar" style="display:none;" onclick="showSection('profile')">
-    <img src="" alt="avatar" id="nav-avatar-img">
-  </div>
-  <button class="nav-hamburger-btn" onclick="toggleHamburgerMenu()" title="القائمة">
-    <i data-lucide="menu"></i>
-  </button>
-  <div id="hamburger-menu" class="hamburger-menu" style="display:none;">
-    <button onclick="showLeaderboard(); toggleHamburgerMenu()">
-      <i data-lucide="trophy"></i> لوحة المتصدرين
-    </button>
-    <button onclick="showSection('profile'); toggleHamburgerMenu()">
-      <i data-lucide="user-circle"></i> حسابي
-    </button>
-    <div class="hamburger-divider"></div>
-    <button onclick="showSection('home'); toggleHamburgerMenu()">
-      <i data-lucide="home"></i> الرئيسية
-    </button>
-    <button onclick="showSection('practice'); toggleHamburgerMenu()">
-      <i data-lucide="book-open"></i> تمرّن
-    </button>
-    <button onclick="showSection('museum'); toggleHamburgerMenu()">
-      <i data-lucide="landmark"></i> المتحف
-    </button>
-    <button onclick="showSection('arud'); toggleHamburgerMenu()">
-      <i data-lucide="feather"></i> المحلل العروضي
-    </button>
-  </div>
-</div>
+              <button id="nav-login-btn" class="nav-login-btn" onclick="openLoginModal()">
+                <i data-lucide="user"></i>
+                <span>دخول</span>
+              </button>
+              <div id="nav-user-avatar" class="nav-user-avatar" style="display:none;" onclick="showSection('profile')">
+                <img src="" alt="avatar" id="nav-avatar-img">
+              </div>
+              <button id="theme-toggle" class="theme-btn">
+                  <i data-lucide="moon" id="moon-icon"></i>
+                  <i data-lucide="sun" id="sun-icon" style="display:none"></i>
+              </button>
+            </div>
         </div>
     </nav>
 
@@ -148,22 +124,41 @@
                 <button class="back-btn" onclick="showSection('home')" title="العودة للرئيسية">
                     <i data-lucide="arrow-right"></i>
                 </button>
-                <div class="practice-stats">
-                    <button id="course-selector-btn" class="course-selector-toggle-btn" title="تغيير المنهج" onclick="toggleCourseSelector()">
-                        <i data-lucide="plus"></i>
+                <div class="practice-stats" id="practice-stats-wrapper">
+                    <div class="practice-stats-inner">
+                        <div class="stats-panel" id="stats-panel">
+                            <button id="course-selector-btn" class="course-selector-toggle-btn" title="تغيير المنهج" onclick="toggleCourseSelector()">
+                                <i data-lucide="plus"></i>
+                            </button>
+                            <div class="stat-pill streak-pill streak-item" id="practice-streak-display" title="أيام الحماس المتتالية">
+                                <i data-lucide="flame"></i>
+                                <span>12</span>
+                            </div>
+                            <div class="stat-pill gem-pill" title="الجواهر المكتسبة">
+                                <i data-lucide="gem"></i>
+                                <span>340</span>
+                            </div>
+                            <div class="stat-pill heart-pill" title="القلوب المتبقية">
+                                <i data-lucide="heart"></i>
+                                <span id="practice-hearts-val">5</span>
+                            </div>
+                        </div>
+                        <div class="menu-panel" id="menu-panel">
+                            <button class="menu-action-btn" onclick="showLeaderboard()" title="لوحة المتصدرين">
+                                <i data-lucide="trophy" style="color: #f59e0b;"></i>
+                            </button>
+                            <button class="menu-action-btn" onclick="showSection('profile')" title="حسابي">
+                                <i data-lucide="user-circle" style="color: #3b82f6;"></i>
+                            </button>
+                            <button class="menu-action-btn" onclick="alert('المتجر قيد التعديل قريباً...')" title="المتجر">
+                                <i data-lucide="shopping-cart" style="color: #10b981;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="nav-hamburger-btn hamburger-trigger" id="practice-hamburger-btn" onclick="togglePracticeMenu(event)" title="القائمة">
+                      <i data-lucide="menu" id="hamburger-icon-menu"></i>
+                      <i data-lucide="x" id="hamburger-icon-x" style="display:none"></i>
                     </button>
-                    <div class="stat-pill streak-pill streak-item" id="practice-streak-display" title="أيام الحماس المتتالية">
-                        <i data-lucide="flame"></i>
-                        <span>12</span>
-                    </div>
-                    <div class="stat-pill gem-pill" title="الجواهر المكتسبة">
-                        <i data-lucide="gem"></i>
-                        <span>340</span>
-                    </div>
-                    <div class="stat-pill heart-pill" title="القلوب المتبقية">
-                        <i data-lucide="heart"></i>
-                        <span id="practice-hearts-val">5</span>
-                    </div>
                 </div>
             </div>
             
