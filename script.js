@@ -914,49 +914,441 @@ function renderProfileSection() {
   if(window.lucide) lucide.createIcons();
 }
 
-// ===== Leaderboard =====
-async function showLeaderboard() {
-  const content = document.getElementById('leaderboard-content');
-  if (content) {
-    content.innerHTML = `<div class="leaderboard-loading">جاري التحميل...</div>`;
-  }
-  openModal('leaderboard-modal');
+// ===== Leaderboard Subpage & Ready-to-Connect Template =====
+let cachedLeaderboardUsers = [];
+
+// دالة مساعدة لحساب إنجاز المستخدم الحالي
+function getCurrentUserProgressStats() {
+  const completedNodes = (practiceNodes || []).filter(n => n.status === 'completed').length;
+  const completedSections = (practiceUnits || []).filter(u => {
+    const uNodes = (practiceNodes || []).filter(n => n.unitId === u.id);
+    return uNodes.length > 0 && uNodes.every(n => n.status === 'completed');
+  }).length;
+  return { completedNodes, completedSections };
+}
+
+// احتساب ترتيب المتصدرين (طريقة داخلية تعتمد على الأقسام والعقد المكتملة دون كشف المعادلة للعامة)
+function calculateBotRankScore(user) {
+  const sections = Number(user.completedSections ?? user.completedSectionsCount ?? 0);
+  const nodes = Number(user.completedNodes ?? user.completedNodesCount ?? 0);
+  const streak = Number(user.highestStreak ?? user.streak ?? 0);
+  const xp = Number(user.totalXP ?? user.xp ?? 0);
   
+  // احتساب البوت: الأقسام المكتملة أولاً ثم العقد ثم الستريك ونقاط الخبرة
+  return (sections * 1000) + (nodes * 50) + (streak * 10) + xp;
+}
+
+// الرتب والمراكز المعروضة للعامة بحسب المركز
+function getRankHonorTitle(rankNumber) {
+  if (rankNumber === 1) return { rankText: 'المركز الأول', badgeClass: 'gold', rankNumber: 1 };
+  if (rankNumber === 2) return { rankText: 'المركز الثاني', badgeClass: 'silver', rankNumber: 2 };
+  if (rankNumber === 3) return { rankText: 'المركز الثالث', badgeClass: 'bronze', rankNumber: 3 };
+  return { rankText: `المركز ${rankNumber}`, badgeClass: '', rankNumber };
+}
+
+// قالب جلب بيانات المتصدرين المسجلين (قالب جاهز للربط عبر API أو التخزين)
+async function fetchLeaderboardData() {
+  // 1. محاولة جلب البيانات الحية من الخادم إذا كان متصلاً
   try {
     const r = await fetch('/api/leaderboard');
-    const data = await r.json();
-    
-    if (!data.length) {
-      content.innerHTML = `<p style="text-align:center;color:var(--color-muted);padding:20px;">لا يوجد متصدرون بعد. كن الأول!</p>`;
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.filter(u => u.isRegistered !== false);
+      }
+    }
+  } catch (e) {}
+
+  // 2. قالب التخزين المحلي للمستخدمين المسجلين للدخول (نماذج مسجلة جاهزة للربط)
+  let registeredList = JSON.parse(localStorage.getItem('registeredLeaderboardUsers') || 'null');
+  // التحقق من تحديث الأسماء السابقة إلى "اسم المستخدم"
+  if (registeredList && Array.isArray(registeredList)) {
+    const hasOldNames = registeredList.some(u => u.name && u.name.includes('كلثوم') || u.name.includes('الخنساء') || u.name.includes('حسان') || u.name.includes('سارة'));
+    if (hasOldNames) {
+      registeredList = null;
+    }
+  }
+
+  if (!registeredList || !registeredList.length) {
+    registeredList = [
+      {
+        id: 'user_reg_1',
+        name: 'اسم المستخدم',
+        photo: '',
+        bio: 'مهتم بعلم البلاغة وقوافي الشعر العربي الأصيل وبحور الخليل.',
+        isRegistered: true,
+        completedSections: 4,
+        completedNodes: 28,
+        highestStreak: 19,
+        totalXP: 420,
+        joinedAt: '2024-01-15'
+      },
+      {
+        id: 'user_reg_2',
+        name: 'اسم المستخدم',
+        photo: '',
+        bio: 'باحثة في الأدب وفنون البديع والبيان والمعلقات.',
+        isRegistered: true,
+        completedSections: 3,
+        completedNodes: 22,
+        highestStreak: 14,
+        totalXP: 330,
+        joinedAt: '2024-02-01'
+      },
+      {
+        id: 'user_reg_3',
+        name: 'اسم المستخدم',
+        photo: '',
+        bio: 'أطمح لختم جميع مسارات علم العروض وتصريف الأوزان الفصيحة.',
+        isRegistered: true,
+        completedSections: 2,
+        completedNodes: 16,
+        highestStreak: 9,
+        totalXP: 240,
+        joinedAt: '2024-03-10'
+      },
+      {
+        id: 'user_reg_4',
+        name: 'اسم المستخدم',
+        photo: '',
+        bio: 'قارئة ومحبة لقصائد المعلقات وبحور الشعر العربي.',
+        isRegistered: true,
+        completedSections: 1,
+        completedNodes: 11,
+        highestStreak: 7,
+        totalXP: 165,
+        joinedAt: '2024-04-05'
+      }
+    ];
+    localStorage.setItem('registeredLeaderboardUsers', JSON.stringify(registeredList));
+  }
+
+  // 3. دمج المستخدم الحالي إذا كان مسجلاً للدخول
+  if (currentUser) {
+    const stats = getCurrentUserProgressStats();
+    const existingIndex = registeredList.findIndex(u => (currentUser.id && u.id === currentUser.id) || (currentUser.email && u.email === currentUser.email));
+    const myEntry = {
+      id: currentUser.id || 'current_registered_user',
+      name: currentUser.name || 'اسم المستخدم',
+      email: currentUser.email || '',
+      photo: currentUser.photo || '',
+      bio: currentUser.bio || 'طالب علم في البيان',
+      isRegistered: true,
+      isCurrentUser: true,
+      completedSections: stats.completedSections,
+      completedNodes: stats.completedNodes,
+      highestStreak: (streakData && streakData.count) || currentUser.highestStreak || 0,
+      totalXP: currentUser.totalXP || (stats.completedNodes * 15),
+      joinedAt: currentUser.joinedAt || new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+      registeredList[existingIndex] = { ...registeredList[existingIndex], ...myEntry };
+    } else {
+      registeredList.push(myEntry);
+    }
+  }
+
+  return registeredList;
+}
+
+// عرض صفحة لوحة المتصدرين
+async function renderLeaderboardSection() {
+  const container = document.getElementById('leaderboard-page-content');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="leaderboard-loading">
+      <i data-lucide="loader-2" style="width:24px;height:24px;animation:spin 1s linear infinite;margin:0 auto 12px;display:block;"></i>
+      جاري تحميل لوحة المتصدرين...
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
+
+  try {
+    const rawUsers = await fetchLeaderboardData();
+
+    // فلترة المستخدمين المسجلين فقط
+    const registeredUsers = rawUsers.filter(u => u.isRegistered !== false);
+
+    if (!registeredUsers.length) {
+      container.innerHTML = `
+        <div class="leaderboard-hero-card">
+          <div class="leaderboard-hero-trophy"><i data-lucide="trophy"></i></div>
+          <h2>لوحة المتصدرين</h2>
+          <p>لا يوجد متصدرون مسجلون بعد. سجّل دخولك لتكون أول المتصدرين!</p>
+          ${!currentUser ? `
+            <div style="margin-top:20px;">
+              <button class="btn-primary" onclick="openLoginModal()">
+                <i data-lucide="log-in"></i> تسجيل الدخول للمنافسة
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
       return;
     }
-    
-    const rankClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-    const rankIcon  = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-    
-    content.innerHTML = data.map((u, i) => `
-      <div class="leaderboard-item">
-        <div class="leaderboard-rank ${rankClass(i)}">${rankIcon(i)}</div>
-        ${u.photo
-          ? `<img src="${escHtml(u.photo)}" class="leaderboard-avatar" alt="${escHtml(u.name)}">`
-          : `<div class="leaderboard-avatar-placeholder"><i data-lucide="user" style="width:18px;height:18px;"></i></div>`
-        }
-        <div class="leaderboard-info">
-          <div class="leaderboard-name">${escHtml(u.name)}</div>
-          <div class="leaderboard-xp">${u.totalXP} نقطة XP</div>
+
+    // ترتيب المتصدرين وفق احتساب البوت (الأقسام والعقد المكتملة)
+    registeredUsers.sort((a, b) => {
+      const scoreA = calculateBotRankScore(a);
+      const scoreB = calculateBotRankScore(b);
+      return scoreB - scoreA;
+    });
+
+    // تعيين الرتب
+    registeredUsers.forEach((u, i) => {
+      u.rankIndex = i;
+    });
+
+    cachedLeaderboardUsers = registeredUsers;
+
+    // استخراج الثلاثة الأوائل
+    const top3 = registeredUsers.slice(0, 3);
+    const remainingUsers = registeredUsers.slice(3);
+
+    // معرفة رتبة المستخدم الحالي إن وجد
+    const myIndex = currentUser ? registeredUsers.findIndex(u => u.isCurrentUser || (currentUser.id && u.id === currentUser.id) || (currentUser.email && u.email === currentUser.email)) : -1;
+    const myRankInfo = myIndex >= 0 ? getRankHonorTitle(myIndex + 1) : null;
+
+    let userBannerHtml = '';
+    if (currentUser && myIndex >= 0) {
+      userBannerHtml = `
+        <div class="leaderboard-user-status-bar highlight">
+          <div class="user-status-info">
+            ${currentUser.photo 
+              ? `<img src="${escHtml(currentUser.photo)}" class="user-status-avatar" alt="${escHtml(currentUser.name)}">`
+              : `<div class="user-status-avatar podium-avatar-placeholder"><i data-lucide="user" style="width:20px;height:20px;"></i></div>`
+            }
+            <div class="user-status-text">
+              <div class="user-status-title">أهلاً ${escHtml(currentUser.name || 'بك')}! رتبتك الحالية: ${myRankInfo.rankText}</div>
+              <div class="user-status-sub">اضغط على أي متصدر لعرض ملفه الشخصي</div>
+            </div>
+          </div>
+          <div class="user-status-badge">
+            <i data-lucide="award" style="width:16px;height:16px;color:#f59e0b;"></i>
+            <span>${myRankInfo.rankText}</span>
+          </div>
         </div>
-        <div class="leaderboard-streak">
-          <i data-lucide="flame" style="width:14px;height:14px;"></i>
-          ${u.highestStreak}
+      `;
+    } else if (!currentUser) {
+      userBannerHtml = `
+        <div class="leaderboard-user-status-bar">
+          <div class="user-status-info">
+            <div class="user-status-avatar podium-avatar-placeholder">
+              <i data-lucide="sparkles" style="width:20px;height:20px;color:#f59e0b;"></i>
+            </div>
+            <div class="user-status-text">
+              <div class="user-status-title">سجّل دخولك لحجز مركزك في لوحة المتصدرين</div>
+              <div class="user-status-sub">يتم احتساب المراكز تلقائياً للأعضاء المسجلين بناءً على إنجاز المسارات</div>
+            </div>
+          </div>
+          <button class="btn-primary btn-sm" onclick="openLoginModal()">
+            <i data-lucide="log-in" style="width:14px;height:14px;"></i> تسجيل الدخول
+          </button>
         </div>
+      `;
+    }
+
+    // بناء منصة التتويج (Podium) - 2nd place, 1st place, 3rd place
+    let podiumHtml = '';
+    if (top3.length > 0) {
+      const p1 = top3[0];
+      const p2 = top3[1];
+      const p3 = top3[2];
+
+      const renderPodiumStep = (user, rankNum) => {
+        if (!user) return `<div class="podium-step" style="visibility:hidden;"></div>`;
+        const honor = getRankHonorTitle(rankNum);
+        const avatar = user.photo
+          ? `<img src="${escHtml(user.photo)}" class="podium-avatar" alt="${escHtml(user.name)}">`
+          : `<div class="podium-avatar podium-avatar-placeholder"><i data-lucide="user" style="width:28px;height:28px;"></i></div>`;
+
+        return `
+          <div class="podium-step rank-${rankNum}" onclick="openPublicProfileModal('${user.id}')" title="عرض ملف ${escHtml(user.name)}">
+            <div class="podium-avatar-wrapper">
+              <div class="podium-halo"></div>
+              ${avatar}
+            </div>
+            <div class="podium-name">${escHtml(user.name)}</div>
+            ${user.highestStreak ? `
+              <div class="podium-meta-streak" title="أيام الحماس">
+                <i data-lucide="flame"></i>
+                <span>${user.highestStreak} أيام</span>
+              </div>
+            ` : ''}
+            <div class="podium-pillar">
+              <div class="podium-rank-badge">${rankNum}</div>
+              <div class="podium-rank-text">${honor.rankText}</div>
+            </div>
+          </div>
+        `;
+      };
+
+      podiumHtml = `
+        <div class="leaderboard-podium">
+          ${renderPodiumStep(p2, 2)}
+          ${renderPodiumStep(p1, 1)}
+          ${renderPodiumStep(p3, 3)}
+        </div>
+      `;
+    }
+
+    // بناء قائمة باقي المتصدرين (المركز الرابع فما فوق)
+    let listHtml = '';
+    if (remainingUsers.length > 0) {
+      listHtml = `
+        <div class="leaderboard-list-card">
+          <div class="leaderboard-list-header">
+            <i data-lucide="users" style="width:16px;height:16px;color:var(--color-muted);"></i>
+            <span>باقي المتصدرين المسجلين</span>
+          </div>
+          <div class="leaderboard-rows">
+            ${remainingUsers.map(u => {
+              const rankInfo = getRankHonorTitle(u.rankIndex + 1);
+              const isMe = (currentUser && (u.id === currentUser.id || u.email === currentUser.email || u.isCurrentUser));
+              const avatar = u.photo
+                ? `<img src="${escHtml(u.photo)}" class="leaderboard-row-avatar" alt="${escHtml(u.name)}">`
+                : `<div class="leaderboard-row-avatar podium-avatar-placeholder"><i data-lucide="user" style="width:20px;height:20px;"></i></div>`;
+
+              return `
+                <div class="leaderboard-row-item ${isMe ? 'is-me' : ''}" onclick="openPublicProfileModal('${u.id}')" title="عرض الملف الشخصي">
+                  <div class="leaderboard-rank-pill">${u.rankIndex + 1}</div>
+                  ${avatar}
+                  <div class="leaderboard-row-info">
+                    <div class="leaderboard-row-name">
+                      ${escHtml(u.name)}
+                      ${isMe ? `<span class="leaderboard-me-tag">أنت</span>` : ''}
+                    </div>
+                    <div class="leaderboard-row-badge">${rankInfo.rankText}</div>
+                  </div>
+                  ${u.highestStreak ? `
+                    <div class="leaderboard-row-streak" title="أيام الحماس">
+                      <i data-lucide="flame" style="width:14px;height:14px;"></i>
+                      <span>${u.highestStreak}</span>
+                    </div>
+                  ` : ''}
+                  <div class="leaderboard-view-profile-hint">
+                    <i data-lucide="chevron-left" style="width:18px;height:18px;"></i>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="leaderboard-hero-card">
+        <div class="leaderboard-hero-trophy"><i data-lucide="trophy"></i></div>
+        <h2>لوحة المتصدرين</h2>
+        <p>تصنيف المتنافسين المسجلين في ميادين الأدب والشعر</p>
       </div>
-    `).join('');
-    
-    if(window.lucide) lucide.createIcons();
-  } catch(e) {
-    if (content) content.innerHTML = `<p style="text-align:center;color:var(--color-muted);">فشل تحميل المتصدرين</p>`;
+
+      ${userBannerHtml}
+
+      ${podiumHtml}
+
+      ${listHtml}
+    `;
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-muted);">حدث خطأ أثناء تحميل المتصدرين. يرجى المحاولة مرة أخرى.</div>`;
   }
 }
+
+// فتح مودال الملف الشخصي لأحد المتصدرين
+function openPublicProfileModal(userId) {
+  const user = cachedLeaderboardUsers.find(u => String(u.id) === String(userId));
+  if (!user) return;
+
+  const modalBody = document.getElementById('public-profile-modal-body');
+  if (!modalBody) return;
+
+  const rankInfo = getRankHonorTitle((user.rankIndex || 0) + 1);
+  const isMe = (currentUser && (user.id === currentUser.id || user.email === currentUser.email || user.isCurrentUser));
+  
+  const joinDateFormatted = user.joinedAt 
+    ? new Date(user.joinedAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })
+    : 'عضو مسجل';
+
+  const avatarHtml = user.photo
+    ? `<img src="${escHtml(user.photo)}" class="public-profile-avatar" alt="${escHtml(user.name)}">`
+    : `<div class="public-profile-avatar podium-avatar-placeholder" style="background:rgba(255,255,255,0.2);margin:0 auto 12px;border:3px solid rgba(255,255,255,0.6);"><i data-lucide="user" style="width:40px;height:40px;color:#fff;"></i></div>`;
+
+  modalBody.innerHTML = `
+    <div class="public-profile-header">
+      <button class="public-profile-close-btn" onclick="closeModal('public-profile-modal')" title="إغلاق">
+        <i data-lucide="x" style="width:18px;height:18px;"></i>
+      </button>
+      ${avatarHtml}
+      <div class="public-profile-name">${escHtml(user.name || 'اسم المستخدم')}</div>
+      <div class="public-profile-honor">
+        <span><i data-lucide="award" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i></span>
+        <span>${rankInfo.rankText}</span>
+      </div>
+    </div>
+    <div class="public-profile-body">
+      ${user.bio ? `
+        <div class="public-profile-bio-box">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--color-muted);margin-bottom:4px;">النبذة الشخصية:</div>
+          <div>${escHtml(user.bio)}</div>
+        </div>
+      ` : ''}
+
+      <div class="public-profile-stats-grid">
+        <div class="public-profile-stat-card">
+          <div class="public-profile-stat-num" style="color:#ea580c;">
+            <i data-lucide="flame" style="display:inline;width:18px;height:18px;vertical-align:middle;"></i>
+            ${user.highestStreak || 0}
+          </div>
+          <div class="public-profile-stat-label">أيام الحماس المتتالية</div>
+        </div>
+        <div class="public-profile-stat-card">
+          <div class="public-profile-stat-num" style="color:#f59e0b;">
+            <i data-lucide="award" style="display:inline;width:18px;height:18px;vertical-align:middle;"></i>
+            ${rankInfo.rankNumber}
+          </div>
+          <div class="public-profile-stat-label">${rankInfo.rankText}</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-size:0.8rem;color:var(--color-muted);margin-bottom:16px;">
+        <i data-lucide="calendar" style="display:inline;width:14px;height:14px;vertical-align:middle;margin-left:4px;"></i>
+        عضو مسجل منذ: ${joinDateFormatted}
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:center;">
+        ${isMe ? `
+          <button class="btn-primary btn-sm" onclick="closeModal('public-profile-modal'); showSection('profile');">
+            <i data-lucide="edit-3"></i> تعديل ملفي الشخصي
+          </button>
+        ` : ''}
+        <button class="btn-secondary btn-sm" onclick="closeModal('public-profile-modal')">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  `;
+
+  openModal('public-profile-modal');
+  if (window.lucide) lucide.createIcons();
+}
+window.openPublicProfileModal = openPublicProfileModal;
+
+// التوجيه إلى صفحة المتصدرين الفرعية
+function showLeaderboard() {
+  showSection('leaderboard');
+}
+window.showLeaderboard = showLeaderboard;
+
+function returnFromLeaderboard() {
+  showSection(previousSection || 'practice');
+}
+window.returnFromLeaderboard = returnFromLeaderboard;
 
 // ===== Practice Menu Animation =====
 function togglePracticeMenu(event) {
@@ -3829,10 +4221,18 @@ window.finishNodeAchievement = function() {
   showSection('practice');
 };
 
-// Update showSection to handle practice path rendering
-const ALL_SECTIONS = ['home','tests','quiz','arud','museum','museum-poet', 'practice', 'lesson', 'profile'];
+// Update showSection to handle practice path and leaderboard subpage
+let previousSection = 'home';
+let currentActiveSection = 'home';
+
+const ALL_SECTIONS = ['home','tests','quiz','arud','museum','museum-poet', 'practice', 'lesson', 'profile', 'leaderboard'];
 
 function showSection(id) {
+  if (currentActiveSection !== id && id !== 'lesson') {
+    previousSection = currentActiveSection;
+  }
+  currentActiveSection = id;
+
   ALL_SECTIONS.forEach(s => {
     const el = document.getElementById(`${s}-section`);
     if (el) {
@@ -3865,6 +4265,7 @@ function showSection(id) {
     }
     if (id === 'museum') renderMuseumLanding();
     if (id === 'profile') renderProfileSection();
+    if (id === 'leaderboard') renderLeaderboardSection();
   }
   
   window.scrollTo({ top:0, behavior:'smooth' });
