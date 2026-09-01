@@ -109,6 +109,24 @@
                 </div>
             </section>
         </section>
+<!-- ===== لوحة المتصدرين (صفحة فرعية) ===== -->
+<section id="leaderboard-section" style="display:none;">
+  <div class="container py-8" style="max-width:760px;">
+    <div class="leaderboard-top-nav">
+      <button class="back-btn" onclick="returnFromLeaderboard()">
+        <i data-lucide="arrow-right"></i> العودة
+      </button>
+      <div class="leaderboard-page-badge">
+        <i data-lucide="award"></i> المتصدرون المسجلون
+      </div>
+    </div>
+    
+    <div id="leaderboard-page-content">
+      <!-- Injected by renderLeaderboardSection() -->
+    </div>
+  </div>
+</section>
+
 <!-- ===== الملف الشخصي ===== -->
 <section id="profile-section" style="display:none;">
   <div class="container py-8" style="max-width:680px;">
@@ -862,6 +880,15 @@
     </div>
     <div class="modal-body" id="leaderboard-content" style="gap:8px;">
       <!-- injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- مودال عرض الملف الشخصي لأحد المتصدرين -->
+<div id="public-profile-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'public-profile-modal')">
+  <div class="modal-card" style="max-width:480px; padding:0; overflow:hidden; border-radius:20px;">
+    <div id="public-profile-modal-body">
+      <!-- Injected by JS -->
     </div>
   </div>
 </div>
