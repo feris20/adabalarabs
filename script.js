@@ -3850,6 +3850,7 @@ function showSection(id) {
       t.classList.add('section-enter');
     }
     if (id === 'museum') renderMuseumLanding();
+    if (id === 'profile') renderProfileSection();
   }
   window.scrollTo({ top:0, behavior:'smooth' });
 }
