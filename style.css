@@ -3825,3 +3825,86 @@ transform: rotate(45deg);
   .podium-rank-badge { font-size: 1.15rem; }
   .podium-rank-text { font-size: 0.68rem; }
 }
+/* ===== نظام القلوب ===== */
+.heart-pill { cursor: pointer; transition: all 0.2s ease; }
+.heart-pill:hover { transform: scale(1.05); }
+.heart-pill.infinite {
+  background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.15));
+  border-color: rgba(168,85,247,0.5);
+  color: #a855f7;
+}
+.heart-pill.low-hearts {
+  background: rgba(225,29,72,0.08);
+  border-color: rgba(225,29,72,0.3);
+  color: #e11d48;
+  animation: heartBeat 1.5s infinite;
+}
+@keyframes heartBeat {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.lesson-hearts { cursor: default; }
+.lesson-hearts.infinite i,
+.lesson-hearts.infinite span { color: #a855f7; }
+
+.hearts-count-big {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-text);
+}
+.hearts-count-big.low  { color: #e11d48; }
+.hearts-count-big.zero { color: #9ca3af; }
+.hearts-count-big.infinite {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== كودات البرومو (أدمن) ===== */
+.promo-code-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+}
+.promo-code-item.inactive { opacity: 0.6; }
+.promo-code-badge {
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  padding: 5px 12px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+.promo-code-item.inactive .promo-code-badge {
+  text-decoration: line-through;
+  color: var(--color-muted);
+}
+.promo-code-info { flex: 1; min-width: 0; }
+.promo-code-name { font-weight: 700; font-size: 0.9rem; }
+.promo-code-stats { font-size: 0.78rem; color: var(--color-muted); margin-top: 2px; }
+.promo-code-emails { font-size: 0.72rem; color: var(--color-muted); margin-top: 3px; direction: ltr; text-align: right; }
+.promo-code-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.promo-action-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.promo-action-btn:hover { border-color: var(--color-text); color: var(--color-text); }
+.promo-action-btn.danger:hover { border-color: #e11d48; color: #e11d48; }
+.promo-action-btn.enable:hover { border-color: #22c55e; color: #22c55e; }
