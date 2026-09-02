@@ -706,10 +706,15 @@ async function handleGoogleCredential(response) {
     
     closeModal('login-modal');
     updateNavUserDisplay();
-    syncProgressToServer();
+
+    // مزامنة التقدم ثم جلبه وتطبيقه فوراً
+    await syncProgressToServer();
+    // بعد الدخول مباشرة: اجلب تقدم السيرفر وطبّقه
+    await loadProgressFromServer();
     
     if (window.lucide) lucide.createIcons();
   } catch(e) {
+    console.error("خطأ تسجيل الدخول بالتفصيل:", e);
     alert('خطأ في تسجيل الدخول: ' + e.message);
   }
 }
@@ -734,7 +739,10 @@ async function loadUserFromStorage() {
       }
     } catch(e) {}
   }
-  updateNavUserDisplay();
+    updateNavUserDisplay();
+  if (userToken) {
+    await loadProgressFromServer();
+  }
 }
 
 function updateNavUserDisplay() {
@@ -803,36 +811,119 @@ async function saveUserProfile() {
 }
 
 async function syncProgressToServer() {
-  if (!userToken) return;
-  const completedNodes = practiceNodes.filter(n => n.status === 'completed').length;
-  const totalXP = completedNodes * 15;
+  if (!userToken || !currentUser) return;
+  
+  const STATUS_RANK = { locked: 0, current: 1, completed: 2 };
   const progress = {};
   
   practiceNodes.forEach(n => {
-    if (n.status === 'completed') {
-      progress[String(n.id)] = { status: 'completed', levelIndex: n.levels?.length || 0 };
-    } else if (n.status === 'current') {
-      progress[String(n.id)] = { status: 'current', levelIndex: n.currentLevelIndex || 0 };
+    const rank = STATUS_RANK[n.status] || 0;
+    if (rank > 0) {
+      progress[String(n.id)] = {
+        status:            n.status,
+        currentLevelIndex: n.currentLevelIndex || 0,
+        unitId:            n.unitId
+      };
     }
   });
-  
+
+  const completedCount = practiceNodes.filter(n => n.status === 'completed').length;
+  const totalXP        = completedCount * 15;
+
   try {
     await fetch('/api/user/progress', {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type':  'application/json',
         'Authorization': `Bearer ${userToken}`
       },
-      body: JSON.stringify({ totalXP, highestStreak: streakData.count, progress })
+      body: JSON.stringify({
+        progress,
+        totalXP,
+        streakCount:    streakData.count,
+        lastActiveDate: streakData.lastActiveDate,
+        highestStreak:  Math.max(streakData.count, currentUser?.highestStreak || 0)
+      })
     });
+
     if (currentUser) {
-      currentUser.totalXP = Math.max(currentUser.totalXP || 0, totalXP);
+      currentUser.totalXP       = Math.max(currentUser.totalXP || 0, totalXP);
       currentUser.highestStreak = Math.max(currentUser.highestStreak || 0, streakData.count);
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
-  } catch(e) {}
+  } catch(e) {
+    console.warn('syncProgressToServer failed:', e);
+  }
 }
 
+async function loadProgressFromServer() {
+  if (!userToken) return;
+
+  try {
+    const r = await fetch('/api/user/progress', {
+      headers: { 'Authorization': `Bearer ${userToken}` }
+    });
+    if (!r.ok) return;
+
+    const serverData = await r.json();
+    const serverProgress = serverData.progress || {};
+    const STATUS_RANK = { locked: 0, current: 1, completed: 2 };
+
+    // طبّق التقدم على practiceNodes
+    let anyChange = false;
+    practiceNodes.forEach(node => {
+      const nodeKey    = String(node.id);
+      const serverNode = serverProgress[nodeKey];
+      if (!serverNode) return;
+
+      const serverRank = STATUS_RANK[serverNode.status] || 0;
+      const localRank  = STATUS_RANK[node.status]       || 0;
+
+      if (serverRank > localRank) {
+        node.status            = serverNode.status;
+        node.currentLevelIndex = serverNode.currentLevelIndex || 0;
+        anyChange = true;
+      } else if (serverRank === localRank && serverRank === 2) {
+        // كلاهما completed — خذ الأعلى levelIndex
+        if ((serverNode.currentLevelIndex || 0) > (node.currentLevelIndex || 0)) {
+          node.currentLevelIndex = serverNode.currentLevelIndex;
+          anyChange = true;
+        }
+      }
+    });
+
+    // طبّق الستريك
+    if (serverData.lastActiveDate) {
+      try {
+        const serverDate = new Date(serverData.lastActiveDate);
+        const localDate  = streakData.lastActiveDate ? new Date(streakData.lastActiveDate) : null;
+        if (!localDate || serverDate > localDate) {
+          streakData.count          = serverData.streakCount    || 0;
+          streakData.lastActiveDate = serverData.lastActiveDate;
+          localStorage.setItem('streakData', JSON.stringify(streakData));
+          updateStreakDisplay();
+          anyChange = true;
+        }
+      } catch(e) {}
+    }
+
+    // طبّق highestStreak و totalXP على currentUser
+    if (currentUser) {
+      currentUser.highestStreak = serverData.highestStreak || 0;
+      currentUser.totalXP       = serverData.totalXP       || 0;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+
+    if (anyChange) {
+      // احفظ محلياً مع التقدم المحدَّث
+      localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
+      renderPracticePath();
+      console.log('✅ تم تحميل التقدم من السيرفر');
+    }
+  } catch(e) {
+    console.warn('loadProgressFromServer failed:', e);
+  }
+}
 // ===== Profile Section =====
 function renderProfileSection() {
   const container = document.getElementById('profile-content');
