@@ -274,6 +274,12 @@ document.addEventListener('pointerdown', () => {
 // =============================================
 let authToken = sessionStorage.getItem('adminToken') || null;
 let isAdmin   = false;
+let heartsData = JSON.parse(localStorage.getItem('heartsData') || 'null') || {
+  count: 5.0,
+  infiniteHearts: false,
+  promoCode: null,
+  lastDailyRefill: null
+};
 let currentUser = null;
 let userToken   = localStorage.getItem('userToken') || null;
 const GOOGLE_CLIENT_ID = '612595539801-ik8h3fjp1migc6skf7iia6a79megdmhc.apps.googleusercontent.com'; // ← نفس Client ID
@@ -1497,6 +1503,269 @@ function saveEditedCourseName() {
   }
 }
 
+// =============================================
+// نظام القلوب
+// =============================================
+function saveHeartsLocally() {
+  try { localStorage.setItem('heartsData', JSON.stringify(heartsData)); } catch(e) {}
+}
+
+function updateHeartsDisplay() {
+  const inf  = heartsData.infiniteHearts;
+  const cnt  = Math.max(0, heartsData.count);
+  const disp = inf ? '∞' : (cnt % 1 === 0 ? String(cnt) : cnt.toFixed(1));
+
+  // شريط تمرّن
+  const practiceVal  = document.getElementById('practice-hearts-val');
+  const heartsPill   = document.getElementById('practice-hearts-pill');
+  const heartsIcon   = document.getElementById('practice-hearts-icon');
+  if (practiceVal) practiceVal.textContent = disp;
+  if (heartsPill) {
+    heartsPill.classList.toggle('infinite', inf);
+    heartsPill.classList.toggle('low-hearts', !inf && cnt < 2);
+  }
+  if (heartsIcon) {
+    heartsIcon.setAttribute('data-lucide', inf ? 'gem' : 'heart');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // شريط الدرس
+  const lessonCount  = document.getElementById('lesson-heart-count');
+  const lessonDiv    = document.querySelector('.lesson-hearts');
+  if (lessonCount) lessonCount.textContent = disp;
+  if (lessonDiv)   lessonDiv.classList.toggle('infinite', inf);
+}
+
+async function initHearts() {
+  const stored = localStorage.getItem('heartsData');
+  if (stored) { try { heartsData = JSON.parse(stored); } catch(e) {} }
+
+  if (userToken) {
+    try {
+      const r = await fetch('/api/hearts', { headers: { 'Authorization': `Bearer ${userToken}` } });
+      if (r.ok) {
+        const d = await r.json();
+        heartsData.count          = d.hearts;
+        heartsData.infiniteHearts = d.infiniteHearts || false;
+        heartsData.promoCode      = d.promoCodeUsed  || null;
+        heartsData.lastDailyRefill = d.lastDailyRefill;
+        saveHeartsLocally();
+        if (d.dailyGiven) showHeartsToast('❤️ تمت إضافة 5 قلوب يومية!', '#e11d48');
+      }
+    } catch(e) { console.warn('Hearts init failed:', e); }
+  } else {
+    // زائر: تحقق يومي محلي
+    const today = new Date().toISOString().split('T')[0];
+    if (!heartsData.lastDailyRefill || heartsData.lastDailyRefill !== today) {
+      if (!heartsData.infiniteHearts)
+        heartsData.count = Math.min((heartsData.count || 0) + 5, 10);
+      heartsData.lastDailyRefill = today;
+      saveHeartsLocally();
+    }
+  }
+  updateHeartsDisplay();
+}
+
+function showHeartsToast(msg, color) {
+  const n = document.createElement('div');
+  n.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${color};color:white;padding:10px 20px;border-radius:10px;font-size:0.85rem;font-weight:700;font-family:var(--font-sans);z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;`;
+  n.textContent = msg;
+  document.body.appendChild(n);
+  requestAnimationFrame(() => {
+    n.style.opacity = '1';
+    setTimeout(() => { n.style.opacity = '0'; setTimeout(() => n.remove(), 300); }, 3000);
+  });
+}
+
+function deductHeart() {
+  if (heartsData.infiniteHearts) return;
+  heartsData.count = Math.round((heartsData.count - 0.5) * 10) / 10;
+  saveHeartsLocally();
+  updateHeartsDisplay();
+  scheduleHeartsSync();
+}
+
+let heartsSyncTimer = null;
+function scheduleHeartsSync() {
+  if (!userToken) return;
+  clearTimeout(heartsSyncTimer);
+  heartsSyncTimer = setTimeout(syncHeartsToServer, 2000);
+}
+
+async function syncHeartsToServer() {
+  if (!userToken || heartsData.infiniteHearts) return;
+  try {
+    await fetch('/api/hearts', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userToken}` },
+      body: JSON.stringify({ count: heartsData.count })
+    });
+  } catch(e) {}
+}
+
+function canStartLesson() {
+  return heartsData.infiniteHearts || heartsData.count >= 0.5;
+}
+
+function openHeartsModal() {
+  const display      = document.getElementById('hearts-modal-display');
+  const dailyInfo    = document.getElementById('hearts-daily-info');
+  const promoSection = document.getElementById('hearts-promo-section');
+  const infiniteInfo = document.getElementById('hearts-infinite-info');
+  const loginPrompt  = document.getElementById('hearts-login-prompt');
+
+  if (!display) return;
+
+  if (heartsData.infiniteHearts) {
+    display.innerHTML = `<div style="font-size:3.5rem;margin-bottom:8px;">💜</div>
+      <div class="hearts-count-big infinite">∞</div>
+      <div style="color:var(--color-muted);font-size:0.85rem;margin-top:4px;">قلوب لا نهائية</div>`;
+    if (infiniteInfo) infiniteInfo.style.display = 'block';
+    if (promoSection) promoSection.style.display  = 'none';
+    if (loginPrompt)  loginPrompt.style.display   = 'none';
+  } else {
+    const cnt   = Math.max(0, heartsData.count);
+    const cls   = cnt < 1 ? 'zero' : cnt < 2 ? 'low' : '';
+    const emoji = cnt < 1 ? '💔' : cnt < 2 ? '🖤' : '❤️';
+    display.innerHTML = `<div style="font-size:3rem;margin-bottom:8px;">${emoji}</div>
+      <div class="hearts-count-big ${cls}">${cnt % 1 === 0 ? cnt : cnt.toFixed(1)}</div>
+      <div style="color:var(--color-muted);font-size:0.85rem;margin-top:4px;">قلوب متبقية (الحد الأقصى 10)</div>`;
+    if (infiniteInfo) infiniteInfo.style.display = 'none';
+    if (!userToken) {
+      if (promoSection) promoSection.style.display = 'none';
+      if (loginPrompt)  loginPrompt.style.display  = 'block';
+    } else {
+      if (promoSection) promoSection.style.display = 'block';
+      if (loginPrompt)  loginPrompt.style.display  = 'none';
+    }
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  if (dailyInfo) {
+    dailyInfo.textContent = heartsData.lastDailyRefill === today
+      ? '✅ تم استلام قلوب اليوم — القلوب التالية: غداً'
+      : '⏰ ستحصل على 5 قلوب غداً عند فتح الموقع';
+  }
+
+  const promoErr = document.getElementById('promo-error');
+  if (promoErr) promoErr.style.display = 'none';
+  const promoInp = document.getElementById('promo-code-input');
+  if (promoInp) promoInp.value = '';
+
+  openModal('hearts-modal');
+}
+
+async function redeemPromoCode() {
+  if (!userToken) { alert('يجب تسجيل الدخول أولاً'); return; }
+  const input    = document.getElementById('promo-code-input');
+  const errorEl  = document.getElementById('promo-error');
+  const code     = (input?.value || '').trim().toUpperCase();
+  if (!code) {
+    if (errorEl) { errorEl.textContent = 'يرجى إدخال الكود'; errorEl.style.display = 'block'; }
+    return;
+  }
+  try {
+    const r = await fetch('/api/promo', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${userToken}` },
+      body: JSON.stringify({ code })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      heartsData.infiniteHearts = true;
+      heartsData.promoCode = code;
+      saveHeartsLocally();
+      updateHeartsDisplay();
+      if (errorEl) errorEl.style.display = 'none';
+      openHeartsModal();
+      if (soundFX) soundFX.levelWin();
+      setTimeout(() => showHeartsToast('💜 تم تفعيل القلوب اللانهائية!', '#a855f7'), 500);
+    } else {
+      if (errorEl) { errorEl.textContent = d.detail || d.error || 'الكود غير صالح'; errorEl.style.display = 'block'; }
+    }
+  } catch(e) {
+    if (errorEl) { errorEl.textContent = 'خطأ في الاتصال'; errorEl.style.display = 'block'; }
+  }
+}
+
+// =============================================
+// أدمن: إدارة كودات البرومو
+// =============================================
+async function openAdminPromosModal() {
+  if (!isAdmin) return;
+  openModal('admin-promos-modal');
+  await loadAdminPromos();
+}
+
+async function loadAdminPromos() {
+  const list = document.getElementById('admin-promos-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;color:var(--color-muted);padding:20px;">جاري التحميل...</div>';
+  try {
+    const codes = await apiCall('GET', '/admin/promos', null, true);
+    const entries = Object.entries(codes || {});
+    if (!entries.length) {
+      list.innerHTML = '<div style="text-align:center;color:var(--color-muted);padding:20px;font-style:italic;">لا توجد كودات بعد</div>';
+      return;
+    }
+    list.innerHTML = entries.map(([code, p]) => `
+      <div class="promo-code-item ${p.active ? '' : 'inactive'}">
+        <div class="promo-code-badge">${escHtml(code)}</div>
+        <div class="promo-code-info">
+          <div class="promo-code-name">${escHtml(p.name || 'بدون اسم')}</div>
+          <div class="promo-code-stats">
+            ${p.uses} مستخدم${p.maxUses !== -1 ? ` / ${p.maxUses}` : ' (غير محدود)'}
+            ${!p.active ? ' — <span style="color:#e11d48">معطّل</span>' : ''}
+          </div>
+          ${p.usedEmails?.length ? `<div class="promo-code-emails" dir="ltr">${p.usedEmails.slice(0,3).join(', ')}${p.usedEmails.length>3?` +${p.usedEmails.length-3}`:''}</div>` : ''}
+        </div>
+        <div class="promo-code-actions">
+          <button class="promo-action-btn ${p.active ? 'danger' : 'enable'}" title="${p.active ? 'تعطيل' : 'تفعيل'}"
+            onclick="adminTogglePromo('${escHtml(code)}', ${!p.active})">
+            <i data-lucide="${p.active ? 'toggle-right' : 'toggle-left'}" style="width:14px;height:14px;"></i>
+          </button>
+          <button class="promo-action-btn danger" title="حذف" onclick="adminDeletePromo('${escHtml(code)}')">
+            <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+    if (window.lucide) lucide.createIcons();
+  } catch(e) {
+    list.innerHTML = '<div style="color:#e11d48;padding:20px;text-align:center;">فشل التحميل</div>';
+  }
+}
+
+async function adminCreatePromoCode() {
+  const code    = (document.getElementById('new-promo-code')?.value || '').trim().toUpperCase();
+  const name    = (document.getElementById('new-promo-name')?.value || '').trim();
+  const maxUses = parseInt(document.getElementById('new-promo-max')?.value || '-1');
+  if (!code || !name) return alert('يرجى ملء الكود والاسم');
+  try {
+    await apiCall('POST', '/admin/promos', { code, name, maxUses }, true);
+    document.getElementById('new-promo-code').value = '';
+    document.getElementById('new-promo-name').value = '';
+    document.getElementById('new-promo-max').value  = '-1';
+    if (soundFX) soundFX.success();
+    await loadAdminPromos();
+  } catch(e) { alert('خطأ: ' + e.message); }
+}
+
+async function adminTogglePromo(code, activate) {
+  try {
+    await apiCall('PUT', `/admin/promos/${code}`, { active: activate }, true);
+    await loadAdminPromos();
+  } catch(e) { alert('خطأ: ' + e.message); }
+}
+
+async function adminDeletePromo(code) {
+  if (!confirm(`حذف الكود "${code}" نهائياً؟`)) return;
+  try {
+    await apiCall('DELETE', `/admin/promos/${code}`, null, true);
+    await loadAdminPromos();
+  } catch(e) { alert('خطأ: ' + e.message); }
+}
+
 function savePracticeData() {
   localStorage.setItem('practiceCourses_v1', JSON.stringify(practiceCourses));
   localStorage.setItem('currentCourseId', currentCourseId);
@@ -2051,15 +2320,9 @@ function renderPracticePath() {
             <span>قسم مقفول</span> <i data-lucide="lock" style="width:16px;height:16px;"></i>
           </button>
         `;
-      } else if (node.status === 'completed') {
+            } else if (node.status === 'completed') {
         actionsHtml = `
-          <button type="button" class="tt-action-btn tt-review" onclick="startLesson('review', ${node.id})">
-            <span>مراجعة +5 XP</span> <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
-          </button>
           <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
-            <span>${node.actionText || 'إعادة +15 XP'}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
-          </button>
-        `;
       } else if (node.status === 'current' || isAdmin) {
         actionsHtml = `
           <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
@@ -3455,6 +3718,19 @@ function startLesson(mode, nodeId = null) {
   
   const node = practiceNodes.find(n => n.id === currentNodeId);
   if (!node) return;
+     // فحص القلوب
+  if (!canStartLesson()) {
+    if (soundFX) soundFX.error();
+    // حساب الوقت المتبقي حتى الغد
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0);
+    const diff = tomorrow - new Date();
+    const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
+    const timerEl = document.getElementById('no-hearts-timer');
+    if (timerEl) timerEl.textContent = `⏰ القلوب القادمة بعد ${h} ساعة و ${m} دقيقة`;
+    const m2 = document.getElementById('no-hearts-modal');
+    if (m2) m2.style.display = 'flex';
+    return;
+  }
 
   // Strict unit locking check
   const unitIdx = practiceUnits.findIndex(u => Number(u.id) === Number(node.unitId));
@@ -4116,7 +4392,9 @@ window.checkAnswer = function() {
   if (!btn.classList.contains('active')) return;
   
   const q = currentLessonQuestions[currentQuestionIndex];
-  
+   
+  // خصم قلب لكل سؤال
+     deductHeart();
   // Cards succeed without quiz evaluation
   if (q.type === 'info_card' || q.type === 'image_card') {
     if (soundFX) soundFX.tap();
@@ -4190,15 +4468,6 @@ window.checkAnswer = function() {
     else if (q.type === 'keypad') desc.textContent = `النمط الصحيح: ${q.correct}`;
     else desc.textContent = 'حاول التركيز مرة أخرى';
     
-    // Reduce heart count
-    const hc = document.getElementById('lesson-heart-count');
-    if (hc) {
-      let h = parseInt(hc.textContent);
-      if (h > 0) hc.textContent = h - 1;
-    }
-  }
-  if (window.lucide) lucide.createIcons();
-};
 
 window.nextQuestion = function() {
   if (soundFX) soundFX.tap();
@@ -4298,14 +4567,33 @@ function showNodeAchievements(node) {
     document.getElementById('achievement-node-title').textContent = `أكملت عقدة "${node.title}" بنجاح وتألقت في أدب العرب!`;
   }
   
-  activateStreak();
+    activateStreak();
   savePracticeData();
+
+  // مكافأة إكمال العقدة: +2 قلب
+  if (!heartsData.infiniteHearts) {
+    heartsData.count = Math.min(heartsData.count + 2, 10);
+    saveHeartsLocally();
+    updateHeartsDisplay();
+    showHeartsToast('❤️ +2 قلب مكافأة إكمال العقدة!', '#22c55e');
+  }
+  // مزامنة مع السيرفر (للمسجلين) — Anti-cheat: مكافأة مرة واحدة لكل عقدة
+  if (userToken) {
+    fetch('/api/hearts/complete', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${userToken}` },
+      body: JSON.stringify({ nodeId: String(node.id) })
+    }).then(r => r.json()).then(data => {
+      if (data.hearts !== undefined) {
+        heartsData.count = data.hearts;
+        saveHeartsLocally();
+        updateHeartsDisplay();
+      }
+    }).catch(() => {});
+  }
+
   renderPracticePath();
-  syncProgressToServer();
-   
   openModal('node-achievement-modal');
-  if (window.lucide) lucide.createIcons();
-}
 
 window.finishNodeAchievement = function() {
   closeModal('node-achievement-modal');
@@ -5020,6 +5308,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   await verifyStoredToken();
   await loadPracticeFromServer(); // ← أضف هذا السطر
   await loadUserFromStorage();
+  await initHearts();
    
   loadVerses();
 
@@ -5065,6 +5354,12 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   window.openUnitSelector=openUnitSelector; window.addNewUnit=addNewUnit; window.selectUnit=selectUnit;
   window.openAdminAddPracticeNode=openAdminAddPracticeNode; window.addNodeLevel=addNodeLevel; window.addQuestionToLevel=addQuestionToLevel; window.editCurrentNode=editCurrentNode; window.deleteCurrentNode=deleteCurrentNode;
   window.savePracticeNode=savePracticeNode;
+  window.openHeartsModal      = openHeartsModal;
+  window.redeemPromoCode      = redeemPromoCode;
+  window.openAdminPromosModal = openAdminPromosModal;
+  window.adminCreatePromoCode = adminCreatePromoCode;
+  window.adminTogglePromo     = adminTogglePromo;
+  window.adminDeletePromo     = adminDeletePromo;
 
   // تفاعل الأصوات للنقرات محصور حصرياً بصفحة تمرّن والدرس وشاشاتها
   document.addEventListener('click', (e) => {
