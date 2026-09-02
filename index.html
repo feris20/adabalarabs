@@ -156,9 +156,10 @@
                                 <i data-lucide="gem"></i>
                                 <span>340</span>
                             </div>
-                            <div class="stat-pill heart-pill" title="القلوب المتبقية">
-                                <i data-lucide="heart"></i>
-                                <span id="practice-hearts-val">5</span>
+                            <div class="stat-pill heart-pill" id="practice-hearts-pill" 
+                                 title="القلوب" onclick="openHeartsModal()" style="cursor:pointer;">
+                              <i data-lucide="heart" id="practice-hearts-icon"></i>
+                              <span id="practice-hearts-val">5</span>
                             </div>
                         </div>
                         <div class="menu-panel" id="menu-panel">
@@ -199,6 +200,11 @@
 
                     
                     <div id="admin-add-practice-btn" class="admin-add-area" style="display:none; position: fixed; z-index: 2100; bottom: 32px; left: 32px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                        <button class="admin-add-ad-btn" onclick="openAdminPromosModal()" 
+                          title="إدارة كودات البرومو"
+                          style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;border:2px solid white;box-shadow:0 4px 15px rgba(124,58,237,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                          <i data-lucide="ticket" style="width:20px;height:20px;"></i>
+                        </button>
                         <button class="admin-add-ad-btn" onclick="openAdminAddPracticeAd()" title="إضافة شاشة إعلانية في المسار" style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: white; border: 2px solid white; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;">
                             <i data-lucide="megaphone" style="width: 20px; height: 20px;"></i>
                         </button>
@@ -908,6 +914,101 @@
     <div class="modal-footer">
       <button class="btn-primary" onclick="saveEditedCourseName()">حفظ</button>
       <button class="btn-secondary" onclick="closeModal('edit-course-modal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+    <!-- نافذة القلوب والبرومو -->
+<div id="hearts-modal" class="modal-overlay" style="display:none;" onclick="handleModalBackdrop(event,'hearts-modal')">
+  <div class="modal-card" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>❤️ القلوب</h3>
+      <button class="modal-close" onclick="closeModal('hearts-modal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" style="align-items:center;gap:18px;text-align:center;">
+      <div id="hearts-modal-display"></div>
+      <div id="hearts-daily-info" style="font-size:0.85rem;color:var(--color-muted);"></div>
+      <!-- للمستخدم المسجل بدون قلوب لانهائية -->
+      <div id="hearts-promo-section" style="width:100%;border-top:1px solid var(--color-border);padding-top:16px;display:none;">
+        <p style="font-weight:700;font-size:0.9rem;margin-bottom:10px;">هل لديك كود هدية؟ 🎁</p>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="promo-code-input" class="modal-input"
+            placeholder="أدخل الكود..." maxlength="30"
+            style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800;"
+            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-_]/g,'')">
+          <button class="btn-primary btn-sm" onclick="redeemPromoCode()" style="white-space:nowrap;">تفعيل</button>
+        </div>
+        <p id="promo-error" style="color:#e11d48;font-size:0.8rem;margin-top:6px;display:none;"></p>
+      </div>
+      <!-- قلوب لانهائية مفعّلة -->
+      <div id="hearts-infinite-info" style="display:none;width:100%;">
+        <div style="background:linear-gradient(135deg,#6366f1,#a855f7);color:white;padding:12px 20px;border-radius:12px;font-weight:800;">
+          💜 القلوب اللانهائية مفعّلة!
+        </div>
+      </div>
+      <!-- للزوار -->
+      <div id="hearts-login-prompt" style="display:none;width:100%;">
+        <p style="color:var(--color-muted);font-size:0.85rem;margin-bottom:12px;">سجّل الدخول لاستخدام كود البرومو</p>
+        <button class="btn-primary" style="width:100%;" onclick="closeModal('hearts-modal');openLoginModal();">
+          <i data-lucide="log-in"></i> تسجيل الدخول
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة نفاد القلوب -->
+<div id="no-hearts-modal" class="modal-overlay" style="display:none;z-index:3300;" onclick="handleModalBackdrop(event,'no-hearts-modal')">
+  <div class="modal-card" style="max-width:380px;text-align:center;">
+    <div class="modal-body" style="align-items:center;gap:20px;padding:32px 24px;">
+      <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+        <i data-lucide="heart-off" style="width:36px;height:36px;color:#e11d48;"></i>
+      </div>
+      <h3 style="font-size:1.4rem;font-weight:900;">نفدت قلوبك! 💔</h3>
+      <p style="color:var(--color-muted);">تُضاف لك 5 قلوب في اليوم التالي عند فتح الموقع، أو يمكنك استخدام كود هدية.</p>
+      <div id="no-hearts-timer" style="font-weight:800;color:#6366f1;font-size:0.95rem;"></div>
+      <div style="display:flex;gap:10px;width:100%;flex-wrap:wrap;">
+        <button class="btn-primary" style="flex:1;" onclick="closeModal('no-hearts-modal');openHeartsModal();">
+          🎁 أدخل كود هدية
+        </button>
+        <button class="btn-secondary" style="flex:1;" onclick="closeModal('no-hearts-modal')">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة إدارة البرومو (أدمن) -->
+<div id="admin-promos-modal" class="modal-overlay" style="display:none;z-index:3400;" onclick="handleModalBackdrop(event,'admin-promos-modal')">
+  <div class="modal-card" style="max-width:680px;max-height:90vh;">
+    <div class="modal-header">
+      <h3>🎟️ إدارة كودات البرومو</h3>
+      <button class="modal-close" onclick="closeModal('admin-promos-modal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" style="gap:16px;">
+      <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:16px;">
+        <h4 style="margin-bottom:12px;font-weight:800;color:var(--color-accent);">+ كود جديد</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px;">الكود (إنجليزي):</label>
+            <input type="text" id="new-promo-code" class="modal-input" placeholder="FRIENDS2026"
+              style="text-transform:uppercase;letter-spacing:1px;font-weight:800;"
+              oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-_]/g,'')">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px;">الاسم/الوصف:</label>
+            <input type="text" id="new-promo-name" class="modal-input" placeholder="كود الأصدقاء">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-end;">
+          <div style="flex:1;">
+            <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px;">الحد الأقصى (-1 = لا نهائي):</label>
+            <input type="number" id="new-promo-max" class="modal-input" value="-1" min="-1">
+          </div>
+          <button class="btn-primary btn-sm" style="margin-bottom:1px;" onclick="adminCreatePromoCode()">إضافة</button>
+        </div>
+      </div>
+      <div id="admin-promos-list" style="display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow-y:auto;">
+        <div style="text-align:center;color:var(--color-muted);padding:20px;">جاري التحميل...</div>
+      </div>
     </div>
   </div>
 </div>
