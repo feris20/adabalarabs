@@ -724,42 +724,60 @@ function initGoogleSignIn() {
 
 async function handleGoogleCredential(response) {
   try {
-    const r = await fetch('/api/auth', {
+    const r = await fetch(BASE_URL + '/auth/google', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ credential: response.credential })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || data.error || 'فشل تسجيل الدخول');
-
+ 
     userToken   = data.token;
     currentUser = data.user;
     localStorage.setItem('userToken',   userToken);
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
+ 
     closeModal('login-modal');
     updateNavUserDisplay();
-
-    // حمّل تقدم هذا الحساب (namespace صحيح الآن)
-    const savedProgress = loadUserData('nodeProgress', {});
-    practiceNodes = practiceNodes.map(n => {
-      const p = savedProgress[String(n.id)];
-      return { ...n, status: p?.status ?? 'locked', currentLevelIndex: p?.currentLevelIndex ?? 0 };
-    });
-    const hasP = practiceNodes.some(n => n.status !== 'locked');
-    if (!hasP && practiceNodes.length > 0) practiceNodes[0].status = 'current';
-
+ 
+    // ✅ تحديث namespace للستريك
     streakData = loadUserData('streakData', { count: 0, lastActiveDate: null });
-
+ 
+    // ✅ تحميل القلوب من السيرفر أولاً (هذا يتعامل مع القلوب اليومية بشكل آمن)
     await initHearts();
-    await loadProgressFromServer();
+ 
+    // ✅ تحميل الهيكل والتقدم معاً (loadPracticeFromServer تجلب التقدم من السيرفر)
     await loadPracticeFromServer();
-
+ 
+    // ✅ تحديث الستريك من السيرفر
+    try {
+      const pr = await fetch(BASE_URL + '/user/progress', {
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      if (pr.ok) {
+        const pd = await pr.json();
+        if (pd.lastActiveDate) {
+          const serverDate = new Date(pd.lastActiveDate);
+          const localDate  = streakData.lastActiveDate ? new Date(streakData.lastActiveDate) : null;
+          if (!localDate || serverDate > localDate) {
+            streakData.count          = pd.streakCount    || 0;
+            streakData.lastActiveDate = pd.lastActiveDate;
+            saveUserData('streakData', streakData);
+          }
+        }
+        if (currentUser) {
+          currentUser.highestStreak = pd.highestStreak || currentUser.highestStreak || 0;
+          currentUser.totalXP       = pd.totalXP       || currentUser.totalXP       || 0;
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+      }
+    } catch(e) {}
+ 
     renderPracticePath();
     updateStreakDisplay();
     if (window.lucide) lucide.createIcons();
   } catch(e) {
-    console.error("خطأ تسجيل الدخول:", e);
+    console.error('خطأ تسجيل الدخول:', e);
     alert('خطأ في تسجيل الدخول: ' + e.message);
   }
 }
@@ -1897,35 +1915,56 @@ async function loadPracticeFromServer() {
   try {
     const d = await api.get('/practice');
     if (!d || !d.nodes || d.nodes.length === 0) return;
-
+ 
     practiceCourses = d.courses?.length ? d.courses : practiceCourses;
     practiceUnits   = d.units?.length   ? d.units   : practiceUnits;
     practiceAds     = d.ads?.length     ? d.ads     : practiceAds;
-
-    // تقدم هذا المستخدم/الزائر تحديداً
-    const progress = loadUserData('nodeProgress', {});
-
+ 
+    // ✅ الإصلاح: جلب التقدم من السيرفر مباشرة (وليس localStorage)
+    let serverProgress = {};
+    if (userToken) {
+      try {
+        const pr = await fetch(BASE_URL + '/user/progress', {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        });
+        if (pr.ok) {
+          const pd = await pr.json();
+          serverProgress = pd.progress || {};
+        }
+      } catch(e) {}
+    }
+ 
+    // إذا لم يكن مسجلاً، استخدم localStorage (للزوار)
+    const localProgress = userToken ? serverProgress : loadUserData('nodeProgress', {});
+ 
     practiceNodes = d.nodes.map(serverNode => {
-      const p = progress[String(serverNode.id)];
+      const p = localProgress[String(serverNode.id)];
       return {
         ...serverNode,
         status:            p?.status            ?? 'locked',
         currentLevelIndex: p?.currentLevelIndex ?? 0
       };
     });
-
+ 
     const hasProgress = practiceNodes.some(n => n.status !== 'locked');
     if (!hasProgress && practiceNodes.length > 0) {
       practiceNodes[0].status = 'current';
     }
-
-    // حفظ الهيكل مشتركاً فقط
+ 
+    // حفظ الهيكل مشتركاً
     localStorage.setItem('practiceCourses_v1', JSON.stringify(practiceCourses));
     localStorage.setItem('practiceUnits',      JSON.stringify(practiceUnits));
     localStorage.setItem('practiceAds_v1',     JSON.stringify(practiceAds));
     const cleanNodes = practiceNodes.map(({ status, currentLevelIndex, ...rest }) => rest);
-    localStorage.setItem('practiceNodes_v4',   JSON.stringify(cleanNodes));
-
+    localStorage.setItem('practiceNodes_v4', JSON.stringify(cleanNodes));
+ 
+    // ✅ حفظ التقدم محلياً بعد تطبيقه
+    const newProgress = {};
+    practiceNodes.forEach(n => {
+      newProgress[String(n.id)] = { status: n.status, currentLevelIndex: n.currentLevelIndex || 0 };
+    });
+    saveUserData('nodeProgress', newProgress);
+ 
   } catch(e) { console.warn('Practice load failed:', e); }
 }
 
