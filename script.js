@@ -2089,7 +2089,8 @@ function renderProgressRingSVG(config) {
 
 function isUnitCompleted(unitId) {
   const nodes = practiceNodes.filter(n => Number(n.unitId) === Number(unitId));
-  if (nodes.length === 0) return false;
+  // ✅ قسم بلا عُقد (فارغ) لا يُعتبر عائقاً — لا يمنع فتح الأقسام التالية
+  if (nodes.length === 0) return true;
   return nodes.every(n => n.status === 'completed');
 }
 
