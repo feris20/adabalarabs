@@ -284,6 +284,23 @@ let currentUser = null;
 let userToken   = localStorage.getItem('userToken') || null;
 const GOOGLE_CLIENT_ID = '612595539801-ik8h3fjp1migc6skf7iia6a79megdmhc.apps.googleusercontent.com'; // ← نفس Client ID
 
+// =============================================
+// Namespace — عزل كامل لكل حساب/زائر
+// =============================================
+function getUid() {
+  return currentUser ? `user_${currentUser.id}` : 'guest';
+}
+function uKey(base) { return `${base}__${getUid()}`; }
+function saveUserData(key, value) {
+  try { localStorage.setItem(uKey(key), JSON.stringify(value)); } catch(e) {}
+}
+function loadUserData(key, fallback = null) {
+  try {
+    const raw = localStorage.getItem(uKey(key));
+    return raw ? JSON.parse(raw) : fallback;
+  } catch(e) { return fallback; }
+}
+
 // 🔥 هذا المتغير يوجه كل طلبات المتحف والأدمن لتمر عبر الوسيط الشامل 🔥
 const BASE_URL = '/api';
 
@@ -414,7 +431,7 @@ window.addEventListener('resize', updateArudHeight);
 // =============================================
 // Practice Path & Streak Logic
 // =============================================
-let streakData = JSON.parse(localStorage.getItem('streakData')) || { count: 0, lastActiveDate: null };
+let streakData = { count: 0, lastActiveDate: null }; // يُحمَّل بعد تحديد المستخدم
 
 let practiceCourses = JSON.parse(localStorage.getItem('practiceCourses_v1')) || [
   { id: 1, title: 'البلاغة', icon: 'book', isHidden: false }
@@ -666,11 +683,21 @@ const initialPracticeAds = [
   }
 ];
 
-let practiceNodes = JSON.parse(localStorage.getItem('practiceNodes_v4'));
-if (!practiceNodes || !practiceNodes.some(n => n.type === 'countdown')) {
-  practiceNodes = initialPracticeNodes;
-  localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
+let rawNodes = JSON.parse(localStorage.getItem('practiceNodes_v4'));
+if (!rawNodes || !rawNodes.some(n => n.type === 'countdown')) {
+  rawNodes = initialPracticeNodes;
+  // احفظ الهيكل فقط — بدون status/currentLevelIndex
+  localStorage.setItem('practiceNodes_v4', JSON.stringify(
+    rawNodes.map(({ status, currentLevelIndex, ...rest }) => rest)
+  ));
 }
+let practiceNodes = rawNodes.map(n => ({
+  ...n,
+  status: 'locked',
+  currentLevelIndex: 0
+}));
+// العقدة الأولى current للزائر الجديد
+if (practiceNodes.length > 0) practiceNodes[0].status = 'current';
 
 let practiceAds = JSON.parse(localStorage.getItem('practiceAds_v1')) || initialPracticeAds;
 let dismissedPracticeAds = JSON.parse(sessionStorage.getItem('dismissedPracticeAds') || '[]');
@@ -703,25 +730,36 @@ async function handleGoogleCredential(response) {
       body: JSON.stringify({ credential: response.credential })
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'فشل تسجيل الدخول');
-    
+    if (!r.ok) throw new Error(data.detail || data.error || 'فشل تسجيل الدخول');
+
     userToken   = data.token;
     currentUser = data.user;
-    localStorage.setItem('userToken',    userToken);
-    localStorage.setItem('currentUser',  JSON.stringify(currentUser));
-    
+    localStorage.setItem('userToken',   userToken);
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
     closeModal('login-modal');
     updateNavUserDisplay();
 
-    // مزامنة التقدم ثم جلبه وتطبيقه فوراً
-    await syncProgressToServer();
-    // بعد الدخول مباشرة: اجلب تقدم السيرفر وطبّقه
+    // حمّل تقدم هذا الحساب (namespace صحيح الآن)
+    const savedProgress = loadUserData('nodeProgress', {});
+    practiceNodes = practiceNodes.map(n => {
+      const p = savedProgress[String(n.id)];
+      return { ...n, status: p?.status ?? 'locked', currentLevelIndex: p?.currentLevelIndex ?? 0 };
+    });
+    const hasP = practiceNodes.some(n => n.status !== 'locked');
+    if (!hasP && practiceNodes.length > 0) practiceNodes[0].status = 'current';
+
+    streakData = loadUserData('streakData', { count: 0, lastActiveDate: null });
+
+    await initHearts();
     await loadProgressFromServer();
-    await initHearts(); // أعد تحميل القلوب بناءً على الحساب الجديد
-    
+    await loadPracticeFromServer();
+
+    renderPracticePath();
+    updateStreakDisplay();
     if (window.lucide) lucide.createIcons();
   } catch(e) {
-    console.error("خطأ تسجيل الدخول بالتفصيل:", e);
+    console.error("خطأ تسجيل الدخول:", e);
     alert('خطأ في تسجيل الدخول: ' + e.message);
   }
 }
@@ -774,14 +812,32 @@ function openLoginModal() {
 
 function userSignOut() {
   if (!confirm('هل تريد تسجيل الخروج؟')) return;
-  userToken = null; currentUser = null;
+
+  // احفظ بيانات الحساب الحالي قبل الخروج
+  savePracticeData();
+
+  userToken   = null;
+  currentUser = null;
   localStorage.removeItem('userToken');
   localStorage.removeItem('currentUser');
   if (window.google) google.accounts.id.disableAutoSelect();
-  updateNavUserDisplay();
-     // إعادة تعيين القلوب لحالة الزائر
+
+  // استعد بيانات الزائر (namespace = guest)
+  const guestProgress = loadUserData('nodeProgress', {});
+  practiceNodes = practiceNodes.map(n => {
+    const p = guestProgress[String(n.id)];
+    return { ...n, status: p?.status ?? 'locked', currentLevelIndex: p?.currentLevelIndex ?? 0 };
+  });
+  const hasP = practiceNodes.some(n => n.status !== 'locked');
+  if (!hasP && practiceNodes.length > 0) practiceNodes[0].status = 'current';
+
+  streakData = loadUserData('streakData', { count: 0, lastActiveDate: null });
   heartsData = { count: 5.0, infiniteHearts: false, promoCode: null, lastDailyRefill: null };
+
+  updateNavUserDisplay();
   updateHeartsDisplay();
+  updateStreakDisplay();
+  renderPracticePath();
   showSection('home');
 }
 
@@ -910,7 +966,7 @@ async function loadProgressFromServer() {
         if (!localDate || serverDate > localDate) {
           streakData.count          = serverData.streakCount    || 0;
           streakData.lastActiveDate = serverData.lastActiveDate;
-          localStorage.setItem('streakData', JSON.stringify(streakData));
+          saveUserData('streakData', streakData);
           updateStreakDisplay();
           anyChange = true;
         }
@@ -926,7 +982,11 @@ async function loadProgressFromServer() {
 
     if (anyChange) {
       // احفظ محلياً مع التقدم المحدَّث
-      localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
+      const newProgress = {};
+practiceNodes.forEach(n => {
+  newProgress[String(n.id)] = { status: n.status, currentLevelIndex: n.currentLevelIndex || 0 };
+});
+saveUserData('nodeProgress', newProgress);
       renderPracticePath();
       console.log('✅ تم تحميل التقدم من السيرفر');
     }
@@ -1792,21 +1852,34 @@ async function adminDeletePromo(code) {
 }
 
 function savePracticeData() {
+  // الهيكل المشترك للجميع
   localStorage.setItem('practiceCourses_v1', JSON.stringify(practiceCourses));
   localStorage.setItem('currentCourseId', currentCourseId);
   localStorage.setItem('practiceUnits', JSON.stringify(practiceUnits));
-  localStorage.setItem('practiceNodes_v4', JSON.stringify(practiceNodes));
   localStorage.setItem('practiceAds_v1', JSON.stringify(practiceAds));
-  localStorage.setItem('streakData', JSON.stringify(streakData));
-  
+
+  // الهيكل بدون تقدم
+  const cleanNodes = practiceNodes.map(({ status, currentLevelIndex, ...rest }) => rest);
+  localStorage.setItem('practiceNodes_v4', JSON.stringify(cleanNodes));
+
+  // التقدم خاص بكل مستخدم
+  const progress = {};
+  practiceNodes.forEach(n => {
+    progress[String(n.id)] = {
+      status:            n.status || 'locked',
+      currentLevelIndex: n.currentLevelIndex || 0
+    };
+  });
+  saveUserData('nodeProgress', progress);
+  saveUserData('streakData', streakData);
+
   syncPracticeToServer();
-  syncProgressToServer(); // ← أضف هذا السطر
+  syncProgressToServer();
 }
 
 async function syncPracticeToServer() {
   if (!isAdmin || !authToken) return;
   try {
-    // أرسل للسيرفر الهيكل فقط — بدون status أو currentLevelIndex
     const cleanNodes = practiceNodes.map(n => {
       const { status, currentLevelIndex, ...rest } = n;
       return rest;
@@ -1825,33 +1898,35 @@ async function loadPracticeFromServer() {
     const d = await api.get('/practice');
     if (!d || !d.nodes || d.nodes.length === 0) return;
 
-    // استرجع تقدم المستخدم المحفوظ محلياً
-    const localNodes = JSON.parse(localStorage.getItem('practiceNodes_v4') || '[]');
+    practiceCourses = d.courses?.length ? d.courses : practiceCourses;
+    practiceUnits   = d.units?.length   ? d.units   : practiceUnits;
+    practiceAds     = d.ads?.length     ? d.ads     : practiceAds;
 
-    // ادمج: الهيكل من السيرفر + التقدم من localStorage
-    const mergedNodes = d.nodes.map(serverNode => {
-      const localNode = localNodes.find(l => l.id === serverNode.id);
+    // تقدم هذا المستخدم/الزائر تحديداً
+    const progress = loadUserData('nodeProgress', {});
+
+    practiceNodes = d.nodes.map(serverNode => {
+      const p = progress[String(serverNode.id)];
       return {
         ...serverNode,
-        status: localNode?.status ?? 'locked',
-        currentLevelIndex: localNode?.currentLevelIndex ?? 0
+        status:            p?.status            ?? 'locked',
+        currentLevelIndex: p?.currentLevelIndex ?? 0
       };
     });
 
-    // إذا لم يكن هناك تقدم محلي أصلاً، اجعل العقدة الأولى current
-    const hasAnyProgress = mergedNodes.some(n => n.status !== 'locked');
-    if (!hasAnyProgress && mergedNodes.length > 0) {
-      mergedNodes[0].status = 'current';
+    const hasProgress = practiceNodes.some(n => n.status !== 'locked');
+    if (!hasProgress && practiceNodes.length > 0) {
+      practiceNodes[0].status = 'current';
     }
 
-    practiceCourses = d.courses?.length ? d.courses : practiceCourses;
-    practiceUnits   = d.units?.length   ? d.units   : practiceUnits;
-    practiceNodes   = mergedNodes;
-    practiceAds     = d.ads?.length     ? d.ads     : practiceAds;
+    // حفظ الهيكل مشتركاً فقط
+    localStorage.setItem('practiceCourses_v1', JSON.stringify(practiceCourses));
+    localStorage.setItem('practiceUnits',      JSON.stringify(practiceUnits));
+    localStorage.setItem('practiceAds_v1',     JSON.stringify(practiceAds));
+    const cleanNodes = practiceNodes.map(({ status, currentLevelIndex, ...rest }) => rest);
+    localStorage.setItem('practiceNodes_v4',   JSON.stringify(cleanNodes));
 
-    // احفظ محلياً كـ cache (مع التقدم الصحيح)
-    savePracticeData();
-  } catch(e) { console.warn('Practice load failed, using localStorage cache'); }
+  } catch(e) { console.warn('Practice load failed:', e); }
 }
 
 function updateStreakDisplay(animateState = null) {
@@ -5347,9 +5422,18 @@ function escHtml(str){return(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 document.addEventListener('DOMContentLoaded', async ()=>{
   // ① التحقق من الجلسة المحفوظة
   await verifyStoredToken();
-  await loadPracticeFromServer(); // ← أضف هذا السطر
-  await loadUserFromStorage();
-  await initHearts();
+await loadUserFromStorage();    // يحدد currentUser أولاً
+streakData = loadUserData('streakData', { count: 0, lastActiveDate: null });
+const savedProg = loadUserData('nodeProgress', {});
+practiceNodes = practiceNodes.map(n => {
+  const p = savedProg[String(n.id)];
+  return { ...n, status: p?.status ?? 'locked', currentLevelIndex: p?.currentLevelIndex ?? 0 };
+});
+const hasProg = practiceNodes.some(n => n.status !== 'locked');
+if (!hasProg && practiceNodes.length > 0) practiceNodes[0].status = 'current';
+await initHearts();
+await loadPracticeFromServer();
+if (userToken) await loadProgressFromServer();
    
   loadVerses();
 
