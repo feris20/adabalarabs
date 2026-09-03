@@ -5422,9 +5422,25 @@ function escHtml(str){return(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 document.addEventListener('DOMContentLoaded', async ()=>{
   // ① التحقق من الجلسة المحفوظة
   await verifyStoredToken();
-await loadUserFromStorage();    // يحدد currentUser أولاً
+await loadUserFromStorage();
 streakData = loadUserData('streakData', { count: 0, lastActiveDate: null });
-const savedProg = loadUserData('nodeProgress', {});
+
+// migration: إذا لم يكن nodeProgress موجوداً بعد، اقرأ التقدم القديم من practiceNodes_v4
+let savedProg = loadUserData('nodeProgress', null);
+if (!savedProg) {
+  const oldNodes = JSON.parse(localStorage.getItem('practiceNodes_v4') || '[]');
+  savedProg = {};
+  oldNodes.forEach(n => {
+    if (n.status && n.status !== 'locked') {
+      savedProg[String(n.id)] = {
+        status: n.status,
+        currentLevelIndex: n.currentLevelIndex || 0
+      };
+    }
+  });
+  // احفظ التقدم المُهاجَر فوراً
+  saveUserData('nodeProgress', savedProg);
+}
 practiceNodes = practiceNodes.map(n => {
   const p = savedProg[String(n.id)];
   return { ...n, status: p?.status ?? 'locked', currentLevelIndex: p?.currentLevelIndex ?? 0 };
