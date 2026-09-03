@@ -2465,10 +2465,16 @@ function renderPracticePath() {
             <span>قسم مقفول</span> <i data-lucide="lock" style="width:16px;height:16px;"></i>
           </button>
         `;
-                        } else if (node.status === 'completed') {
+      } else if (node.status === 'completed') {
         actionsHtml = `
           <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
             <span>${node.actionText || 'إعادة +15 XP'}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
+          </button>
+        `;
+      } else if (node.status === 'current' || isAdmin) {
+        actionsHtml = `
+          <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
+            <span>${startBtnText}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
           </button>
         `;
       } else {
