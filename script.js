@@ -2320,13 +2320,13 @@ function renderPracticePath() {
             <span>قسم مقفول</span> <i data-lucide="lock" style="width:16px;height:16px;"></i>
           </button>
         `;
-            } else if (node.status === 'completed') {
+                  } else if (node.status === 'completed') {
         actionsHtml = `
+          <button type="button" class="tt-action-btn tt-review" onclick="startLesson('review', ${node.id})">
+            <span>مراجعة +5 XP</span> <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
+          </button>
           <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
-      } else if (node.status === 'current' || isAdmin) {
-        actionsHtml = `
-          <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
-            <span>${startBtnText}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
+            <span>${node.actionText || 'إعادة +15 XP'}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
           </button>
         `;
       } else {
@@ -3715,20 +3715,23 @@ function startLesson(mode, nodeId = null) {
   if (soundFX) soundFX.tap();
   if (nodeId) currentNodeId = nodeId;
   if (typeof closeAllTooltips === 'function') closeAllTooltips();
-  
+
   const node = practiceNodes.find(n => n.id === currentNodeId);
   if (!node) return;
-     // فحص القلوب
+
+  // ── فحص القلوب ──
   if (!canStartLesson()) {
     if (soundFX) soundFX.error();
-    // حساب الوقت المتبقي حتى الغد
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
     const diff = tomorrow - new Date();
-    const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
     const timerEl = document.getElementById('no-hearts-timer');
     if (timerEl) timerEl.textContent = `⏰ القلوب القادمة بعد ${h} ساعة و ${m} دقيقة`;
-    const m2 = document.getElementById('no-hearts-modal');
-    if (m2) m2.style.display = 'flex';
+    const noHeartsModal = document.getElementById('no-hearts-modal');
+    if (noHeartsModal) noHeartsModal.style.display = 'flex';
     return;
   }
 
@@ -3739,42 +3742,42 @@ function startLesson(mode, nodeId = null) {
     alert(`🔒 هذا القسم مقفول! يجب عليك إنهاء جميع عقد "${prevTitle}" أولاً لفتحه.`);
     return;
   }
-  
+
   // Strict node locking check
   if (node.status === 'locked' && !isAdmin) {
     alert('🔒 هذا الدرس مقفول! أكمل العقد السابقة أولاً لفتحه.');
     return;
   }
-  
+
   currentLessonQuestions = [];
   nodeStartTime = Date.now();
   nodeSessionMistakes = [];
   isMistakesReviewMode = false;
   totalQuestionsAttempted = 0;
   totalQuestionsCorrectFirstTry = 0;
-  
+
   const badge = document.getElementById('mistakes-review-badge');
   if (badge) badge.style.display = 'none';
-  
+
   isCurrentNodeCountdown = (node?.type === 'countdown');
-  
+
   if (isCurrentNodeCountdown) {
     const totalSecs = node.timerSeconds || 90;
     startCountdownTimer(totalSecs);
   } else {
     stopCountdownTimer();
   }
-  
+
   if (node) {
     if (!node.levels || node.levels.length === 0) {
       node.levels = [{ id: 1, title: 'المستوى 1', questions: defaultQuestions }];
     }
     activeNodeLevelCount = node.levels.length;
     if (typeof node.currentLevelIndex === 'undefined') node.currentLevelIndex = 0;
-    
+
     if (mode === 'review') {
       let allQs = [];
-      node.levels.forEach(l => { if(l.questions) allQs.push(...l.questions); });
+      node.levels.forEach(l => { if (l.questions) allQs.push(...l.questions); });
       if (allQs.length > 0) {
         currentLessonQuestions = allQs.sort(() => 0.5 - Math.random()).slice(0, 6);
       }
@@ -3786,11 +3789,11 @@ function startLesson(mode, nodeId = null) {
       }
     }
   }
-  
+
   if (!currentLessonQuestions || currentLessonQuestions.length === 0) {
     currentLessonQuestions = defaultQuestions;
   }
-  
+
   showSection('lesson');
   currentQuestionIndex = 0;
   loadQuestion();
@@ -4390,21 +4393,22 @@ function checkIfReady() {
 window.checkAnswer = function() {
   const btn = document.getElementById('btn-check-answer');
   if (!btn.classList.contains('active')) return;
-  
+
   const q = currentLessonQuestions[currentQuestionIndex];
-   
-  // خصم قلب لكل سؤال
-     deductHeart();
-  // Cards succeed without quiz evaluation
+
+  // البطاقات لا تحسب كسؤال — لا خصم قلب
   if (q.type === 'info_card' || q.type === 'image_card') {
     if (soundFX) soundFX.tap();
     nextQuestion();
     return;
   }
-  
+
+  // خصم 0.5 قلب لكل سؤال
+  deductHeart();
+
   totalQuestionsAttempted++;
   let isCorrect = false;
-  
+
   if (q.type === 'translate') {
     isCorrect = JSON.stringify(userAnswers) === JSON.stringify(q.correct);
   } else if (q.type === 'mcq') {
@@ -4420,35 +4424,35 @@ window.checkAnswer = function() {
   } else if (q.type === 'keypad') {
     const userRaw = (keypadCurrentVal || '').trim();
     const userNorm = normalizeArabic(userRaw).replace(/\s+/g, ' ');
-    const acceptedArr = (Array.isArray(q.correct) ? q.correct : (typeof q.correct === 'string' ? q.correct.split('+') : [q.correct]))
-      .map(s => (s || '').trim());
-    
+    const acceptedArr = (Array.isArray(q.correct)
+      ? q.correct
+      : (typeof q.correct === 'string' ? q.correct.split('+') : [q.correct])
+    ).map(s => (s || '').trim());
+
     isCorrect = acceptedArr.some(acc => {
       if (acc === userRaw) return true;
       if (normalizeArabic(acc).replace(/\s+/g, ' ') === userNorm) return true;
-      // Allow conversion between Eastern Arabic digits and standard digits (٠ <-> 0)
-      const convAcc = acc.replace(/٠/g, '0');
+      const convAcc  = acc.replace(/٠/g, '0');
       const convUser = userRaw.replace(/٠/g, '0');
       return convAcc === convUser;
     });
   }
-  
+
   const feedback = document.getElementById('lesson-feedback-bar');
-  const icon = document.getElementById('feedback-icon');
-  const title = document.getElementById('feedback-title');
-  const desc = document.getElementById('feedback-desc');
-  
+  const icon     = document.getElementById('feedback-icon');
+  const title    = document.getElementById('feedback-title');
+  const desc     = document.getElementById('feedback-desc');
+
   if (isCorrect) {
     if (soundFX) soundFX.success();
     totalQuestionsCorrectFirstTry++;
     feedback.className = 'lesson-feedback-bar show success';
-    icon.innerHTML = '<i data-lucide="check"></i>';
-    title.textContent = 'رائع جداً!';
-    desc.textContent = 'إجابة صحيحة وممتازة';
+    icon.innerHTML     = '<i data-lucide="check"></i>';
+    title.textContent  = 'رائع جداً!';
+    desc.textContent   = 'إجابة صحيحة وممتازة';
   } else {
     if (soundFX) soundFX.error();
-    
-    // In review mode: re-queue this exact question to be repeated until mastered!
+
     if (isMistakesReviewMode) {
       currentLessonQuestions.push(q);
     } else {
@@ -4456,17 +4460,21 @@ window.checkAnswer = function() {
         nodeSessionMistakes.push(q);
       }
     }
-    
+
     feedback.className = 'lesson-feedback-bar show error';
-    icon.innerHTML = '<i data-lucide="x"></i>';
-    title.textContent = 'إجابة خاطئة';
-    
-    if (q.type === 'translate') desc.textContent = `الصحيح: ${q.correct.join(' ')}`;
-    else if (q.type === 'mcq') desc.textContent = `الصحيح: ${q.options[q.correct]}`;
-    else if (q.type === 'fill_blank_text') desc.textContent = `الصحيح: ${Array.isArray(q.correct) ? q.correct[0] : q.correct}`;
+    icon.innerHTML     = '<i data-lucide="x"></i>';
+    title.textContent  = 'إجابة خاطئة';
+
+    if (q.type === 'translate')        desc.textContent = `الصحيح: ${q.correct.join(' ')}`;
+    else if (q.type === 'mcq')         desc.textContent = `الصحيح: ${q.options[q.correct]}`;
+    else if (q.type === 'fill_blank_text')  desc.textContent = `الصحيح: ${Array.isArray(q.correct) ? q.correct[0] : q.correct}`;
     else if (q.type === 'fill_blank_choice') desc.textContent = `الصحيح: ${q.correct}`;
-    else if (q.type === 'keypad') desc.textContent = `النمط الصحيح: ${q.correct}`;
+    else if (q.type === 'keypad')      desc.textContent = `النمط الصحيح: ${q.correct}`;
     else desc.textContent = 'حاول التركيز مرة أخرى';
+  }
+
+  if (window.lucide) lucide.createIcons();
+};
     
 
 window.nextQuestion = function() {
@@ -4544,47 +4552,56 @@ function showNodeAchievements(node) {
   const mins = Math.floor(durationSec / 60);
   const secs = durationSec % 60;
   const timeFormatted = mins > 0 ? `${mins} دقيقة و ${secs} ثانية` : `${secs} ثوانٍ`;
-  
-  const xpEarned = Math.max(15, (node.levels?.length || 1) * 15);
-  const accuracyPct = Math.min(100, Math.round((totalQuestionsCorrectFirstTry / Math.max(1, totalQuestionsAttempted)) * 100));
-  
-  document.getElementById('achieve-time-val').textContent = timeFormatted;
-  document.getElementById('achieve-xp-val').textContent = `+${xpEarned} XP`;
+
+  const xpEarned    = Math.max(15, (node.levels?.length || 1) * 15);
+  const accuracyPct = Math.min(100, Math.round(
+    (totalQuestionsCorrectFirstTry / Math.max(1, totalQuestionsAttempted)) * 100
+  ));
+
+  document.getElementById('achieve-time-val').textContent     = timeFormatted;
+  document.getElementById('achieve-xp-val').textContent       = `+${xpEarned} XP`;
   document.getElementById('achieve-accuracy-val').textContent = `${accuracyPct}%`;
-  document.getElementById('achieve-levels-val').textContent = `${node.levels?.length || 1} / ${node.levels?.length || 1}`;
-  document.getElementById('achievement-node-title').textContent = `أكملت عقدة "${node.title}" بنجاح وتألقت في أدب العرب!`;
-  
+  document.getElementById('achieve-levels-val').textContent   =
+    `${node.levels?.length || 1} / ${node.levels?.length || 1}`;
+
   node.status = 'completed';
-  
-  const curUnit = practiceUnits.find(u => Number(u.id) === Number(node.unitId));
-  const curUnitIdx = practiceUnits.findIndex(u => Number(u.id) === Number(node.unitId));
+
+  const curUnit      = practiceUnits.find(u => Number(u.id) === Number(node.unitId));
+  const curUnitIdx   = practiceUnits.findIndex(u => Number(u.id) === Number(node.unitId));
   const curUnitFinished = curUnit && isUnitCompleted(curUnit.id);
-  
+
   if (curUnitFinished && curUnitIdx + 1 < practiceUnits.length) {
     const nextUnit = practiceUnits[curUnitIdx + 1];
-    document.getElementById('achievement-node-title').textContent = `🎉 مبروك! لقد أنهيت جميع عقد "${curUnit.title}" بنجاح، وتم فتح القسم التالي "${nextUnit.title}"!`;
+    document.getElementById('achievement-node-title').textContent =
+      `🎉 مبروك! لقد أنهيت جميع عقد "${curUnit.title}" بنجاح، وتم فتح القسم التالي "${nextUnit.title}"!`;
   } else {
-    document.getElementById('achievement-node-title').textContent = `أكملت عقدة "${node.title}" بنجاح وتألقت في أدب العرب!`;
+    document.getElementById('achievement-node-title').textContent =
+      `أكملت عقدة "${node.title}" بنجاح وتألقت في أدب العرب!`;
   }
-  
-    activateStreak();
-  savePracticeData();
 
-  // مكافأة إكمال العقدة: +2 قلب
+  activateStreak();
+  savePracticeData();
+  syncProgressToServer();
+
+  // مكافأة القلوب: +2 عند إكمال العقدة
   if (!heartsData.infiniteHearts) {
     heartsData.count = Math.min(heartsData.count + 2, 10);
     saveHeartsLocally();
     updateHeartsDisplay();
-    showHeartsToast('❤️ +2 قلب مكافأة إكمال العقدة!', '#22c55e');
+    setTimeout(() => showHeartsToast('❤️ +2 قلب مكافأة إكمال العقدة!', '#22c55e'), 600);
   }
-  // مزامنة مع السيرفر (للمسجلين) — Anti-cheat: مكافأة مرة واحدة لكل عقدة
+
+  // مزامنة مع السيرفر (Anti-cheat: مكافأة مرة واحدة لكل عقدة)
   if (userToken) {
     fetch('/api/hearts/complete', {
       method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${userToken}` },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`
+      },
       body: JSON.stringify({ nodeId: String(node.id) })
     }).then(r => r.json()).then(data => {
-      if (data.hearts !== undefined) {
+      if (typeof data.hearts === 'number') {
         heartsData.count = data.hearts;
         saveHeartsLocally();
         updateHeartsDisplay();
@@ -4594,7 +4611,9 @@ function showNodeAchievements(node) {
 
   renderPracticePath();
   openModal('node-achievement-modal');
-
+  if (window.lucide) lucide.createIcons();
+}
+   
 window.finishNodeAchievement = function() {
   closeModal('node-achievement-modal');
   showSection('practice');
