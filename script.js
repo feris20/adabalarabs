@@ -717,6 +717,7 @@ async function handleGoogleCredential(response) {
     await syncProgressToServer();
     // بعد الدخول مباشرة: اجلب تقدم السيرفر وطبّقه
     await loadProgressFromServer();
+    await initHearts(); // أعد تحميل القلوب بناءً على الحساب الجديد
     
     if (window.lucide) lucide.createIcons();
   } catch(e) {
@@ -778,6 +779,9 @@ function userSignOut() {
   localStorage.removeItem('currentUser');
   if (window.google) google.accounts.id.disableAutoSelect();
   updateNavUserDisplay();
+     // إعادة تعيين القلوب لحالة الزائر
+  heartsData = { count: 5.0, infiniteHearts: false, promoCode: null, lastDailyRefill: null };
+  updateHeartsDisplay();
   showSection('home');
 }
 
@@ -1506,8 +1510,57 @@ function saveEditedCourseName() {
 // =============================================
 // نظام القلوب
 // =============================================
+function getHeartsStorageKey() {
+  // مفتاح مختلف لكل حساب
+  return currentUser ? `heartsData_${currentUser.id}` : 'heartsData_guest';
+}
+
 function saveHeartsLocally() {
-  try { localStorage.setItem('heartsData', JSON.stringify(heartsData)); } catch(e) {}
+  try {
+    localStorage.setItem(getHeartsStorageKey(), JSON.stringify(heartsData));
+  } catch(e) {}
+}
+
+async function initHearts() {
+  // أعد تعيين heartsData أولاً بناءً على الحساب الحالي
+  const key    = getHeartsStorageKey();
+  const stored = localStorage.getItem(key);
+  if (stored) {
+    try { heartsData = JSON.parse(stored); } catch(e) {
+      heartsData = { count: 5.0, infiniteHearts: false, promoCode: null, lastDailyRefill: null };
+    }
+  } else {
+    heartsData = { count: 5.0, infiniteHearts: false, promoCode: null, lastDailyRefill: null };
+  }
+
+  if (userToken) {
+    // المستخدم مسجل — السيرفر هو المرجع دائماً
+    try {
+      const r = await fetch('/api/hearts', {
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      if (r.ok) {
+        const d = await r.json();
+        heartsData.count           = d.hearts;
+        heartsData.infiniteHearts  = d.infiniteHearts  || false;
+        heartsData.promoCode       = d.promoCodeUsed   || null;
+        heartsData.lastDailyRefill = d.lastDailyRefill || null;
+        saveHeartsLocally();
+        if (d.dailyGiven) showHeartsToast('❤️ تمت إضافة 5 قلوب يومية!', '#e11d48');
+      }
+    } catch(e) { console.warn('Hearts init failed:', e); }
+  } else {
+    // زائر — تحقق يومي محلي
+    const today = new Date().toISOString().split('T')[0];
+    if (!heartsData.lastDailyRefill || heartsData.lastDailyRefill !== today) {
+      if (!heartsData.infiniteHearts)
+        heartsData.count = Math.min((heartsData.count || 0) + 5, 10);
+      heartsData.lastDailyRefill = today;
+      saveHeartsLocally();
+    }
+  }
+
+  updateHeartsDisplay();
 }
 
 function updateHeartsDisplay() {
@@ -1536,35 +1589,7 @@ function updateHeartsDisplay() {
   if (lessonDiv)   lessonDiv.classList.toggle('infinite', inf);
 }
 
-async function initHearts() {
-  const stored = localStorage.getItem('heartsData');
-  if (stored) { try { heartsData = JSON.parse(stored); } catch(e) {} }
 
-  if (userToken) {
-    try {
-      const r = await fetch('/api/hearts', { headers: { 'Authorization': `Bearer ${userToken}` } });
-      if (r.ok) {
-        const d = await r.json();
-        heartsData.count          = d.hearts;
-        heartsData.infiniteHearts = d.infiniteHearts || false;
-        heartsData.promoCode      = d.promoCodeUsed  || null;
-        heartsData.lastDailyRefill = d.lastDailyRefill;
-        saveHeartsLocally();
-        if (d.dailyGiven) showHeartsToast('❤️ تمت إضافة 5 قلوب يومية!', '#e11d48');
-      }
-    } catch(e) { console.warn('Hearts init failed:', e); }
-  } else {
-    // زائر: تحقق يومي محلي
-    const today = new Date().toISOString().split('T')[0];
-    if (!heartsData.lastDailyRefill || heartsData.lastDailyRefill !== today) {
-      if (!heartsData.infiniteHearts)
-        heartsData.count = Math.min((heartsData.count || 0) + 5, 10);
-      heartsData.lastDailyRefill = today;
-      saveHeartsLocally();
-    }
-  }
-  updateHeartsDisplay();
-}
 
 function showHeartsToast(msg, color) {
   const n = document.createElement('div');
@@ -4391,9 +4416,9 @@ window.checkAnswer = function() {
   const btn = document.getElementById('btn-check-answer');
   if (!btn.classList.contains('active')) return;
 
-  const q = currentLessonQuestions[currentQuestionIndex];
+    const q = currentLessonQuestions[currentQuestionIndex];
 
-  // البطاقات لا تحسب كسؤال — لا خصم قلب
+  // البطاقات لا تُخصم قلباً
   if (q.type === 'info_card' || q.type === 'image_card') {
     if (soundFX) soundFX.tap();
     nextQuestion();
