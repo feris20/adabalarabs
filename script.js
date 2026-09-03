@@ -1614,7 +1614,7 @@ async function initHearts() {
   if (userToken) {
     // المستخدم مسجل — السيرفر هو المرجع دائماً
     try {
-      const r = await fetch('/api/hearts', {
+      const r = await fetch('/api/user/hearts', {
         headers: { 'Authorization': `Bearer ${userToken}` }
       });
       if (r.ok) {
@@ -1630,9 +1630,14 @@ async function initHearts() {
   } else {
     // زائر — تحقق يومي محلي
     const today = new Date().toISOString().split('T')[0];
+    const isFirstEverVisit = !stored; // لا يوجد سجل سابق على هذا المتصفح إطلاقاً
     if (!heartsData.lastDailyRefill || heartsData.lastDailyRefill !== today) {
-      if (!heartsData.infiniteHearts)
+      if (isFirstEverVisit) {
+        // أول زيارة على الإطلاق: الرصيد الافتراضي (5) هو نفسه رصيد اليوم، لا تُضف فوقه
+        heartsData.count = heartsData.infiniteHearts ? heartsData.count : 5.0;
+      } else if (!heartsData.infiniteHearts) {
         heartsData.count = Math.min((heartsData.count || 0) + 5, 10);
+      }
       heartsData.lastDailyRefill = today;
       saveHeartsLocally();
     }
@@ -1698,7 +1703,7 @@ function scheduleHeartsSync() {
 async function syncHeartsToServer() {
   if (!userToken || heartsData.infiniteHearts) return;
   try {
-    await fetch('/api/hearts', {
+    await fetch('/api/user/hearts', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userToken}` },
       body: JSON.stringify({ count: heartsData.count })
@@ -1768,7 +1773,7 @@ async function redeemPromoCode() {
     return;
   }
   try {
-    const r = await fetch('/api/promo', {
+    const r = await fetch('/api/user/promo/redeem', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${userToken}` },
       body: JSON.stringify({ code })
@@ -4729,7 +4734,7 @@ function showNodeAchievements(node) {
 
   // مزامنة مع السيرفر (Anti-cheat: مكافأة مرة واحدة لكل عقدة)
   if (userToken) {
-    fetch('/api/hearts/complete', {
+    fetch('/api/user/hearts/complete', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -5464,26 +5469,32 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 await loadUserFromStorage();
 streakData = loadUserData('streakData', { count: 0, lastActiveDate: null });
 
-// migration: إذا لم يكن nodeProgress موجوداً بعد، اقرأ التقدم القديم من practiceNodes_v4
-let savedProg = loadUserData('nodeProgress', null);
-if (!savedProg) {
-  const oldNodes = JSON.parse(localStorage.getItem('practiceNodes_v4') || '[]');
-  savedProg = {};
-  oldNodes.forEach(n => {
-    if (n.status && n.status !== 'locked') {
-      savedProg[String(n.id)] = {
-        status: n.status,
-        currentLevelIndex: n.currentLevelIndex || 0
-      };
-    }
+// migration/تطبيق التقدم المحلي: هذا فقط للزوار (غير المسجلين).
+// ✅ للمستخدم المسجّل: loadUserFromStorage() طبّقت أعلاه التقدم الصحيح القادم من السيرفر بالفعل،
+//    وإعادة قراءته من localStorage هنا (وقد يكون فارغاً/قديماً على جهاز جديد) كانت تمحو ذلك التقدم
+//    وتُظهر العُقد "مقفولة" حتى تُصحَّح لاحقاً — لذلك نتخطى هذه الخطوة كلياً لهم.
+if (!userToken) {
+  // migration: إذا لم يكن nodeProgress موجوداً بعد، اقرأ التقدم القديم من practiceNodes_v4
+  let savedProg = loadUserData('nodeProgress', null);
+  if (!savedProg) {
+    const oldNodes = JSON.parse(localStorage.getItem('practiceNodes_v4') || '[]');
+    savedProg = {};
+    oldNodes.forEach(n => {
+      if (n.status && n.status !== 'locked') {
+        savedProg[String(n.id)] = {
+          status: n.status,
+          currentLevelIndex: n.currentLevelIndex || 0
+        };
+      }
+    });
+    // احفظ التقدم المُهاجَر فوراً
+    saveUserData('nodeProgress', savedProg);
+  }
+  practiceNodes = practiceNodes.map(n => {
+    const p = savedProg[String(n.id)];
+    return { ...n, status: p?.status ?? 'locked', currentLevelIndex: p?.currentLevelIndex ?? 0 };
   });
-  // احفظ التقدم المُهاجَر فوراً
-  saveUserData('nodeProgress', savedProg);
 }
-practiceNodes = practiceNodes.map(n => {
-  const p = savedProg[String(n.id)];
-  return { ...n, status: p?.status ?? 'locked', currentLevelIndex: p?.currentLevelIndex ?? 0 };
-});
 const hasProg = practiceNodes.some(n => n.status !== 'locked');
 if (!hasProg && practiceNodes.length > 0) practiceNodes[0].status = 'current';
 await initHearts();
