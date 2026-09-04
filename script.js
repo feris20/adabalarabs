@@ -2471,12 +2471,23 @@ function renderPracticePath() {
             <span>${node.actionText || 'إعادة +15 XP'}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
           </button>
         `;
-      } else if (node.status === 'current' || isAdmin) {
-        actionsHtml = `
-          <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
-            <span>${startBtnText}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
-          </button>
-        `;
+            } else if (node.status === 'current' || isAdmin) {
+        const lvlCost = isAdmin ? 0 : calcNodeNextLevelCost(node);
+        const notEnoughHearts = !heartsData.infiniteHearts && !isAdmin && heartsData.count < Math.min(lvlCost, 0.5);
+        if (notEnoughHearts) {
+          actionsHtml = `
+            <button type="button" class="tt-action-btn" onclick="openHeartsModal()"
+              style="background:rgba(225,29,72,0.08);border-color:rgba(225,29,72,0.3);color:#e11d48;">
+              <span>💔 القلوب غير كافية</span>
+            </button>
+          `;
+        } else {
+          actionsHtml = `
+            <button type="button" class="tt-action-btn" onclick="startLesson('start', ${node.id})">
+              <span>${startBtnText}</span> <i data-lucide="play" style="width:16px;height:16px;"></i>
+            </button>
+          `;
+        }
       } else {
         actionsHtml = `
           <button type="button" class="tt-action-btn locked-btn" disabled style="opacity:0.6; cursor:not-allowed;">
@@ -3859,6 +3870,24 @@ window.confirmExitLesson = function() {
   showSection('practice');
 };
 
+// احسب تكلفة مستوى معين بالقلوب (تجاهل البطاقات)
+function calcLevelCost(level) {
+  if (!level || !level.questions) return 0;
+  const countable = level.questions.filter(
+    q => q.type !== 'info_card' && q.type !== 'image_card'
+  ).length;
+  return countable * 0.5;
+}
+
+// احسب تكلفة المستوى الحالي للعقدة
+function calcNodeNextLevelCost(node) {
+  if (heartsData.infiniteHearts) return 0;
+  if (!node.levels || node.levels.length === 0) return 0;
+  const idx = node.currentLevelIndex || 0;
+  const level = node.levels[Math.min(idx, node.levels.length - 1)];
+  return calcLevelCost(level);
+}
+
 function startLesson(mode, nodeId = null) {
   if (soundFX) soundFX.tap();
   if (nodeId) currentNodeId = nodeId;
@@ -3868,21 +3897,26 @@ function startLesson(mode, nodeId = null) {
   if (!node) return;
 
   // ── فحص القلوب ──
-  if (!canStartLesson()) {
-    if (soundFX) soundFX.error();
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    const diff = tomorrow - new Date();
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const timerEl = document.getElementById('no-hearts-timer');
-    if (timerEl) timerEl.textContent = `⏰ القلوب القادمة بعد ${h} ساعة و ${m} دقيقة`;
-    const noHeartsModal = document.getElementById('no-hearts-modal');
-    if (noHeartsModal) noHeartsModal.style.display = 'flex';
-    return;
-  }
+    // ── فحص القلوب ──
+  if (!heartsData.infiniteHearts) {
+    const levelCost = calcNodeNextLevelCost(node);
+    const hasEnough = heartsData.count >= Math.min(levelCost, 0.5);
 
+    if (!hasEnough) {
+      if (soundFX) soundFX.error();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const diff = tomorrow - new Date();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const timerEl = document.getElementById('no-hearts-timer');
+      if (timerEl) timerEl.textContent = `⏰ القلوب القادمة بعد ${h} ساعة و ${m} دقيقة`;
+      const noHeartsModal = document.getElementById('no-hearts-modal');
+      if (noHeartsModal) noHeartsModal.style.display = 'flex';
+      return;
+    }
+  }
   // Strict unit locking check
   const unitIdx = practiceUnits.findIndex(u => Number(u.id) === Number(node.unitId));
   if (unitIdx > 0 && isUnitLocked(unitIdx) && !isAdmin) {
