@@ -13539,19 +13539,27 @@ button,
   justify-content: flex-end; /* Because it's RTL */
 }
 
-/* Make bento boxes 30% smaller */
+/* Make bento boxes 30% smaller - WITHOUT breaking clicks */
 .liquid-bento-grid {
-  transform-origin: top center;
-  transform: scale(0.75);
-  margin-bottom: -50px; /* Adjust spacing after scaling */
+  max-width: 546px !important; /* 780px * 0.7 */
 }
 
-@media (max-width: 768px) {
-  .liquid-bento-grid {
-    transform: scale(0.85);
-    margin-bottom: -20px;
-  }
+.lg-content-horizontal {
+  padding: 17px 22px !important; /* 24px * 0.7 */
 }
+
+.lg-content-vertical {
+  padding: 17px !important;
+  gap: 11px !important;
+}
+
+.lg-icon-box {
+  width: 34px !important; /* 48px * 0.7 */
+  height: 34px !important;
+}
+
+.lg-icon-box i {
+  width: 17px !important; /*
 
 /* Fix active button circle centering */
 .bottom-nav .active-nav-circle {
@@ -13570,10 +13578,10 @@ button,
 }
 
 .home-level-card-wrap {
-  margin-bottom: -60px !important;
+  margin-bottom: -60px !important;  /* نصف ارتفاع البطاقة 120px */
 }
 @media (max-width: 768px) {
   .home-level-card-wrap {
-    margin-bottom: -50px !important;
+    margin-bottom: -50px !important;  /* نصف ارتفاع البطاقة موبايل 100px */
   }
 }
