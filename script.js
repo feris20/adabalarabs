@@ -5132,7 +5132,6 @@ function renderVerses() {
       }
     });
   });
-  showSection('home');
   if(window.lucide)lucide.createIcons();
 }
 
@@ -5286,7 +5285,6 @@ function renderMuseumLanding() {
     adminCard.addEventListener('click',()=>openModal('admin-modal'));
   }
   grid.appendChild(adminCard);
-  showSection('home');
   if(window.lucide)lucide.createIcons();
 }
 
