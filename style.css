@@ -6389,7 +6389,7 @@ button,
 }
 .home-hero-header {
   position: relative;
-  background-image: url(/src/assets/images/header_bg_1788623696418.jpg);
+  background-image: url(/src/assets/images/header_bg_1788623696418.jpeg);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -6470,7 +6470,7 @@ button,
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url(/src/assets/images/user_card_bg_1788623714883.jpg);
+  background-image: url(/src/assets/images/arab_desert_night_bg_1788678203402.jpg);
   background-size: cover;
   background-position: center;
   z-index: 1;
@@ -13113,7 +13113,7 @@ button,
 }
 .home-hero-header {
   position: relative;
-  background-image: url(/src/assets/images/header_bg_1788623696418.jpg);
+  background-image: url(/src/assets/images/header_bg_1788623696418.jpeg);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -13194,7 +13194,7 @@ button,
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url(/src/assets/images/user_card_bg_1788623714883.jpg);
+  background-image: url(/src/assets/images/arab_desert_night_bg_1788678203402.jpg);
   background-size: cover;
   background-position: center;
   z-index: 1;
@@ -13570,10 +13570,10 @@ button,
 }
 
 .home-level-card-wrap {
-  margin-bottom: -60px !important;
+  margin-bottom: -150px !important;
 }
 @media (max-width: 768px) {
   .home-level-card-wrap {
-    margin-bottom: -50px !important;
+    margin-bottom: -140px !important;
   }
 }
