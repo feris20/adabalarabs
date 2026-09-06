@@ -1776,7 +1776,7 @@ main {
   padding: 12px 20px;
   background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
-  z-index: 10;
+  z-index: 30;
   box-shadow: 0 2px 10px #00000008;
 }
 .course-selector-toggle-btn {
@@ -2041,7 +2041,7 @@ main {
 .practice-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 40px;
+  padding-bottom: 90px;
   scroll-behavior: smooth;
 }
 .unit-banner {
@@ -2193,7 +2193,7 @@ main {
   justify-content: space-around;
   padding: 12px 0;
   padding-bottom: env(safe-area-inset-bottom, 12px);
-  z-index: 10;
+  z-index: 30;
 }
 .nav-item {
   background: none;
@@ -2431,7 +2431,7 @@ main {
   justify-content: center;
   flex-shrink: 0;
   background-color: var(--color-bg);
-  z-index: 10;
+  z-index: 30;
 }
 .btn-check {
   width: 100%;
@@ -2621,7 +2621,7 @@ main {
   letter-spacing: 0.05em;
   animation: bounceBadge 1.2s infinite;
   pointer-events: none;
-  z-index: 10;
+  z-index: 30;
 }
 .start-badge:after {
   content: "";
@@ -3801,7 +3801,7 @@ main {
 }
 .practice-ad-tile-wrapper {
   position: absolute;
-  z-index: 10;
+  z-index: 30;
   pointer-events: auto;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform: translate(-50%);
@@ -6394,9 +6394,9 @@ button,
   background-position: center;
   background-repeat: no-repeat;
   padding-top: 24px;
-  padding-bottom: 90px;
+  padding-bottom: 40px;
   margin-bottom: 0;
-  z-index: 10;
+  z-index: 30;
 }
 .home-nav-overlay {
   display: flex;
@@ -6608,7 +6608,7 @@ button,
 @media (max-width: 768px) {
   .home-hero-header {
     padding-top: 16px;
-    padding-bottom: 90px;
+    padding-bottom: 40px;
   }
   .home-nav-overlay {
     margin-bottom: 40px;
@@ -8500,7 +8500,7 @@ main {
   padding: 12px 20px;
   background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
-  z-index: 10;
+  z-index: 30;
   box-shadow: 0 2px 10px #00000008;
 }
 .course-selector-toggle-btn {
@@ -8765,7 +8765,7 @@ main {
 .practice-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 40px;
+  padding-bottom: 90px;
   scroll-behavior: smooth;
 }
 .unit-banner {
@@ -8917,7 +8917,7 @@ main {
   justify-content: space-around;
   padding: 12px 0;
   padding-bottom: env(safe-area-inset-bottom, 12px);
-  z-index: 10;
+  z-index: 30;
 }
 .nav-item {
   background: none;
@@ -9155,7 +9155,7 @@ main {
   justify-content: center;
   flex-shrink: 0;
   background-color: var(--color-bg);
-  z-index: 10;
+  z-index: 30;
 }
 .btn-check {
   width: 100%;
@@ -9345,7 +9345,7 @@ main {
   letter-spacing: 0.05em;
   animation: bounceBadge 1.2s infinite;
   pointer-events: none;
-  z-index: 10;
+  z-index: 30;
 }
 .start-badge:after {
   content: "";
@@ -10525,7 +10525,7 @@ main {
 }
 .practice-ad-tile-wrapper {
   position: absolute;
-  z-index: 10;
+  z-index: 30;
   pointer-events: auto;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform: translate(-50%);
@@ -13118,9 +13118,9 @@ button,
   background-position: center;
   background-repeat: no-repeat;
   padding-top: 24px;
-  padding-bottom: 90px;
+  padding-bottom: 40px;
   margin-bottom: 0;
-  z-index: 10;
+  z-index: 30;
 }
 .home-nav-overlay {
   display: flex;
@@ -13332,7 +13332,7 @@ button,
 @media (max-width: 768px) {
   .home-hero-header {
     padding-top: 16px;
-    padding-bottom: 90px;
+    padding-bottom: 40px;
   }
   .home-nav-overlay {
     margin-bottom: 40px;
@@ -13562,18 +13562,10 @@ button,
 
 .liquid-bento-grid {
   position: relative;
-  z-index: 10;
+  z-index: 30;
 }
 .interactive-showcase {
   position: relative;
   z-index: 5;
 }
 
-.home-level-card-wrap {
-  margin-bottom: -150px !important;
-}
-@media (max-width: 768px) {
-  .home-level-card-wrap {
-    margin-bottom: -140px !important;
-  }
-}
