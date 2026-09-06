@@ -408,14 +408,44 @@ async function analyzeVerses(text) {
 let isDark = localStorage.getItem('theme') === 'dark';
 function applyTheme() {
   document.documentElement.classList.toggle('dark', isDark);
-  document.getElementById('moon-icon').style.display = isDark ? 'none' : 'block';
-  document.getElementById('sun-icon').style.display  = isDark ? 'block' : 'none';
+  document.getElementById('home-moon-icon').style.display = isDark ? 'none' : 'block';
+  document.getElementById('home-sun-icon').style.display  = isDark ? 'block' : 'none';
+  
+  const logoSrc = 'logo.png';
+  const navLogo = document.getElementById('nav-logo-img');
+  const heroLogo = document.getElementById('hero-logo-img');
+  
+  if (navLogo) navLogo.src = logoSrc;
+  if (heroLogo) heroLogo.src = logoSrc;
 }
-document.getElementById('theme-toggle').addEventListener('click', () => {
-  isDark = !isDark;
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  applyTheme();
-});
+
+function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    const isDark = document.documentElement.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    
+    const moon = document.getElementById('home-moon-icon');
+    const sun = document.getElementById('home-sun-icon');
+    if(moon) moon.style.display = isDark ? 'none' : 'block';
+    if(sun) sun.style.display = isDark ? 'block' : 'none';
+    
+    const homeMoon = document.getElementById('home-moon-icon');
+    const homeSun = document.getElementById('home-sun-icon');
+    if(homeMoon) homeMoon.style.display = isDark ? 'none' : 'block';
+    if(homeSun) homeSun.style.display = isDark ? 'block' : 'none';
+    
+    const l1 = document.getElementById('nav-logo-img');
+    const h1 = document.getElementById('home-logo-img');
+    if (l1) l1.src = 'logo.png';
+    if (h1) h1.src = 'logo.png';
+}
+
+const themeToggle = null;
+if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+
+const homeThemeToggle = document.getElementById('home-theme-toggle');
+if (homeThemeToggle) homeThemeToggle.addEventListener('click', toggleTheme);
+
 applyTheme();
 
 // =============================================
@@ -809,17 +839,33 @@ async function loadUserFromStorage() {
 }
 
 function updateNavUserDisplay() {
-  const loginBtn = document.getElementById('nav-login-btn');
+  const loginBtn = null;
   const avatar   = document.getElementById('nav-user-avatar');
   const img      = document.getElementById('nav-avatar-img');
   
+  const homeLoginBtn = document.getElementById('home-login-btn');
+  const homeAuthIcon = document.getElementById('home-auth-icon');
+  const homeAvatar   = document.getElementById('home-user-avatar');
+  const homeImg      = document.getElementById('home-avatar-img');
+
   if (currentUser) {
     if (loginBtn) loginBtn.style.display = 'none';
     if (avatar)   avatar.style.display = 'flex';
     if (img && currentUser.photo) img.src = currentUser.photo;
+    
+    if (homeAvatar) homeAvatar.style.display = 'flex';
+    if (homeImg && currentUser.photo) homeImg.src = currentUser.photo;
+    if (homeAuthIcon) homeAuthIcon.setAttribute('data-lucide', 'log-out');
   } else {
     if (loginBtn) loginBtn.style.display = 'flex';
     if (avatar)   avatar.style.display = 'none';
+    
+    if (homeAvatar) homeAvatar.style.display = 'none';
+    if (homeAuthIcon) homeAuthIcon.setAttribute('data-lucide', 'log-in');
+  }
+  
+  if (window.lucide) {
+    lucide.createIcons();
   }
 }
 
@@ -857,6 +903,9 @@ function userSignOut() {
   updateStreakDisplay();
   renderPracticePath();
   showSection('home');
+const globalNav = document.querySelector('.navbar');
+if (globalNav) globalNav.style.display = 'none';
+
 }
 
 async function deleteUserAccount() {
@@ -1977,6 +2026,8 @@ function updateStreakDisplay(animateState = null) {
   const streakItem = document.querySelector('.streak-item');
   if (!streakItem) return;
   streakItem.querySelector('span').textContent = streakData.count;
+  const homeLevelNum = document.getElementById('home-level-display-num');
+  if (homeLevelNum) homeLevelNum.textContent = streakData.count;
   
   streakItem.classList.remove('streak-active', 'streak-lost', 'streak-renewed');
   // force reflow
@@ -2035,7 +2086,8 @@ function activateStreak() {
     document.getElementById('streak-celebration-count').textContent = streakData.count;
     setTimeout(() => {
         openModal('streak-celebration-modal');
-        if(window.lucide)lucide.createIcons(); // refresh fire icon
+        showSection('home');
+  if(window.lucide)lucide.createIcons(); // refresh fire icon
     }, 600);
   }
 }
@@ -2103,6 +2155,36 @@ function toggleCourseSelector() {
   } else {
     bar.style.display = 'none';
   }
+}
+
+
+
+function openOnboardingCourseSelector() {
+  const modal = document.getElementById('onboarding-course-modal');
+  const container = document.getElementById('onboarding-courses-container');
+  if (!modal || !container) return;
+  
+  container.innerHTML = practiceCourses
+    .filter(c => !c.isHidden)
+    .map(c => `
+    <div class="onboarding-course-card" onclick="selectOnboardingCourse(${c.id})">
+      <i data-lucide="${c.icon || 'book'}" style="width: 48px; height: 48px; color: var(--color-accent); margin: 0 auto;"></i>
+      <span class="course-item-name" style="font-weight: 700; white-space: normal;">${c.title}</span>
+    </div>
+    `).join('');
+    
+  if (window.lucide) lucide.createIcons();
+  modal.style.display = 'flex';
+}
+
+function selectOnboardingCourse(id) {
+  if (window.soundFX) soundFX.tap();
+  localStorage.setItem('hasSelectedCourse', 'true');
+  currentCourseId = Number(id);
+  localStorage.setItem('currentCourseId', currentCourseId);
+  const modal = document.getElementById('onboarding-course-modal');
+  if (modal) modal.style.display = 'none';
+  renderPracticePath();
 }
 
 function renderCourseSelector() {
@@ -2630,6 +2712,7 @@ function openUnitSelector() {
   if (adminContainer) adminContainer.style.display = isAdmin ? 'block' : 'none';
   
   openModal('unit-selector-modal');
+  showSection('home');
   if(window.lucide)lucide.createIcons();
 }
 
@@ -3364,7 +3447,8 @@ function createLevelElement(index) {
 function addNodeLevel() {
   const container = document.getElementById('node-levels-container');
   container.appendChild(createLevelElement(container.children.length));
-  setTimeout(() => { if(window.lucide)lucide.createIcons(); }, 10);
+  setTimeout(() => { showSection('home');
+  if(window.lucide)lucide.createIcons(); }, 10);
 }
 
 function addQuestionToLevel(btn, type) {
@@ -4812,6 +4896,8 @@ function showSection(id) {
     previousSection = currentActiveSection;
   }
   currentActiveSection = id;
+  
+  updateBottomNav(id);
 
   ALL_SECTIONS.forEach(s => {
     const el = document.getElementById(`${s}-section`);
@@ -4822,6 +4908,9 @@ function showSection(id) {
   });
   
   if (id === 'practice') {
+    if (!localStorage.getItem('hasSelectedCourse') && practiceCourses.filter(c => !c.isHidden).length > 0) {
+      openOnboardingCourseSelector();
+    }
     renderPracticePath();
   }
 
@@ -4964,7 +5053,8 @@ async function updateAnalysisMobile(idx, text, inputElement) {
     const data=await analyzeVerses(text);
     if (idx===activeIndex&&!manualClosed&&targetRow.isConnected) {
       inlineContent.innerHTML=createAnalysisPanel(data);
-      if(window.lucide)lucide.createIcons();
+      showSection('home');
+  if(window.lucide)lucide.createIcons();
       window.currentAnalysis={bahr:data.meter,kitaba:data.phonetic,scansion:data.symbols};
     }
   } catch(e){ console.warn('mobile analysis:',e); }
@@ -4979,7 +5069,8 @@ async function updateAnalysisDesktop(idx, text, inputElement) {
     const data=await analyzeVerses(text);
     if (idx===activeIndex&&!manualClosed&&analysisBox.style.display!=='none') {
       analysisContent.innerHTML=createAnalysisPanel(data);
-      if(window.lucide)lucide.createIcons();
+      showSection('home');
+  if(window.lucide)lucide.createIcons();
       window.currentAnalysis={bahr:data.meter,kitaba:data.phonetic,scansion:data.symbols};
     }
   } catch(e){ console.warn('desktop analysis:',e); }
@@ -5005,7 +5096,9 @@ function positionBox(inputElement) {
 window.closeInlineAnalysis=()=>{clearTimeout(typingTimer);manualClosed=true;if(inlineBox)inlineBox.classList.remove('open');};
 window.closeAnalysis=()=>{clearTimeout(typingTimer);manualClosed=true;if(analysisBox)analysisBox.style.display='none';if(inlineBox)inlineBox.classList.remove('open');};
 window.copyAnalysis=()=>{if(!window.currentAnalysis)return;const{bahr,kitaba,scansion}=window.currentAnalysis;navigator.clipboard.writeText(`البحر: ${bahr}\nالكتابة: ${kitaba}\nالترميز: ${scansion}`);const btn=document.getElementById('copy-btn-text');if(btn){btn.textContent='تم!';setTimeout(()=>btn.textContent='نسخ',2000);}};
-window.copyAllVerses=(btn)=>{const l=[];for(let i=0;i<verses.length;i+=2){const s=verses[i]||'',a=verses[i+1]||'';if(s||a)l.push(`${s} ... ${a}`);}if(!l.length)return;navigator.clipboard.writeText(l.join('\n'));if(btn){const o=btn.innerHTML;btn.innerHTML='<i data-lucide="check"></i> تم النسخ';if(window.lucide)lucide.createIcons();setTimeout(()=>{btn.innerHTML=o;if(window.lucide)lucide.createIcons();},2000);}};
+window.copyAllVerses=(btn)=>{const l=[];for(let i=0;i<verses.length;i+=2){const s=verses[i]||'',a=verses[i+1]||'';if(s||a)l.push(`${s} ... ${a}`);}if(!l.length)return;navigator.clipboard.writeText(l.join('\n'));if(btn){const o=btn.innerHTML;btn.innerHTML='<i data-lucide="check"></i> تم النسخ';showSection('home');
+  if(window.lucide)lucide.createIcons();setTimeout(()=>{btn.innerHTML=o;showSection('home');
+  if(window.lucide)lucide.createIcons();},2000);}};
 
 // =============================================
 // رسم حقول الأبيات
@@ -5039,6 +5132,7 @@ function renderVerses() {
       }
     });
   });
+  showSection('home');
   if(window.lucide)lucide.createIcons();
 }
 
@@ -5093,7 +5187,8 @@ function openModal(id){
   if(m){
     m.style.display='flex';
     if(soundFX) soundFX.magicChime();
-    if(window.lucide)lucide.createIcons();
+    showSection('home');
+  if(window.lucide)lucide.createIcons();
   }
 }
 function closeModal(id){
@@ -5191,6 +5286,7 @@ function renderMuseumLanding() {
     adminCard.addEventListener('click',()=>openModal('admin-modal'));
   }
   grid.appendChild(adminCard);
+  showSection('home');
   if(window.lucide)lucide.createIcons();
 }
 
@@ -5214,6 +5310,7 @@ async function showMuseumPoet(poetId) {
 
   // اعرض مؤشر تحميل
   document.getElementById('poet-content-area').innerHTML='<div class="empty-state"><p style="opacity:0.5">جاري التحميل...</p></div>';
+  showSection('home');
   if(window.lucide)lucide.createIcons();
 
   await loadPoetData(poetId);
@@ -5227,7 +5324,8 @@ function renderPoetContent(poetId) {
 
   if(entries.length===0){
     container.innerHTML=`<div class="empty-state"><i data-lucide="scroll"></i><p>لم يُضَف محتوى بعد لهذه المعلقة</p></div>`;
-    if(window.lucide)lucide.createIcons();return;
+    showSection('home');
+  if(window.lucide)lucide.createIcons();return;
   }
 
   entries.forEach(entry=>{
@@ -5238,6 +5336,7 @@ function renderPoetContent(poetId) {
     container.appendChild(el);
   });
 
+  showSection('home');
   if(window.lucide)lucide.createIcons();
   setupAnnotationEvents(poetId);
 }
@@ -5604,5 +5703,158 @@ if (userToken) await loadProgressFromServer();
     }
   });
 
+  showSection('home');
   if(window.lucide)lucide.createIcons();
 });
+
+// =============================================
+// Scroll Reveal Observer
+// =============================================
+function initScrollReveal() {
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.15
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                // Optional: stop observing once revealed if you want it to happen only once
+                // observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal-on-scroll').forEach((el) => {
+        observer.observe(el);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initScrollReveal);
+// In case the script is loaded dynamically or DOM is already ready
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initScrollReveal();
+}
+
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('app-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if(sidebar) sidebar.classList.toggle('open');
+    if(overlay) overlay.classList.toggle('open');
+}
+
+function handleHomeAuthClick() {
+    if (currentUser) {
+        // Log out
+        currentUser = null;
+        userToken = null;
+        localStorage.removeItem('userToken');
+        updateNavUserDisplay();
+        showSection('home');
+    } else {
+        openLoginModal();
+    }
+}
+function showToast(msg) {
+    let t = document.getElementById('custom-toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'custom-toast';
+        t.style.position = 'fixed';
+        t.style.bottom = '100px';
+        t.style.left = '50%';
+        t.style.transform = 'translateX(-50%)';
+        t.style.background = 'rgba(0,0,0,0.8)';
+        t.style.color = '#fff';
+        t.style.padding = '8px 16px';
+        t.style.borderRadius = '20px';
+        t.style.zIndex = '9999';
+        t.style.fontSize = '14px';
+        t.style.pointerEvents = 'none';
+        t.style.transition = 'opacity 0.3s';
+        document.body.appendChild(t);
+    }
+    t.innerText = msg;
+    t.style.opacity = '1';
+    setTimeout(() => { t.style.opacity = '0'; }, 2000);
+}
+
+function updateBottomNav(sectionId) {
+    const bottomNav = document.querySelector(".bottom-nav");
+    if (bottomNav) {
+        bottomNav.style.display = (sectionId === "lesson" || sectionId === "quiz") ? "none" : "flex";
+    }
+
+    // In RTL, btn1 is rightmost, btn5 is leftmost
+    const btn1 = document.getElementById('nav-btn-1'); 
+    const btn2 = document.getElementById('nav-btn-2');
+    const centerBtn = document.getElementById('nav-btn-center');
+    const btn4 = document.getElementById('nav-btn-4');
+    const btn5 = document.getElementById('nav-btn-5'); 
+
+    if (!btn1 || !btn2 || !centerBtn || !btn4 || !btn5) return;
+
+    // Rightmost: Menu
+    btn1.onclick = toggleSidebar;
+    btn1.innerHTML = `<i data-lucide="menu"></i>`;
+
+    let activeIcon = '';
+    let activeAction = null;
+    let slot2 = { icon: 'message-circle', action: function() { showToast('قيد التطوير'); } }; // 2nd from right
+    let slot4 = { icon: 'trophy', action: function() { showSection('leaderboard'); } }; // 2nd from left
+    let slot5 = { icon: 'shopping-bag', action: function() { showToast('قيد التطوير'); } }; // Leftmost
+
+    const internalSections = ['practice', 'lesson', 'arud', 'museum'];
+    
+    if (sectionId === 'home') {
+        activeIcon = 'home';
+        activeAction = function() { showSection('home'); };
+    } else if (sectionId === 'leaderboard') {
+        activeIcon = 'trophy';
+        activeAction = function() { showSection('leaderboard'); };
+        slot4 = { icon: 'home', action: function() { showSection('home'); } };
+    } else if (sectionId === 'chat') {
+        activeIcon = 'message-circle';
+        activeAction = function() { showSection('chat'); };
+        slot2 = { icon: 'home', action: function() { showSection('home'); } };
+    } else if (sectionId === 'store') {
+        activeIcon = 'shopping-bag';
+        activeAction = function() { showSection('store'); };
+        slot5 = { icon: 'home', action: function() { showSection('home'); } };
+    } else if (internalSections.includes(sectionId)) {
+        slot4 = { icon: 'home', action: function() { showSection('home'); } };
+        if (sectionId === 'practice' || sectionId === 'lesson') {
+            activeIcon = 'graduation-cap';
+            activeAction = function() { showSection('practice'); };
+        } else if (sectionId === 'arud') {
+            activeIcon = 'pen-tool';
+            activeAction = function() { showSection('arud'); };
+        } else if (sectionId === 'museum') {
+            activeIcon = 'landmark'; 
+            activeAction = function() { showSection('museum'); };
+        }
+    } else {
+        // Fallback
+        activeIcon = 'home';
+        activeAction = function() { showSection('home'); };
+    }
+
+    centerBtn.innerHTML = `<div class="active-nav-circle"><i data-lucide="${activeIcon}"></i></div>`;
+    centerBtn.onclick = activeAction;
+
+    btn2.innerHTML = `<i data-lucide="${slot2.icon}"></i>`;
+    btn2.onclick = slot2.action;
+
+    btn4.innerHTML = `<i data-lucide="${slot4.icon}"></i>`;
+    btn4.onclick = slot4.action;
+
+    btn5.innerHTML = `<i data-lucide="${slot5.icon}"></i>`;
+    btn5.onclick = slot5.action;
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
