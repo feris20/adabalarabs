@@ -903,6 +903,7 @@ function userSignOut() {
   updateStreakDisplay();
   renderPracticePath();
   showSection('home');
+  
 const globalNav = document.querySelector('.navbar');
 if (globalNav) globalNav.style.display = 'none';
 
@@ -2086,7 +2087,6 @@ function activateStreak() {
     document.getElementById('streak-celebration-count').textContent = streakData.count;
     setTimeout(() => {
         openModal('streak-celebration-modal');
-        showSection('home');
   if(window.lucide)lucide.createIcons(); // refresh fire icon
     }, 600);
   }
@@ -2712,7 +2712,6 @@ function openUnitSelector() {
   if (adminContainer) adminContainer.style.display = isAdmin ? 'block' : 'none';
   
   openModal('unit-selector-modal');
-  showSection('home');
   if(window.lucide)lucide.createIcons();
 }
 
@@ -3447,8 +3446,7 @@ function createLevelElement(index) {
 function addNodeLevel() {
   const container = document.getElementById('node-levels-container');
   container.appendChild(createLevelElement(container.children.length));
-  setTimeout(() => { showSection('home');
-  if(window.lucide)lucide.createIcons(); }, 10);
+  setTimeout(() => { if(window.lucide)lucide.createIcons(); }, 10);
 }
 
 function addQuestionToLevel(btn, type) {
@@ -5053,7 +5051,6 @@ async function updateAnalysisMobile(idx, text, inputElement) {
     const data=await analyzeVerses(text);
     if (idx===activeIndex&&!manualClosed&&targetRow.isConnected) {
       inlineContent.innerHTML=createAnalysisPanel(data);
-      showSection('home');
   if(window.lucide)lucide.createIcons();
       window.currentAnalysis={bahr:data.meter,kitaba:data.phonetic,scansion:data.symbols};
     }
@@ -5069,7 +5066,6 @@ async function updateAnalysisDesktop(idx, text, inputElement) {
     const data=await analyzeVerses(text);
     if (idx===activeIndex&&!manualClosed&&analysisBox.style.display!=='none') {
       analysisContent.innerHTML=createAnalysisPanel(data);
-      showSection('home');
   if(window.lucide)lucide.createIcons();
       window.currentAnalysis={bahr:data.meter,kitaba:data.phonetic,scansion:data.symbols};
     }
@@ -5096,8 +5092,8 @@ function positionBox(inputElement) {
 window.closeInlineAnalysis=()=>{clearTimeout(typingTimer);manualClosed=true;if(inlineBox)inlineBox.classList.remove('open');};
 window.closeAnalysis=()=>{clearTimeout(typingTimer);manualClosed=true;if(analysisBox)analysisBox.style.display='none';if(inlineBox)inlineBox.classList.remove('open');};
 window.copyAnalysis=()=>{if(!window.currentAnalysis)return;const{bahr,kitaba,scansion}=window.currentAnalysis;navigator.clipboard.writeText(`البحر: ${bahr}\nالكتابة: ${kitaba}\nالترميز: ${scansion}`);const btn=document.getElementById('copy-btn-text');if(btn){btn.textContent='تم!';setTimeout(()=>btn.textContent='نسخ',2000);}};
-window.copyAllVerses=(btn)=>{const l=[];for(let i=0;i<verses.length;i+=2){const s=verses[i]||'',a=verses[i+1]||'';if(s||a)l.push(`${s} ... ${a}`);}if(!l.length)return;navigator.clipboard.writeText(l.join('\n'));if(btn){const o=btn.innerHTML;btn.innerHTML='<i data-lucide="check"></i> تم النسخ';showSection('home');
-  if(window.lucide)lucide.createIcons();setTimeout(()=>{btn.innerHTML=o;showSection('home');
+window.copyAllVerses=(btn)=>{const l=[];for(let i=0;i<verses.length;i+=2){const s=verses[i]||'',a=verses[i+1]||'';if(s||a)l.push(`${s} ... ${a}`);}if(!l.length)return;navigator.clipboard.writeText(l.join('\n'));if(btn){const o=btn.innerHTML;btn.innerHTML='<i data-lucide="check"></i> تم النسخ';
+  if(window.lucide)lucide.createIcons();setTimeout(()=>{btn.innerHTML=o;
   if(window.lucide)lucide.createIcons();},2000);}};
 
 // =============================================
@@ -5186,7 +5182,6 @@ function openModal(id){
   if(m){
     m.style.display='flex';
     if(soundFX) soundFX.magicChime();
-    showSection('home');
   if(window.lucide)lucide.createIcons();
   }
 }
@@ -5308,7 +5303,6 @@ async function showMuseumPoet(poetId) {
 
   // اعرض مؤشر تحميل
   document.getElementById('poet-content-area').innerHTML='<div class="empty-state"><p style="opacity:0.5">جاري التحميل...</p></div>';
-  showSection('home');
   if(window.lucide)lucide.createIcons();
 
   await loadPoetData(poetId);
@@ -5322,7 +5316,6 @@ function renderPoetContent(poetId) {
 
   if(entries.length===0){
     container.innerHTML=`<div class="empty-state"><i data-lucide="scroll"></i><p>لم يُضَف محتوى بعد لهذه المعلقة</p></div>`;
-    showSection('home');
   if(window.lucide)lucide.createIcons();return;
   }
 
@@ -5334,7 +5327,6 @@ function renderPoetContent(poetId) {
     container.appendChild(el);
   });
 
-  showSection('home');
   if(window.lucide)lucide.createIcons();
   setupAnnotationEvents(poetId);
 }
@@ -5701,7 +5693,6 @@ if (userToken) await loadProgressFromServer();
     }
   });
 
-  showSection('home');
   if(window.lucide)lucide.createIcons();
 });
 
@@ -5752,6 +5743,7 @@ function handleHomeAuthClick() {
         localStorage.removeItem('userToken');
         updateNavUserDisplay();
         showSection('home');
+        
     } else {
         openLoginModal();
     }
