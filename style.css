@@ -2467,7 +2467,7 @@ main {
   gap: 20px;
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 20;
+  z-index: 200;
 }
 .lesson-feedback-bar.show {
   transform: translateY(0);
@@ -6448,7 +6448,7 @@ button,
 }
 .home-level-card-wrap {
   position: relative;
-  z-index: 20;
+  z-index: 200;
   margin-bottom: -70px;
   z-index: 30;
 }
@@ -9191,7 +9191,7 @@ main {
   gap: 20px;
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 20;
+  z-index: 200;
 }
 .lesson-feedback-bar.show {
   transform: translateY(0);
@@ -13172,7 +13172,7 @@ button,
 }
 .home-level-card-wrap {
   position: relative;
-  z-index: 20;
+  z-index: 200;
   margin-bottom: -70px;
   z-index: 30;
 }
@@ -13568,4 +13568,3 @@ button,
   position: relative;
   z-index: 5;
 }
-
